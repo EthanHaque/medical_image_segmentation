@@ -3,7 +3,11 @@ from typing import List, Union, Any, Tuple, Callable
 import os
 
 import matplotlib.pyplot as plt
-from pydicom import dcmread
+import pydicom
+
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import numpy as np
 
 
 def get_file_paths(roots: Union[str, List[str]], matching_function: Callable[[str], bool]) -> list[Union[str, bytes]]:
@@ -50,17 +54,96 @@ def get_file_type_counts(roots: Union[str, List[str]]) -> dict[str, int]:
     dict[str, int]
         A frequency map of file extensions to their counts.
     """
-    files = gather_files(roots, lambda _: True)
+    files = get_file_paths(roots, lambda _: True)
     extensions = [os.path.splitext(file)[-1] for file in files]
     return dict(Counter(extensions))
 
 
-if __name__ == '__main__':
-    # path = "/scratch/gpfs/eh0560/data/med_datasets/cptacccrcc/manifest-1692379830142/CPTAC-CCRCC/C3N-03019/11-01-2000-NA-KT miednicy mniejszej - bad z kontrastem-00143/10.000000-ZYLNA  5.0  I30f  3-89793/1-091.dcm"
-    # ds = dcmread(path)
-    # arr = ds.pixel_array
-    #
-    # plt.imshow(arr, cmap="gray")
-    # plt.show()
-    dir_path = ["/scratch/gpfs/eh0560/data/med_datasets/cptacccrcc/manifest-1692379830142/CPTAC-CCRCC/C3N-03019"]
-    print(get_file_type_counts(dir_path))
+def process_dicom_files(image_paths: List[str], processing_function: Callable[[str], dict], num_threads: int = 1) -> dict[str, dict]:
+    """
+    Processes DICOM files using the given processing function and returns the results as a dictionary where
+    each key is a file path and each value is some information about the DICOM file.
+
+    Parameters
+    ----------
+    image_paths : List[str] The paths of the DICOM files to process.
+    processing_function : Callable[[str], dict] The processing function to apply to every DICOM file path.
+    num_threads : int, optional [default = 1]: The number of threads to split the processing among.
+
+    Returns
+    -------
+    dict[str, dict]
+        A dictionary where the key is the file path and the value is a dictionary with the results of
+        the processing function.
+    """
+    if num_threads < 1:
+        raise ValueError(f"num_threads must be greater than 1, but got {num_threads}")
+
+    dicom_image_info = {}
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
+        future_to_file = {executor.submit(processing_function, file_path): file_path for file_path in image_paths}
+        for future in as_completed(future_to_file):
+            file_path = future_to_file[future]
+            result = future.result()
+            dicom_image_info[file_path] = result
+
+    return dicom_image_info
+
+
+def get_dicom_image_dimensions(image_paths: List[str], num_threads: int = 1) -> dict[str, List[int]]:
+    """
+    Gets the width and height of every dicom file in the given list of image paths.
+
+    Parameters
+    ----------
+    image_paths : List[str] A list of file paths to get the width and height of.
+    num_threads : int, optional [default: 1] THe number of threads to use for image loading.
+
+    Returns
+    -------
+    dict[str, List[int, int]]
+        A dictionary where the keys are the file paths and the values are a list where the first
+        element is the width and the second is the height of the DICOM image.
+    """
+
+    def get_dimensions_helper(image_path: str) -> dict[str, List[int]]:
+        image_info = pydicom.dcmread(image_path, stop_before_pixels=True)
+        return {
+            "width": image_info.Rows,
+            "height": image_info.Columns
+        }
+
+    dimension_information = process_dicom_files(image_paths, get_dimensions_helper, num_threads)
+    value_as_list = {}
+    for key, value in dimension_information.items():
+        value_as_list[key] = [value["width"], value["height"]]
+
+    return value_as_list
+
+
+if __name__ == "__main__":
+    dir_path = ["/scratch/gpfs/eh0560/data/med_datasets", "/scratch/gpfs/RUSTOW/med_datasets"]
+    files = get_file_paths(dir_path, lambda path: path.endswith(".dcm"))[:10000]
+    # files = ["/scratch/gpfs/RUSTOW/med_datasets/ctcolongraphy/manifest-sFI3R7DS3069120899390652954/CT COLONOGRAPHY/1.3.6.1.4.1.9328.50.4.0052/01-01-2000-1-Abdomen3COLONOGRAPHY-55685/6.000000-AXIAL 3D PRONE-56325/1-396.dcm"]
+
+    dimensions = get_dicom_image_dimensions(files, num_threads=4)
+    widths = []
+    heights = []
+    for file, dims in dimensions.items():
+        widths.append(dims[0])
+        heights.append(dims[1])
+
+    widths = np.array(widths)
+    heights = np.array(heights)
+
+    plt.figure(figsize=(10, 6))
+    plt.scatter(widths, heights, c=np.log(widths * heights), cmap="cool", alpha=0.9)
+    plt.colorbar(label="Log of Area (pixels^2)")
+    plt.title("Distribution of DICOM Image Dimensions")
+    plt.xlabel("Width (pixels)")
+    plt.ylabel("Height (pixels)")
+    plt.tight_layout()
+
+    # Show the plot
+    plt.show()
+
