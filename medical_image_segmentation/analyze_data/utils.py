@@ -84,7 +84,8 @@ def process_dicom_files(image_paths: List[str], processing_function: Callable[[s
             try:
                 result = future.result()
             except Exception as e:
-                raise RuntimeError(f"Error occurred during processing of {file_path}", e)
+                print(f"Error occurred during processing of {file_path}")
+                raise
             dicom_image_info[file_path] = result
 
     return dicom_image_info
