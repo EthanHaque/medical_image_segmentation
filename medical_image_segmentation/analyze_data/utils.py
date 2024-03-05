@@ -109,6 +109,8 @@ def get_dicom_image_dimensions(image_paths: List[str], num_processes: int = 1) -
     dimension_information = process_dicom_files(image_paths, _get_dicom_image_dimensions_helper, num_processes)
     value_as_list = {}
     for key, value in dimension_information.items():
+        if value is None:
+            continue
         value_as_list[key] = [value["width"], value["height"]]
 
     return value_as_list
@@ -128,10 +130,10 @@ def _get_dicom_image_dimensions_helper(image_path: str) -> dict:
         A dictionary with two entries. One gives the image width and the other gives the image height.
     """
     image_info = pydicom.dcmread(image_path, stop_before_pixels=True)
-    return {
-        "width": image_info.Rows,
-        "height": image_info.Columns
-    }
+    if isinstance(image_info, pydicom.dataset.FileDataset):
+        return {}
+    else:
+        return {"width": image_info.Rows, "height": image_info.Columns}
 
 
 if __name__ == "__main__":
