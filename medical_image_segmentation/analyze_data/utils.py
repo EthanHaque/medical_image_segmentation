@@ -1,13 +1,10 @@
 from collections import Counter
-from typing import List, Union, Any, Tuple, Callable
+from typing import List, Union, Callable
 import os
 
-import matplotlib.pyplot as plt
 import pydicom
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
-import numpy as np
 
 
 def get_file_paths(roots: Union[str, List[str]], matching_function: Callable[[str], bool]) -> list[Union[str, bytes]]:
@@ -124,26 +121,6 @@ def get_dicom_image_dimensions(image_paths: List[str], num_threads: int = 1) -> 
 if __name__ == "__main__":
     dir_path = ["/scratch/gpfs/eh0560/data/med_datasets", "/scratch/gpfs/RUSTOW/med_datasets"]
     files = get_file_paths(dir_path, lambda path: path.endswith(".dcm"))[:10000]
-    # files = ["/scratch/gpfs/RUSTOW/med_datasets/ctcolongraphy/manifest-sFI3R7DS3069120899390652954/CT COLONOGRAPHY/1.3.6.1.4.1.9328.50.4.0052/01-01-2000-1-Abdomen3COLONOGRAPHY-55685/6.000000-AXIAL 3D PRONE-56325/1-396.dcm"]
-
-    dimensions = get_dicom_image_dimensions(files, num_threads=4)
-    widths = []
-    heights = []
-    for file, dims in dimensions.items():
-        widths.append(dims[0])
-        heights.append(dims[1])
-
-    widths = np.array(widths)
-    heights = np.array(heights)
-
-    plt.figure(figsize=(10, 6))
-    plt.scatter(widths, heights, c=np.log(widths * heights), cmap="cool", alpha=0.9)
-    plt.colorbar(label="Log of Area (pixels^2)")
-    plt.title("Distribution of DICOM Image Dimensions")
-    plt.xlabel("Width (pixels)")
-    plt.ylabel("Height (pixels)")
-    plt.tight_layout()
-
-    # Show the plot
-    plt.show()
+    print(len(files))
+    print(get_file_type_counts(dir_path))
 
