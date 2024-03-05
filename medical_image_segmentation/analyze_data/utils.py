@@ -109,7 +109,7 @@ def get_dicom_image_dimensions(image_paths: List[str], num_processes: int = 1) -
     dimension_information = process_dicom_files(image_paths, _get_dicom_image_dimensions_helper, num_processes)
     value_as_list = {}
     for key, value in dimension_information.items():
-        if value is None:
+        if not value:
             continue
         value_as_list[key] = [value["width"], value["height"]]
 
