@@ -106,14 +106,7 @@ def get_dicom_image_dimensions(image_paths: List[str], num_processes: int = 1) -
         element is the width and the second is the height of the DICOM image.
     """
 
-    def get_dimensions_helper(image_path: str) -> dict[str, List[int]]:
-        image_info = pydicom.dcmread(image_path, stop_before_pixels=True)
-        return {
-            "width": image_info.Rows,
-            "height": image_info.Columns
-        }
-
-    dimension_information = process_dicom_files(image_paths, get_dimensions_helper, num_threads)
+    dimension_information = process_dicom_files(image_paths, _get_dicom_image_dimensions_helper, num_processes)
     value_as_list = {}
     for key, value in dimension_information.items():
         value_as_list[key] = [value["width"], value["height"]]
@@ -121,9 +114,28 @@ def get_dicom_image_dimensions(image_paths: List[str], num_processes: int = 1) -
     return value_as_list
 
 
+def _get_dicom_image_dimensions_helper(image_path: str) -> dict:
+    """
+    Helper processing function to get DICOM image dimensions
+
+    Parameters
+    ----------
+    image_path : str The path to the image.
+
+    Returns
+    -------
+    dict
+        A dictionary with two entries. One gives the image width and the other gives the image height.
+    """
+    image_info = pydicom.dcmread(image_path, stop_before_pixels=True)
+    return {
+        "width": image_info.Rows,
+        "height": image_info.Columns
+    }
+
+
 if __name__ == "__main__":
     dir_path = ["/scratch/gpfs/eh0560/data/med_datasets", "/scratch/gpfs/RUSTOW/med_datasets"]
     files = get_file_paths(dir_path, lambda path: path.endswith(".dcm"))[:10000]
     print(len(files))
     print(get_file_type_counts(dir_path))
-
