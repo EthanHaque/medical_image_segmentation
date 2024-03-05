@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 from pydicom import dcmread
 
 
-def gather_files(roots: Union[str, List[str]], matching_function: Callable[[str], bool]) -> list[Union[str, bytes]]:
+def get_file_paths(roots: Union[str, List[str]], matching_function: Callable[[str], bool]) -> list[Union[str, bytes]]:
     """
-    Gathers all files from the given directories which end with the given filetypes.
+    Gathers all file paths from the given directories which end with the given filetypes.
 
     Parameters
     ----------
