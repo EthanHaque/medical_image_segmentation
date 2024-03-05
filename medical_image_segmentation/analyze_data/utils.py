@@ -4,7 +4,7 @@ import os
 
 import pydicom
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 
 def get_file_paths(roots: Union[str, List[str]], matching_function: Callable[[str], bool]) -> list[Union[str, bytes]]:
@@ -56,7 +56,7 @@ def get_file_type_counts(roots: Union[str, List[str]]) -> dict[str, int]:
     return dict(Counter(extensions))
 
 
-def process_dicom_files(image_paths: List[str], processing_function: Callable[[str], dict], num_threads: int = 1) -> dict[str, dict]:
+def process_dicom_files(image_paths: List[str], processing_function: Callable[[str], dict], num_processes: int = 1) -> dict[str, dict]:
     """
     Processes DICOM files using the given processing function and returns the results as a dictionary where
     each key is a file path and each value is some information about the DICOM file.
@@ -65,7 +65,7 @@ def process_dicom_files(image_paths: List[str], processing_function: Callable[[s
     ----------
     image_paths : List[str] The paths of the DICOM files to process.
     processing_function : Callable[[str], dict] The processing function to apply to every DICOM file path.
-    num_threads : int, optional [default = 1]: The number of threads to split the processing among.
+    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
 
     Returns
     -------
@@ -73,28 +73,31 @@ def process_dicom_files(image_paths: List[str], processing_function: Callable[[s
         A dictionary where the key is the file path and the value is a dictionary with the results of
         the processing function.
     """
-    if num_threads < 1:
-        raise ValueError(f"num_threads must be greater than 1, but got {num_threads}")
+    if num_processes < 1:
+        raise ValueError(f"num_threads must be greater than 1, but got {num_processes}")
 
     dicom_image_info = {}
-    with ThreadPoolExecutor(max_workers=num_threads) as executor:
+    with ProcessPoolExecutor(max_workers=num_processes) as executor:
         future_to_file = {executor.submit(processing_function, file_path): file_path for file_path in image_paths}
         for future in as_completed(future_to_file):
             file_path = future_to_file[future]
-            result = future.result()
+            try:
+                result = future.result()
+            except Exception as e:
+                raise RuntimeError(f"Error occurred during processing of {file_path}", e)
             dicom_image_info[file_path] = result
 
     return dicom_image_info
 
 
-def get_dicom_image_dimensions(image_paths: List[str], num_threads: int = 1) -> dict[str, List[int]]:
+def get_dicom_image_dimensions(image_paths: List[str], num_processes: int = 1) -> dict[str, List[int]]:
     """
     Gets the width and height of every dicom file in the given list of image paths.
 
     Parameters
     ----------
     image_paths : List[str] A list of file paths to get the width and height of.
-    num_threads : int, optional [default: 1] THe number of threads to use for image loading.
+    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
 
     Returns
     -------
