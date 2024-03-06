@@ -130,10 +130,10 @@ def _get_dicom_image_dimensions_helper(image_path: str) -> dict:
         A dictionary with two entries. One gives the image width and the other gives the image height.
     """
     image_info = pydicom.dcmread(image_path, stop_before_pixels=True)
-    if isinstance(image_info, pydicom.dataset.FileDataset):
-        return {}
-    else:
+    if hasattr(image_info, "Rows") and hasattr(image_info, "Columns"):
         return {"width": image_info.Rows, "height": image_info.Columns}
+    else:
+        return {}
 
 
 if __name__ == "__main__":
