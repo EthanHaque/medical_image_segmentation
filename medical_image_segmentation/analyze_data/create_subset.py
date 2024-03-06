@@ -57,8 +57,12 @@ def get_subset_dicom_image_paths() -> List[str]:
     colongraphy_subset = colongraphy_list[:colongraphy_size]
     subset_file_paths.extend(colongraphy_subset)
 
-    return subset_file_paths
+    return sorted(subset_file_paths)
 
 
 if __name__ == "__main__":
-    print(len(get_subset_dicom_image_paths()))
+    subset_output_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/image_path_list"
+    image_subset = get_subset_dicom_image_paths()
+    with open(subset_output_path, "w") as f:
+        for image_path in image_subset:
+            f.write(image_path + "\n")
