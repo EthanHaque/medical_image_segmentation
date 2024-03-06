@@ -7,6 +7,14 @@ import medical_image_segmentation.analyze_data.utils as utils
 
 
 def get_subset_dicom_image_paths() -> List[str]:
+    """
+    Get a list of paths to the dicom images to use in this project.
+
+    Returns
+    -------
+    List[str]
+        A list of file paths.
+    """
     random.seed(2)
 
     datasets_root_paths = ["/scratch/gpfs/eh0560/data/med_datasets", "/scratch/gpfs/RUSTOW/med_datasets"]
