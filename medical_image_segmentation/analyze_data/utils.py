@@ -1,13 +1,10 @@
 from collections import Counter
-from typing import List, Union, Any, Tuple, Callable
+from typing import List, Union, Callable
 import os
 
-import matplotlib.pyplot as plt
 import pydicom
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
-import numpy as np
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 
 def get_file_paths(roots: Union[str, List[str]], matching_function: Callable[[str], bool]) -> list[Union[str, bytes]]:
@@ -59,7 +56,7 @@ def get_file_type_counts(roots: Union[str, List[str]]) -> dict[str, int]:
     return dict(Counter(extensions))
 
 
-def process_dicom_files(image_paths: List[str], processing_function: Callable[[str], dict], num_threads: int = 1) -> dict[str, dict]:
+def process_dicom_files(image_paths: List[str], processing_function: Callable[[str], dict], num_processes: int = 1) -> dict[str, dict]:
     """
     Processes DICOM files using the given processing function and returns the results as a dictionary where
     each key is a file path and each value is some information about the DICOM file.
@@ -68,7 +65,7 @@ def process_dicom_files(image_paths: List[str], processing_function: Callable[[s
     ----------
     image_paths : List[str] The paths of the DICOM files to process.
     processing_function : Callable[[str], dict] The processing function to apply to every DICOM file path.
-    num_threads : int, optional [default = 1]: The number of threads to split the processing among.
+    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
 
     Returns
     -------
@@ -76,28 +73,31 @@ def process_dicom_files(image_paths: List[str], processing_function: Callable[[s
         A dictionary where the key is the file path and the value is a dictionary with the results of
         the processing function.
     """
-    if num_threads < 1:
-        raise ValueError(f"num_threads must be greater than 1, but got {num_threads}")
+    if num_processes < 1:
+        raise ValueError(f"num_threads must be greater than 1, but got {num_processes}")
 
     dicom_image_info = {}
-    with ThreadPoolExecutor(max_workers=num_threads) as executor:
+    with ProcessPoolExecutor(max_workers=num_processes) as executor:
         future_to_file = {executor.submit(processing_function, file_path): file_path for file_path in image_paths}
         for future in as_completed(future_to_file):
             file_path = future_to_file[future]
-            result = future.result()
+            try:
+                result = future.result()
+            except Exception:
+                raise RuntimeError(f"Error occurred during processing of {file_path}")
             dicom_image_info[file_path] = result
 
     return dicom_image_info
 
 
-def get_dicom_image_dimensions(image_paths: List[str], num_threads: int = 1) -> dict[str, List[int]]:
+def get_dicom_image_dimensions(image_paths: List[str], num_processes: int = 1) -> dict[str, List[int]]:
     """
     Gets the width and height of every dicom file in the given list of image paths.
 
     Parameters
     ----------
     image_paths : List[str] A list of file paths to get the width and height of.
-    num_threads : int, optional [default: 1] THe number of threads to use for image loading.
+    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
 
     Returns
     -------
@@ -106,44 +106,38 @@ def get_dicom_image_dimensions(image_paths: List[str], num_threads: int = 1) -> 
         element is the width and the second is the height of the DICOM image.
     """
 
-    def get_dimensions_helper(image_path: str) -> dict[str, List[int]]:
-        image_info = pydicom.dcmread(image_path, stop_before_pixels=True)
-        return {
-            "width": image_info.Rows,
-            "height": image_info.Columns
-        }
-
-    dimension_information = process_dicom_files(image_paths, get_dimensions_helper, num_threads)
+    dimension_information = process_dicom_files(image_paths, _get_dicom_image_dimensions_helper, num_processes)
     value_as_list = {}
     for key, value in dimension_information.items():
+        if not value:
+            continue
         value_as_list[key] = [value["width"], value["height"]]
 
     return value_as_list
 
 
+def _get_dicom_image_dimensions_helper(image_path: str) -> dict:
+    """
+    Helper processing function to get DICOM image dimensions
+
+    Parameters
+    ----------
+    image_path : str The path to the image.
+
+    Returns
+    -------
+    dict
+        A dictionary with two entries. One gives the image width and the other gives the image height.
+    """
+    image_info = pydicom.dcmread(image_path, stop_before_pixels=True)
+    if hasattr(image_info, "Rows") and hasattr(image_info, "Columns"):
+        return {"width": image_info.Rows, "height": image_info.Columns}
+    else:
+        return {}
+
+
 if __name__ == "__main__":
     dir_path = ["/scratch/gpfs/eh0560/data/med_datasets", "/scratch/gpfs/RUSTOW/med_datasets"]
     files = get_file_paths(dir_path, lambda path: path.endswith(".dcm"))[:10000]
-    # files = ["/scratch/gpfs/RUSTOW/med_datasets/ctcolongraphy/manifest-sFI3R7DS3069120899390652954/CT COLONOGRAPHY/1.3.6.1.4.1.9328.50.4.0052/01-01-2000-1-Abdomen3COLONOGRAPHY-55685/6.000000-AXIAL 3D PRONE-56325/1-396.dcm"]
-
-    dimensions = get_dicom_image_dimensions(files, num_threads=4)
-    widths = []
-    heights = []
-    for file, dims in dimensions.items():
-        widths.append(dims[0])
-        heights.append(dims[1])
-
-    widths = np.array(widths)
-    heights = np.array(heights)
-
-    plt.figure(figsize=(10, 6))
-    plt.scatter(widths, heights, c=np.log(widths * heights), cmap="cool", alpha=0.9)
-    plt.colorbar(label="Log of Area (pixels^2)")
-    plt.title("Distribution of DICOM Image Dimensions")
-    plt.xlabel("Width (pixels)")
-    plt.ylabel("Height (pixels)")
-    plt.tight_layout()
-
-    # Show the plot
-    plt.show()
-
+    print(len(files))
+    print(get_file_type_counts(dir_path))
