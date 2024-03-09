@@ -110,7 +110,7 @@ def write_raw_image_subset(image_paths: List[str], output_dir: str, num_processe
     return count
 
 
-def write_raw_image_subset_helper(output_dir, image_path: str, write_to_null: bool = False, **kwargs) -> dict:
+def write_raw_image_subset_helper(output_dir, image_path: str, write_to_null: bool = False, num_subfolders: int = 0) -> dict:
     """
     Helper function to write an individual DICOM image to output dir.
 
@@ -119,6 +119,7 @@ def write_raw_image_subset_helper(output_dir, image_path: str, write_to_null: bo
     image_path: str The path to the DICOM image to write. The name of the writen file will
     be the hash of the DICOM image.
     write_to_null: bool [default: False] If true, writes the DICOM images to the null file.
+    num_subfolders: int [default: 1] The number of folders to split the images into.
 
     Returns
     -------
@@ -131,7 +132,16 @@ def write_raw_image_subset_helper(output_dir, image_path: str, write_to_null: bo
     arr = pydicom.dcmread(image_path).pixel_array
     arr.flags.writeable = False
     sha_hash = hashlib.sha256(arr).hexdigest()
-    output_path = os.path.join(output_dir, f"{sha_hash}.png")
+
+    if num_subfolders > 0:
+        subfolder_index = int(sha_hash, 16) % num_subfolders
+        subfolder_name = f"{subfolder_index:0{len(str(num_subfolders - 1))}}"
+        subfolder_path = os.path.join(output_dir, subfolder_name)
+        os.makedirs(subfolder_path, exist_ok=True)
+
+        output_path = os.path.join(subfolder_path, f"{sha_hash}.png")
+    else:
+        output_path = os.path.join(output_dir, f"{sha_hash}.png")
 
     try:
         min_val = np.nanmin(arr)
@@ -189,5 +199,5 @@ if __name__ == "__main__":
 
     # Randomizing to make expected remaining time more accurate.
     random.shuffle(paths)
-    count = write_raw_image_subset(paths[:100], write_path, num_processes=args.num_processes, write_to_null=True)
+    count = write_raw_image_subset(paths[:100], write_path, num_processes=args.num_processes, write_to_null=False, num_subfolders=10)
     print(count)
