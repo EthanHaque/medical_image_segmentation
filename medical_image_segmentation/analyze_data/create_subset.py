@@ -79,7 +79,7 @@ def get_subset_dicom_image_paths(size: int) -> List[str]:
     return sorted(subset_file_paths)
 
 
-def write_raw_image_subset(image_paths: List[str], output_dir: str, num_processes: int = 1) -> int:
+def write_raw_image_subset(image_paths: List[str], output_dir: str, num_processes: int = 1, **kwargs) -> int:
     """
     Reads DICOM images from the image_paths and writes them as raw images to output_dir.
 
@@ -98,8 +98,7 @@ def write_raw_image_subset(image_paths: List[str], output_dir: str, num_processe
         raise ValueError("Duplicate paths contained in image_paths.")
     os.makedirs(output_dir, exist_ok=True)
 
-    statuses = utils.process_dicom_files(image_paths, write_raw_image_subset_helper, output_dir=output_dir,
-                                         num_processes=num_processes)
+    statuses = utils.process_dicom_files(image_paths, write_raw_image_subset_helper, num_processes, output_dir, **kwargs)
 
     count = 0
     for path, status in statuses.items():
@@ -111,7 +110,7 @@ def write_raw_image_subset(image_paths: List[str], output_dir: str, num_processe
     return count
 
 
-def write_raw_image_subset_helper(image_path: str, *args, **kwargs) -> dict:
+def write_raw_image_subset_helper(output_dir, image_path: str, write_to_null: bool = False, **kwargs) -> dict:
     """
     Helper function to write an individual DICOM image to output dir.
 
@@ -119,6 +118,7 @@ def write_raw_image_subset_helper(image_path: str, *args, **kwargs) -> dict:
     ----------
     image_path: str The path to the DICOM image to write. The name of the writen file will
     be the hash of the DICOM image.
+    write_to_null: bool [default: False] If true, writes the DICOM images to the null file.
 
     Returns
     -------
@@ -131,7 +131,7 @@ def write_raw_image_subset_helper(image_path: str, *args, **kwargs) -> dict:
     arr = pydicom.dcmread(image_path).pixel_array
     arr.flags.writeable = False
     sha_hash = hashlib.sha256(arr).hexdigest()
-    output_path = os.path.join(kwargs["output_dir"], f"{sha_hash}.png")
+    output_path = os.path.join(output_dir, f"{sha_hash}.png")
 
     try:
         min_val = np.nanmin(arr)
@@ -145,9 +145,11 @@ def write_raw_image_subset_helper(image_path: str, *args, **kwargs) -> dict:
 
     try:
         image = Image.fromarray(arr)
-        with open("/dev/null", "wb") as f:
-            image.save(f, format='PNG', bits=16)
-        # image.save(output_path, format='PNG', bits=16)
+        if write_to_null:
+            with open("/dev/null", "wb") as f:
+                image.save(f, format='PNG', bits=16)
+        else:
+            image.save(output_path, format='PNG', bits=16)
         return {"image_path": image_path, "output_path": output_path, "error": None}
     except Exception as e:
         return {"image_path": image_path, "output_path": output_path, "error": e}
@@ -187,5 +189,5 @@ if __name__ == "__main__":
 
     # Randomizing to make expected remaining time more accurate.
     random.shuffle(paths)
-    count = write_raw_image_subset(paths, write_path, num_processes=args.num_processes)
+    count = write_raw_image_subset(paths[:100], write_path, num_processes=args.num_processes, write_to_null=True)
     print(count)
