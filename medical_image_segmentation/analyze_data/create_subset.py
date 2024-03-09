@@ -139,7 +139,9 @@ def write_raw_image_subset_helper(image_path: str, *args, **kwargs) -> dict:
 
     try:
         image = Image.fromarray(arr)
-        image.save(output_path, format='PNG', bits=16)
+        with open("/dev/null", "wb") as f:
+            image.save(f, format='PNG', bits=16)
+        # image.save(output_path, format='PNG', bits=16)
         return {"image_path": image_path, "output_path": output_path, "error": None}
     except Exception as e:
         return {"image_path": image_path, "output_path": output_path, "error": e}
@@ -154,5 +156,5 @@ if __name__ == "__main__":
     write_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/test"
 
     random.shuffle(paths)
-    count = write_raw_image_subset(paths[:1000], write_path, num_processes=4)
+    count = write_raw_image_subset(paths[:10000], write_path, num_processes=16)
     print(count)
