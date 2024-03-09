@@ -3,6 +3,7 @@ import json
 import os
 import random
 from typing import List
+import argparse
 
 from PIL import Image
 import numpy as np
@@ -145,9 +146,17 @@ def write_raw_image_subset_helper(image_path: str, *args, **kwargs) -> dict:
         return {"image_path": image_path, "output_path": output_path, "error": None}
     except Exception as e:
         return {"image_path": image_path, "output_path": output_path, "error": e}
+    
+def parse_args():
+    parser = argparse.ArgumentParser(description="Process DICOM images and write them as raw images.")
+    parser.add_argument("--num_processes", type=int, default=1, help="Number of processes to use for parallel processing.")
+    return parser.parse_args()
+
 
 
 if __name__ == "__main__":
+    args = parse_args()
+
     subset_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/image_path_list"
     with open(subset_path, "r") as f:
         paths = f.read().splitlines()
@@ -155,6 +164,5 @@ if __name__ == "__main__":
 
     write_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/test"
 
-    random.shuffle(paths)
-    count = write_raw_image_subset(paths[:10000], write_path, num_processes=16)
+    count = write_raw_image_subset(paths[0:100000], write_path, num_processes=args.num_processes)
     print(count)
