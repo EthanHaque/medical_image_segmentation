@@ -6,6 +6,7 @@ import os
 import pydicom
 
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from rich.progress import Progress
 
 
 def get_file_paths(roots: Union[str, List[str]], matching_function: Callable[[str], bool]) -> list[Union[str, bytes]]:
@@ -82,13 +83,17 @@ dict[str, dict]:
     with ProcessPoolExecutor(max_workers=num_processes) as executor:
         partial_processing_function = partial(processing_function, *args, **kwargs)
         future_to_file = {executor.submit(partial_processing_function, file_path): file_path for file_path in image_paths}
-        for future in as_completed(future_to_file):
-            file_path = future_to_file[future]
-            try:
-                result = future.result()
-            except Exception:
-                raise RuntimeError(f"Error occurred during processing of {file_path}")
-            dicom_image_info[file_path] = result
+
+        with Progress() as progress:
+            task = progress.add_task("[green]Processing DICOM files...", total=len(image_paths))
+            for future in as_completed(future_to_file):
+                file_path = future_to_file[future]
+                try:
+                    result = future.result()
+                except Exception:
+                    raise RuntimeError(f"Error occurred during processing of {file_path}")
+                dicom_image_info[file_path] = result
+                progress.update(task, advance=1)
 
     return dicom_image_info
 
