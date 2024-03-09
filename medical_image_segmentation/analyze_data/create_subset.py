@@ -27,8 +27,6 @@ def get_subset_dicom_image_paths(size: int, num_processes: int = 1) -> List[str]
     List[str]
         A list of file paths.
     """
-    random.seed(2)
-
     datasets_root_paths = ["/scratch/gpfs/eh0560/data/med_datasets", "/scratch/gpfs/RUSTOW/med_datasets"]
     image_dimensions_json_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/dicom_image_dimensions.json"
 
@@ -196,13 +194,20 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Process DICOM images and write them as raw images.")
     parser.add_argument("--num_processes", type=int, default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
                         help="Number of processes to use for parallel processing.")
+    parser.add_argument("--subset_size", type=int, default=1_050_000, help="Size of the subset to write")
+    parser.add_argument("--create_subset", action="store_true", help="Flag to enable subset creation")
+    parser.add_argument("--seed", type=int, default=1, help="Random seed")
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+    random.seed(args.seed)
 
-    subset_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/image_path_list"
+    subset_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/possible_image_paths"
+    if args.create_subset:
+        create_subset(args.subset_size, subset_path, args.num_processes)
+
     with open(subset_path, "r") as f:
         paths = f.read().splitlines()
         paths = [path.strip() for path in paths]
@@ -211,8 +216,8 @@ def main():
 
     # Randomizing to make expected remaining time more accurate.
     random.shuffle(paths)
-    count, input_output_path_map = write_raw_image_subset(paths, write_path, num_processes=args.num_processes,
-                                                          write_to_null=False, num_subfolders=100)
+    count, input_output_path_map = write_raw_image_subset(paths[:10000], write_path, num_processes=args.num_processes,
+                                                          write_to_null=True, num_subfolders=100)
 
     input_output_path_map_json_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/input_output_path_map.json"
     with open(input_output_path_map_json_path, "w") as f:
