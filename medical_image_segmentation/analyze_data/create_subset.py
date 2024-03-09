@@ -170,7 +170,7 @@ def create_subset(size: int, output_path: str):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Process DICOM images and write them as raw images.")
-    parser.add_argument("--num_processes", type=int, default=1,
+    parser.add_argument("--num_processes", type=int, default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
                         help="Number of processes to use for parallel processing.")
     return parser.parse_args()
 
