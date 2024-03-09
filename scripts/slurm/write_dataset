@@ -1,0 +1,18 @@
+#!/bin/bash
+#SBATCH --job=write_dataset
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=24
+#SBATCH --mem=64GB
+#SBATCH --time=01:00:00
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=eh0560@princeton.edu
+#SBATCH --output=logs/write_dataset_%j.log
+
+module puge
+module load anaconda3/2023.9
+conda activate medical_image_segmentation
+cd /scratch/gpfs/eh0560/repos/medical-image-segmentation
+python /scratch/gpfs/eh0560/repos/medical-image-segmentation/medical_image_segmentation/analyze_data/create_subset.py
+
+
