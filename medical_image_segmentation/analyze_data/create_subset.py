@@ -166,6 +166,7 @@ if __name__ == "__main__":
 
     write_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/test"
 
+    # Randomizing to make expected remaining time more accurate.
     random.shuffle(paths)
     count = write_raw_image_subset(paths[0:100000], write_path, num_processes=args.num_processes)
     print(count)
