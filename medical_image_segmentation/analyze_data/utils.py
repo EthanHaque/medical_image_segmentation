@@ -1,5 +1,6 @@
 from collections import Counter
-from typing import List, Union, Callable
+from functools import partial
+from typing import List, Union, Callable, Tuple
 import os
 
 import pydicom
@@ -56,7 +57,8 @@ def get_file_type_counts(roots: Union[str, List[str]]) -> dict[str, int]:
     return dict(Counter(extensions))
 
 
-def process_dicom_files(image_paths: List[str], processing_function: Callable[[str], dict], num_processes: int = 1) -> dict[str, dict]:
+def process_dicom_files(image_paths: List[str], processing_function: Callable[[str, ...], dict], num_processes: int = 1, *args, **kwargs) -> \
+dict[str, dict]:
     """
     Processes DICOM files using the given processing function and returns the results as a dictionary where
     each key is a file path and each value is some information about the DICOM file.
@@ -74,11 +76,12 @@ def process_dicom_files(image_paths: List[str], processing_function: Callable[[s
         the processing function.
     """
     if num_processes < 1:
-        raise ValueError(f"num_threads must be greater than 1, but got {num_processes}")
+        raise ValueError(f"num_processes must be greater than 1, but got {num_processes}")
 
     dicom_image_info = {}
     with ProcessPoolExecutor(max_workers=num_processes) as executor:
-        future_to_file = {executor.submit(processing_function, file_path): file_path for file_path in image_paths}
+        partial_processing_function = partial(processing_function, *args, **kwargs)
+        future_to_file = {executor.submit(partial_processing_function, file_path): file_path for file_path in image_paths}
         for future in as_completed(future_to_file):
             file_path = future_to_file[future]
             try:
@@ -134,6 +137,40 @@ def _get_dicom_image_dimensions_helper(image_path: str) -> dict:
         return {"width": image_info.Rows, "height": image_info.Columns}
     else:
         return {}
+
+
+def get_dicom_image_mean_and_std(image_paths: List[str], num_processes: int = 1) -> Tuple[float, float]:
+    """
+    Gets the mean and standard deviation over all images in the given list of image paths.
+
+    Parameters
+    ----------
+    image_paths : List[str] A list of file paths to get the width and height of.
+    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
+
+    Returns
+    -------
+    Tuple[float, float]
+        The mean and standard deviation over all images in the given list of image paths.
+    """
+    dimension_information = process_dicom_files(image_paths, _get_dicom_image_mean_and_std_helper, num_processes)
+
+
+def _get_dicom_image_mean_and_std_helper(image_path: str) -> dict:
+    """
+    Helper processing function to get DICOM image mean and standard deviation.
+
+    Parameters
+    ----------
+    image_path : str The path to the image.
+
+    Returns
+    -------
+    dict
+        A dictionary with two entries. One gives the mean of the pixels in the image and the other gives the
+        standard deviation of the pixels in the image.
+    """
+    image_info = pydicom.dcmread(image_path, stop_before_pixels=False)
 
 
 if __name__ == "__main__":
