@@ -3,7 +3,7 @@ import json
 import os
 import random
 import warnings
-from typing import List
+from typing import List, Tuple
 import argparse
 
 from PIL import Image
@@ -81,7 +81,7 @@ def get_subset_dicom_image_paths(size: int, num_processes: int = 1) -> List[str]
     return sorted(subset_file_paths)
 
 
-def write_raw_image_subset(image_paths: List[str], output_dir: str, num_processes: int = 1, **kwargs) -> int:
+def write_raw_image_subset(image_paths: List[str], output_dir: str, num_processes: int = 1, **kwargs) -> Tuple[int, dict]:
     """
     Reads DICOM images from the image_paths and writes them as raw images to output_dir.
 
@@ -93,8 +93,8 @@ def write_raw_image_subset(image_paths: List[str], output_dir: str, num_processe
 
     Returns
     -------
-    int
-        The number of images successfully written.
+    Tuple[int, dict]
+        The number of images successfully processed, and a dictionary mapping the input paths to the output paths.
     """
     if len(image_paths) != len(set(image_paths)):
         raise ValueError("Duplicate paths contained in image_paths.")
@@ -103,13 +103,15 @@ def write_raw_image_subset(image_paths: List[str], output_dir: str, num_processe
     statuses = utils.process_dicom_files(image_paths, write_raw_image_subset_helper, num_processes, output_dir, **kwargs)
 
     count = 0
+    image_path_map = {}
     for path, status in statuses.items():
         if status["error"] is None:
             count += 1
+            image_path_map[status["image_path"]] = status["output_path"]
         else:
             print(status)
 
-    return count
+    return count, image_path_map
 
 
 def write_raw_image_subset_helper(output_dir, image_path: str, write_to_null: bool = False, num_subfolders: int = 0) -> dict:
@@ -204,7 +206,7 @@ if __name__ == "__main__":
         paths = f.read().splitlines()
         paths = [path.strip() for path in paths]
 
-    write_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/test"
+    write_path = "/scratch/gpfs/eh0560/data/med_datasets/segmentation_png"
 
     # Randomizing to make expected remaining time more accurate.
     random.shuffle(paths)
