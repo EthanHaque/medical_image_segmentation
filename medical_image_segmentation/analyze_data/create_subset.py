@@ -120,6 +120,7 @@ def write_raw_image_subset_helper(output_dir, image_path: str, write_to_null: bo
 
     Parameters
     ----------
+    output_dir : str The root directory to write the images into.
     image_path: str The path to the DICOM image to write. The name of the writen file will
     be the hash of the DICOM image.
     write_to_null: bool [default: False] If true, writes the DICOM images to the null file.
@@ -198,7 +199,7 @@ def parse_args():
     return parser.parse_args()
 
 
-if __name__ == "__main__":
+def main():
     args = parse_args()
 
     subset_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/image_path_list"
@@ -210,5 +211,15 @@ if __name__ == "__main__":
 
     # Randomizing to make expected remaining time more accurate.
     random.shuffle(paths)
-    count = write_raw_image_subset(paths, write_path, num_processes=args.num_processes, write_to_null=False, num_subfolders=100)
+    count, input_output_path_map = write_raw_image_subset(paths, write_path, num_processes=args.num_processes,
+                                                          write_to_null=False, num_subfolders=100)
+
+    input_output_path_map_json_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/input_output_path_map.json"
+    with open(input_output_path_map_json_path, "w") as f:
+        json.dump(input_output_path_map, f)
+
     print(count)
+
+
+if __name__ == "__main__":
+    main()
