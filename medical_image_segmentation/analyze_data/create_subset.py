@@ -75,7 +75,7 @@ def get_subset_dicom_image_paths() -> List[str]:
     return sorted(subset_file_paths)
 
 
-def write_raw_image_subset(image_paths: List[str], output_dir: str, num_processes: int =1) -> int:
+def write_raw_image_subset(image_paths: List[str], output_dir: str, num_processes: int = 1) -> int:
     """
     Reads DICOM images from the image_paths and writes them as raw images to output_dir.
 
@@ -94,7 +94,8 @@ def write_raw_image_subset(image_paths: List[str], output_dir: str, num_processe
         raise ValueError("Duplicate paths contained in image_paths.")
     os.makedirs(output_dir, exist_ok=True)
 
-    statuses = utils.process_dicom_files(image_paths, write_raw_image_subset_helper, output_dir=output_dir, num_processes=num_processes)
+    statuses = utils.process_dicom_files(image_paths, write_raw_image_subset_helper, output_dir=output_dir,
+                                         num_processes=num_processes)
 
     count = 0
     for path, status in statuses.items():
@@ -146,12 +147,13 @@ def write_raw_image_subset_helper(image_path: str, *args, **kwargs) -> dict:
         return {"image_path": image_path, "output_path": output_path, "error": None}
     except Exception as e:
         return {"image_path": image_path, "output_path": output_path, "error": e}
-    
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Process DICOM images and write them as raw images.")
-    parser.add_argument("--num_processes", type=int, default=1, help="Number of processes to use for parallel processing.")
+    parser.add_argument("--num_processes", type=int, default=1,
+                        help="Number of processes to use for parallel processing.")
     return parser.parse_args()
-
 
 
 if __name__ == "__main__":
@@ -164,5 +166,6 @@ if __name__ == "__main__":
 
     write_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/test"
 
+    random.shuffle(paths)
     count = write_raw_image_subset(paths[0:100000], write_path, num_processes=args.num_processes)
     print(count)
