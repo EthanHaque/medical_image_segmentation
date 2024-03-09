@@ -12,9 +12,14 @@ import pydicom
 import medical_image_segmentation.analyze_data.utils as utils
 
 
-def get_subset_dicom_image_paths() -> List[str]:
+def get_subset_dicom_image_paths(size: int) -> List[str]:
     """
     Get a list of paths to the dicom images to use in this project.
+
+    Parameters
+    ----------
+    size : int
+        Size of the subset to be returned.
 
     Returns
     -------
@@ -56,8 +61,7 @@ def get_subset_dicom_image_paths() -> List[str]:
     for dataset_name in [x for x in dataset_names if x not in ["dukebreastcancer", "ctcolongraphy"]]:
         subset_file_paths.extend(dataset_file_map[dataset_name])
 
-    target_size = 1_000_000
-    remaining = target_size - len(subset_file_paths)
+    remaining = size - len(subset_file_paths)
 
     duke_size = remaining // 2
     colongraphy_size = remaining - duke_size
@@ -149,6 +153,21 @@ def write_raw_image_subset_helper(image_path: str, *args, **kwargs) -> dict:
         return {"image_path": image_path, "output_path": output_path, "error": e}
 
 
+def create_subset(size: int, output_path: str):
+    """
+    Create a subset of the images.
+
+    Parameters
+    ----------
+    size : int The size of the subset.
+    output_path : str The path to write the subset to.
+    """
+    files = get_subset_dicom_image_paths(size)
+    with open(output_path, "w") as f:
+        for image_path in files:
+            f.write(image_path + "\n")
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Process DICOM images and write them as raw images.")
     parser.add_argument("--num_processes", type=int, default=1,
@@ -168,5 +187,5 @@ if __name__ == "__main__":
 
     # Randomizing to make expected remaining time more accurate.
     random.shuffle(paths)
-    count = write_raw_image_subset(paths[0:100000], write_path, num_processes=args.num_processes)
+    count = write_raw_image_subset(paths, write_path, num_processes=args.num_processes)
     print(count)
