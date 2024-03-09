@@ -132,6 +132,7 @@ def write_raw_image_subset_helper(output_dir, image_path: str, write_to_null: bo
     arr = pydicom.dcmread(image_path).pixel_array
     arr.flags.writeable = False
     sha_hash = hashlib.sha256(arr).hexdigest()
+    os.makedirs(output_dir, exist_ok=True)
 
     if num_subfolders > 0:
         subfolder_index = int(sha_hash, 16) % num_subfolders
