@@ -83,8 +83,19 @@ def process_dicom_files(image_paths: List[str], processing_function: Callable[[s
     dicom_image_info = {}
     with ProcessPoolExecutor(max_workers=num_processes) as executor:
         partial_processing_function = partial(processing_function, *args, **kwargs)
-        future_to_file = {executor.submit(partial_processing_function, file_path): file_path for file_path in
-                          image_paths}
+        future_to_file = {}
+
+        with Progress(
+                TextColumn("[bold blue]{task.completed}/{task.total} files batched"),
+                BarColumn(),
+                TimeElapsedColumn(),
+                TimeRemainingColumn(),
+        ) as progress:
+            task = progress.add_task("Batching DICOM files...", total=len(image_paths), file_count=0)
+            for i, file_path in enumerate(image_paths):
+                future_to_file[executor.submit(partial_processing_function, file_path)] = file_path
+                progress.update(task, advance=1)
+                
 
         with Progress(
                 TextColumn("[bold blue]{task.completed}/{task.total} files processed"),
@@ -92,7 +103,7 @@ def process_dicom_files(image_paths: List[str], processing_function: Callable[[s
                 TimeElapsedColumn(),
                 TimeRemainingColumn(),
         ) as progress:
-            task = progress.add_task("Processing DICOM files...", total=len(image_paths), file_count=1000)
+            task = progress.add_task("Processing DICOM files...", total=len(image_paths), file_count=0)
             for future in as_completed(future_to_file):
                 file_path = future_to_file[future]
                 try:
@@ -120,7 +131,6 @@ def get_dicom_image_dimensions(image_paths: List[str], num_processes: int = 1) -
         A dictionary where the keys are the file paths and the values are a list where the first
         element is the width and the second is the height of the DICOM image.
     """
-
     dimension_information = process_dicom_files(image_paths, _get_dicom_image_dimensions_helper, num_processes)
     value_as_list = {}
     for key, value in dimension_information.items():
