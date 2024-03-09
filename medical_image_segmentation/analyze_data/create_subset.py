@@ -12,14 +12,14 @@ import pydicom
 import medical_image_segmentation.analyze_data.utils as utils
 
 
-def get_subset_dicom_image_paths(size: int) -> List[str]:
+def get_subset_dicom_image_paths(size: int, num_processes: int = 1) -> List[str]:
     """
     Get a list of paths to the dicom images to use in this project.
 
     Parameters
     ----------
-    size : int
-        Size of the subset to be returned.
+    size : int Size of the subset to be returned.
+    num_processes : int The number of cores to batch tasks on.
 
     Returns
     -------
@@ -37,7 +37,7 @@ def get_subset_dicom_image_paths(size: int) -> List[str]:
             dimensions = json.load(f)
     else:
         files = utils.get_file_paths(datasets_root_paths, lambda path: path.endswith(".dcm"))
-        dimensions = utils.get_dicom_image_dimensions(files, num_processes=8)
+        dimensions = utils.get_dicom_image_dimensions(files, num_processes=num_processes)
         with open(image_dimensions_json_path, "w") as f:
             json.dump(dimensions, f)
 
@@ -189,6 +189,8 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
+
+    get_subset_dicom_image_paths(args.num_processes)
 
     subset_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/image_path_list"
     with open(subset_path, "r") as f:
