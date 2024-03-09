@@ -6,7 +6,7 @@ import os
 import pydicom
 
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from rich.progress import Progress
+from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn, TimeRemainingColumn
 
 
 def get_file_paths(roots: Union[str, List[str]], matching_function: Callable[[str], bool]) -> list[Union[str, bytes]]:
@@ -58,8 +58,9 @@ def get_file_type_counts(roots: Union[str, List[str]]) -> dict[str, int]:
     return dict(Counter(extensions))
 
 
-def process_dicom_files(image_paths: List[str], processing_function: Callable[[str, ...], dict], num_processes: int = 1, *args, **kwargs) -> \
-dict[str, dict]:
+def process_dicom_files(image_paths: List[str], processing_function: Callable[[str, ...], dict], num_processes: int = 1,
+                        *args, **kwargs) -> \
+        dict[str, dict]:
     """
     Processes DICOM files using the given processing function and returns the results as a dictionary where
     each key is a file path and each value is some information about the DICOM file.
@@ -82,10 +83,16 @@ dict[str, dict]:
     dicom_image_info = {}
     with ProcessPoolExecutor(max_workers=num_processes) as executor:
         partial_processing_function = partial(processing_function, *args, **kwargs)
-        future_to_file = {executor.submit(partial_processing_function, file_path): file_path for file_path in image_paths}
+        future_to_file = {executor.submit(partial_processing_function, file_path): file_path for file_path in
+                          image_paths}
 
-        with Progress() as progress:
-            task = progress.add_task("[green]Processing DICOM files...", total=len(image_paths))
+        with Progress(
+                TextColumn("[bold blue]{task.completed}/{task.total} files processed"),
+                BarColumn(),
+                TimeElapsedColumn(),
+                TimeRemainingColumn(),
+        ) as progress:
+            task = progress.add_task("Processing DICOM files...", total=len(image_paths), file_count=1000)
             for future in as_completed(future_to_file):
                 file_path = future_to_file[future]
                 try:
