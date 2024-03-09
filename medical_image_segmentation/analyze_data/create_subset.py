@@ -216,7 +216,7 @@ def main():
 
     # Randomizing to make expected remaining time more accurate.
     random.shuffle(paths)
-    count, input_output_path_map = write_raw_image_subset(paths[:10000], write_path, num_processes=args.num_processes,
+    count, input_output_path_map = write_raw_image_subset(paths, write_path, num_processes=args.num_processes,
                                                           write_to_null=True, num_subfolders=100)
 
     input_output_path_map_json_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/input_output_path_map.json"
