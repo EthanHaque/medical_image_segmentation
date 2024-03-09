@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import random
+import warnings
 from typing import List
 import argparse
 
@@ -135,7 +136,7 @@ def write_raw_image_subset_helper(output_dir, image_path: str, write_to_null: bo
     sha_hash = hashlib.sha256(arr).hexdigest()
     os.makedirs(output_dir, exist_ok=True)
 
-    if num_subfolders > 0:
+    if num_subfolders > 0 and not write_to_null:
         subfolder_index = int(sha_hash, 16) % num_subfolders
         subfolder_name = f"{subfolder_index:0{len(str(num_subfolders - 1))}}"
         subfolder_path = os.path.join(output_dir, subfolder_name)
@@ -145,11 +146,16 @@ def write_raw_image_subset_helper(output_dir, image_path: str, write_to_null: bo
     else:
         output_path = os.path.join(output_dir, f"{sha_hash}.png")
 
+    min_val = np.nanmin(arr)
+    max_val = np.nanmax(arr)
     try:
-        min_val = np.nanmin(arr)
-        max_val = np.nanmax(arr)
         if max_val > min_val:
-            arr = ((arr - min_val) / (max_val - min_val) * 65535).astype(np.uint16)
+            with warnings.catch_warnings():
+                warnings.simplefilter("error")
+                try:
+                    arr = ((arr - min_val) / (max_val - min_val) * 65535).astype(np.uint16)
+                except RuntimeWarning as e:
+                    return {"image_path": image_path, "output_path": None, "error": e}
         else:
             raise ValueError(f"Invalid image data for image {image_path}")
     except ValueError as e:
@@ -167,7 +173,7 @@ def write_raw_image_subset_helper(output_dir, image_path: str, write_to_null: bo
         return {"image_path": image_path, "output_path": output_path, "error": e}
 
 
-def create_subset(size: int, output_path: str):
+def create_subset(size: int, output_path: str, num_processes: int = 1):
     """
     Create a subset of the images.
 
@@ -175,8 +181,9 @@ def create_subset(size: int, output_path: str):
     ----------
     size : int The size of the subset.
     output_path : str The path to write the subset to.
+    num_processes : int  The number of processes to use.
     """
-    files = get_subset_dicom_image_paths(size)
+    files = get_subset_dicom_image_paths(size, num_processes=num_processes)
     with open(output_path, "w") as f:
         for image_path in files:
             f.write(image_path + "\n")
@@ -191,7 +198,6 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    # get_subset_dicom_image_paths(1_050_000, args.num_processes)
 
     subset_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/image_path_list"
     with open(subset_path, "r") as f:
@@ -202,5 +208,5 @@ if __name__ == "__main__":
 
     # Randomizing to make expected remaining time more accurate.
     random.shuffle(paths)
-    count = write_raw_image_subset(paths[:10000], write_path, num_processes=args.num_processes, write_to_null=False, num_subfolders=50)
+    count = write_raw_image_subset(paths, write_path, num_processes=args.num_processes, write_to_null=False, num_subfolders=100)
     print(count)
