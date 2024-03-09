@@ -199,5 +199,5 @@ if __name__ == "__main__":
 
     # Randomizing to make expected remaining time more accurate.
     random.shuffle(paths)
-    count = write_raw_image_subset(paths[:100], write_path, num_processes=args.num_processes, write_to_null=False, num_subfolders=10)
+    count = write_raw_image_subset(paths[:10000], write_path, num_processes=args.num_processes, write_to_null=False, num_subfolders=50)
     print(count)
