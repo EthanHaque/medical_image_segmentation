@@ -229,15 +229,19 @@ def finalize_image_subset(size: int, original_image_to_new_image_map: dict, outp
     random.shuffle(colon_files)
     colon_files = colon_files[:colon_size]
 
-    final_images = []
-    final_images.extend(colon_files)
-    final_images.extend(duke_files)
+    final_images_source = []
+    final_images_source.extend(colon_files)
+    final_images_source.extend(duke_files)
     for dataset_name in dataset_file_map:
         if dataset_name not in ["dukebreastcancer", "ctcolongraphy"]:
-            final_images.extend(dataset_file_map[dataset_name])
+            final_images_source.extend(dataset_file_map[dataset_name])
+
+    final_images_destination = []
+    for original_image in final_images_source:
+        final_images_destination.append(original_image_to_new_image_map[original_image])
 
     with open(output_path, "w") as f:
-        for image_path in final_images:
+        for image_path in final_images_destination:
             f.write(image_path + "\n")
 
 
