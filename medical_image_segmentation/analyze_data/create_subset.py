@@ -190,7 +190,7 @@ def create_subset(size: int, output_path: str, num_processes: int = 1):
             f.write(image_path + "\n")
 
 
-def finalize_image_subset(size: int, original_image_to_new_image_map: dict, output_path: str):
+def finalize_image_subset(size: int, original_image_to_new_image_map: dict, output_path: str, final_path_to_original_image_path: str):
     """
     Given a map of original image paths to their new written image paths, determines which images to include in the
     finalized subset of the images.
@@ -199,7 +199,8 @@ def finalize_image_subset(size: int, original_image_to_new_image_map: dict, outp
     ----------
     size : int The size of the subset to create.
     original_image_to_new_image_map : dict The original image paths mapped to their new image paths.
-    output_path : str The path to write the output file containing a map between the new image paths and the original image paths.
+    output_path : str The path to write the output file containing all the image paths from the subset.
+    final_path_to_original_image_path : str The path to write the output file containing a map between the new image paths and the original image paths.
     """
     if len(original_image_to_new_image_map) < size:
         raise ValueError(f"Not enough images to create subset of specified size. Has only {len(original_image_to_new_image_map)} images,"
@@ -236,13 +237,18 @@ def finalize_image_subset(size: int, original_image_to_new_image_map: dict, outp
         if dataset_name not in ["dukebreastcancer", "ctcolongraphy"]:
             final_images_source.extend(dataset_file_map[dataset_name])
 
-    final_images_destination = []
+    final_images_map = {}
     for original_image in final_images_source:
-        final_images_destination.append(original_image_to_new_image_map[original_image])
+        final_images_map[original_image] = (original_image_to_new_image_map[original_image])
 
     with open(output_path, "w") as f:
-        for image_path in final_images_destination:
+        for image_path in final_images_map.values():
             f.write(image_path + "\n")
+
+    with open(final_path_to_original_image_path, "w") as f:
+        json.dump(final_images_map, f)
+
+
 
 
 def parse_args():
@@ -281,7 +287,17 @@ def main():
     print(count)
 
     final_subset_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/final_image_paths"
-    finalize_image_subset(1_000_000, input_output_path_map, final_subset_path)
+    final_subset_map_to_original_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/final_image_map_to_original"
+    finalize_image_subset(1_000_000, input_output_path_map, final_subset_path, final_subset_map_to_original_path)
+
 
 if __name__ == "__main__":
-    main()
+    # main()
+
+    input_output_path_map_json_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/input_output_path_map.json"
+    with open(input_output_path_map_json_path, "w") as f:
+        input_output_path_map = json.load(f)
+
+    final_subset_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/final_image_paths"
+    final_subset_map_to_original_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/final_image_map_to_original"
+    finalize_image_subset(1_000_000, input_output_path_map, final_subset_path, final_subset_map_to_original_path)
