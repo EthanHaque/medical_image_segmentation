@@ -295,7 +295,7 @@ if __name__ == "__main__":
     # main()
 
     input_output_path_map_json_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/input_output_path_map.json"
-    with open(input_output_path_map_json_path, "w") as f:
+    with open(input_output_path_map_json_path, "r") as f:
         input_output_path_map = json.load(f)
 
     final_subset_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/final_image_paths"
