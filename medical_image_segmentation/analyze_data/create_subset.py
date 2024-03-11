@@ -232,7 +232,7 @@ def finalize_image_subset(size: int, original_image_to_new_image_map: dict, outp
     final_images = []
     final_images.extend(colon_files)
     final_images.extend(duke_files)
-    for dataset_name in dataset_file_map.values():
+    for dataset_name in dataset_file_map:
         if dataset_name not in ["dukebreastcancer", "ctcolongraphy"]:
             final_images.extend(dataset_file_map[dataset_name])
 
