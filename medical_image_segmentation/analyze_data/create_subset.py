@@ -190,6 +190,63 @@ def create_subset(size: int, output_path: str, num_processes: int = 1):
             f.write(image_path + "\n")
 
 
+def finalize_image_subset(size: int, original_image_to_new_image_map: dict, output_path: str):
+    """
+    Given a map of original image paths to their new written image paths, determines which images to include in the
+    finalized subset of the images.
+
+    Parameters
+    ----------
+    size : int The size of the subset to create.
+    original_image_to_new_image_map : dict The original image paths mapped to their new image paths.
+    output_path : str The path to write the output file containing a map between the new image paths and the original image paths.
+    """
+    if len(original_image_to_new_image_map) < size:
+        raise ValueError(f"Not enough images to create subset of specified size. Has only {len(original_image_to_new_image_map)} images,"
+                         f"but requires {size}")
+
+    dataset_file_map = {}
+    for image_path in original_image_to_new_image_map:
+        suffix = image_path.split("med_datasets/")[1]
+        dataset_name = suffix.split("/")[0]
+        if dataset_name not in dataset_file_map:
+            dataset_file_map[dataset_name] = []
+        dataset_file_map[dataset_name].append(image_path)
+
+    remaining_size = size
+    for dataset_files in dataset_file_map.values():
+        if dataset_files not in ["dukebreastcancer", "ctcolongraphy"]:
+            remaining_size -= len(dataset_files)
+
+    duke_size = remaining_size // 2
+    colon_size = remaining_size - duke_size
+
+    duke_files = dataset_file_map["dukebreastcancer"]
+    random.shuffle(duke_files)
+    duke_files = duke_files[:duke_size]
+
+    colon_files = dataset_file_map["ctcolongraphy"]
+    random.shuffle(colon_files)
+    colon_files = colon_files[:colon_size]
+
+    image_to_new_image_final_subset_map = {}
+    for original_file in colon_files:
+        new_file = original_image_to_new_image_map[original_file]
+        image_to_new_image_final_subset_map[original_file] = new_file
+
+    for original_file in duke_files:
+        new_file = original_image_to_new_image_map[original_file]
+        image_to_new_image_final_subset_map[original_file] = new_file
+
+    for dataset_files in dataset_file_map.values():
+        for original_file in dataset_files:
+            new_file = original_image_to_new_image_map[original_file]
+            image_to_new_image_final_subset_map[original_file] = new_file
+
+    with open(output_path, "w") as f:
+        json.dump(output_path, f)
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Process DICOM images and write them as raw images.")
     parser.add_argument("--num_processes", type=int, default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
@@ -217,8 +274,7 @@ def main():
 
     # Randomizing to make expected remaining time more accurate.
     random.shuffle(paths)
-    count, input_output_path_map = write_raw_image_subset(paths, write_path, num_processes=args.num_processes,
-                                                          write_to_null=args.write_to_null, num_subfolders=100)
+    count, input_output_path_map = write_raw_image_subset(paths, write_path, num_processes=args.num_processes, write_to_null=args.write_to_null, num_subfolders=100)
 
     input_output_path_map_json_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/input_output_path_map.json"
     with open(input_output_path_map_json_path, "w") as f:
@@ -226,6 +282,8 @@ def main():
 
     print(count)
 
+
+    finalize_image_subset(1_000_000)
 
 if __name__ == "__main__":
     main()
