@@ -284,9 +284,4 @@ def main():
     finalize_image_subset(1_000_000, input_output_path_map, final_subset_path)
 
 if __name__ == "__main__":
-    # main()
-    with open("/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/input_output_path_map.json", "r") as f:
-        input_output_path_map = json.load(f)
-
-    final_subset_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/final_image_paths"
-    finalize_image_subset(1_000_000, input_output_path_map, final_subset_path)
+    main()
