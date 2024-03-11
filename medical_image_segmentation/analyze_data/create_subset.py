@@ -196,6 +196,7 @@ def parse_args():
                         help="Number of processes to use for parallel processing.")
     parser.add_argument("--subset_size", type=int, default=1_050_000, help="Size of the subset to write")
     parser.add_argument("--create_subset", action="store_true", help="Flag to enable subset creation")
+    parser.add_argument("--write_to_null", action="store_true", help="Flag to disable writing images to output directory")
     parser.add_argument("--seed", type=int, default=1, help="Random seed")
     return parser.parse_args()
 
@@ -217,7 +218,7 @@ def main():
     # Randomizing to make expected remaining time more accurate.
     random.shuffle(paths)
     count, input_output_path_map = write_raw_image_subset(paths, write_path, num_processes=args.num_processes,
-                                                          write_to_null=True, num_subfolders=100)
+                                                          write_to_null=args.write_to_null, num_subfolders=100)
 
     input_output_path_map_json_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/input_output_path_map.json"
     with open(input_output_path_map_json_path, "w") as f:
