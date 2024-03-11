@@ -229,22 +229,16 @@ def finalize_image_subset(size: int, original_image_to_new_image_map: dict, outp
     random.shuffle(colon_files)
     colon_files = colon_files[:colon_size]
 
-    image_to_new_image_final_subset_map = {}
-    for original_file in colon_files:
-        new_file = original_image_to_new_image_map[original_file]
-        image_to_new_image_final_subset_map[original_file] = new_file
-
-    for original_file in duke_files:
-        new_file = original_image_to_new_image_map[original_file]
-        image_to_new_image_final_subset_map[original_file] = new_file
-
-    for dataset_files in dataset_file_map.values():
-        for original_file in dataset_files:
-            new_file = original_image_to_new_image_map[original_file]
-            image_to_new_image_final_subset_map[original_file] = new_file
+    final_images = []
+    final_images.extend(colon_files)
+    final_images.extend(duke_files)
+    for dataset_name in dataset_file_map.values():
+        if dataset_name not in ["dukebreastcancer", "ctcolongraphy"]:
+            final_images.extend(dataset_file_map[dataset_name])
 
     with open(output_path, "w") as f:
-        json.dump(output_path, f)
+        for image_path in final_images:
+            f.write(image_path + "\n")
 
 
 def parse_args():
@@ -282,8 +276,13 @@ def main():
 
     print(count)
 
-
-    finalize_image_subset(1_000_000)
+    final_subset_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/final_image_paths"
+    finalize_image_subset(1_000_000, input_output_path_map, final_subset_path)
 
 if __name__ == "__main__":
-    main()
+    # main()
+    with open("/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/input_output_path_map.json", "r") as f:
+        input_output_path_map = json.load(f)
+
+    final_subset_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/final_image_paths"
+    finalize_image_subset(1_000_000, input_output_path_map, final_subset_path)
