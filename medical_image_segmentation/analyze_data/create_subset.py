@@ -287,7 +287,7 @@ def main():
     print(count)
 
     final_subset_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/final_image_paths"
-    final_subset_map_to_original_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/final_image_map_to_original"
+    final_subset_map_to_original_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/final_image_map_to_original.json.json"
     finalize_image_subset(1_000_000, input_output_path_map, final_subset_path, final_subset_map_to_original_path)
 
 
