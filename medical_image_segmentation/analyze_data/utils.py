@@ -124,7 +124,7 @@ def process_files(image_paths: List[str],
 def start_orphan_checker():
     """Checks for orphaned child processes and kills them."""
     def exit_if_orphaned():
-        multiprocessing.parent_process.join()
+        multiprocessing.parent_process().join()
         os._exit(-1)
 
     threading.Thread(target=exit_if_orphaned, daemon=True).start()
