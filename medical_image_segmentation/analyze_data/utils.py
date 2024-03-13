@@ -1,3 +1,5 @@
+import multiprocessing
+import threading
 from collections import Counter
 from functools import partial
 from typing import List, Union, Callable, Tuple
@@ -84,7 +86,7 @@ def process_files(image_paths: List[str],
         raise ValueError(f"num_processes must be greater than 1, but got {num_processes}")
 
     image_info = {}
-    with ProcessPoolExecutor(max_workers=num_processes) as executor:
+    with ProcessPoolExecutor(max_workers=num_processes, initializer=start_orphan_checker) as executor:
         partial_processing_function = partial(processing_function, *args, **kwargs)
         future_to_file = {}
 
@@ -117,6 +119,15 @@ def process_files(image_paths: List[str],
                 progress.update(task, advance=1)
 
     return image_info
+
+
+def start_orphan_checker():
+    """Checks for orphaned child processes and kills them."""
+    def exit_if_orphaned():
+        multiprocessing.parent_process.join()
+        os._exit(-1)
+
+    threading.Thread(target=exit_if_orphaned, daemon=True).start()
 
 
 def get_dicom_image_dimensions(image_paths: List[str], num_processes: int = 1) -> dict[str, List[int]]:
