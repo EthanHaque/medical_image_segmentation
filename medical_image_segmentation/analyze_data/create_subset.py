@@ -379,10 +379,10 @@ def _get_dicom_image_hashes_helper(image_path: str) -> dict:
     """
     try:
         arr = pydicom.dcmread(image_path).pixel_array
-    except AttributeError as e:
+        arr.flags.writeable = False
+        sha_hash = hashlib.sha256(arr).hexdigest()
+    except Exception as e:
         return {}
-    arr.flags.writeable = False
-    sha_hash = hashlib.sha256(arr).hexdigest()
     return {"hash": sha_hash}
 
 
@@ -396,7 +396,7 @@ def get_dicom_image_hashes_wrapper(dirs: List[str], output_path: str, num_proces
     output_path : str A path where the hashes will be saved as JSON.
     num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
     """
-    image_paths = utils.get_file_paths(dirs, lambda path: path.endswith(".dcm"))
+    image_paths = utils.get_file_paths(dirs, lambda path: path.endswith(".dcm"))[1_300_000:]
     hashes = get_dicom_image_hashes(image_paths, num_processes)
     with open(output_path, "w") as f:
         json.dump(hashes, f)
@@ -426,10 +426,6 @@ def main():
     args = parse_args()
     if args.subcommand == "hashes":
         get_dicom_image_hashes_wrapper(args.dirs, args.output_path, num_processes=args.num_processes)
-
-    # files = utils.get_file_paths(, lambda path: path.endswith(".dcm"))
-    # random.shuffle(files)
-    # hashes = get_dicom_image_hashes(files[:10000])
 
 
 if __name__ == "__main__":
