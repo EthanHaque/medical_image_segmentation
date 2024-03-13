@@ -253,6 +253,29 @@ def finalize_image_subset(size: int, original_image_to_new_image_map: dict, outp
         json.dump(final_images_map, f)
 
 
+def get_dicom_image_dimensions_wrapper(dirs: List[str], output_path: str, num_processes: int = 1):
+    """
+    Wrapper to get the dimensions of all the pixel data from the dicom files in "dirs".
+
+    Parameters
+    ----------
+    dirs : List[str] A list of directory paths to look for DICOM images.
+    output_path : str A path where the hashes will be saved as JSON.
+    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
+    """
+    image_paths = utils.get_file_paths(dirs, lambda path: path.endswith(".dcm"))
+    dimensions = get_dicom_image_dimensions(image_paths, num_processes)
+    with open(output_path, "w") as f:
+        json.dump(dimensions, f)
+
+    count = 0
+    for _, value in dimensions.items():
+        if value:
+            count += 1
+
+    print(f"Successfully computed the dimensions of the pixel data from {count} DICOM images")
+
+
 def get_dicom_image_dimensions(image_paths: List[str], num_processes: int = 1) -> dict[str, List[int]]:
     """
     Gets the width and height of every dicom file in the given list of image paths.
@@ -388,7 +411,7 @@ def _get_dicom_image_hashes_helper(image_path: str) -> dict:
 
 def get_dicom_image_hashes_wrapper(dirs: List[str], output_path: str, num_processes: int = 1):
     """
-    Wrapper to get the hashes of all the pixel data from the dicom files specified in `image_paths`.
+    Wrapper to get the hashes of all the pixel data from the dicom files in "dirs".
 
     Parameters
     ----------
@@ -420,6 +443,13 @@ def parse_args():
     parser_get_hashes.add_argument("--num_processes", type=int, default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
                                    help="Number of processes to use for parallel processing.")
 
+    parser_get_dicom_sizes = sub_parsers.add_parser("dicom-sizes", help="Get the sizes of the dicom images")
+    parser_get_dicom_sizes.add_argument("--dirs", nargs="+", type=str, help="Directories to search DICOM images for.")
+    parser_get_dicom_sizes.add_argument("--output-path", type=str, help="Where to write the map from paths to sizes")
+    parser_get_dicom_sizes.add_argument("--num_processes", type=int,
+                                        default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
+                                        help="Number of processes to use for parallel processing.")
+
     return parser.parse_args()
 
 
@@ -427,6 +457,8 @@ def main():
     args = parse_args()
     if args.subcommand == "hashes":
         get_dicom_image_hashes_wrapper(args.dirs, args.output_path, num_processes=args.num_processes)
+    if args.subcommand == "dicom-sizes":
+        get_dicom_image_dimensions_wrapper(args.dirs, args.output_path, num_processes=args.num_processes)
 
 
 if __name__ == "__main__":
