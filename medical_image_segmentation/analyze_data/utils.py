@@ -1,3 +1,5 @@
+import multiprocessing
+import threading
 from collections import Counter
 from functools import partial
 from typing import List, Union, Callable, Tuple
@@ -84,27 +86,27 @@ def process_files(image_paths: List[str],
         raise ValueError(f"num_processes must be greater than 1, but got {num_processes}")
 
     image_info = {}
-    with ProcessPoolExecutor(max_workers=num_processes) as executor:
+    with ProcessPoolExecutor(max_workers=num_processes, initializer=start_orphan_checker) as executor:
         partial_processing_function = partial(processing_function, *args, **kwargs)
         future_to_file = {}
 
         with Progress(
-                TextColumn("[bold blue]{task.completed}/{task.total} files batched"),
-                BarColumn(),
-                TimeElapsedColumn(),
-                TimeRemainingColumn(),
+            TextColumn("[bold blue]{task.completed}/{task.total} files batched"),
+            BarColumn(),
+            TimeElapsedColumn(),
+            TimeRemainingColumn(),
+            transient=True
         ) as progress:
             task = progress.add_task("Batching files...", total=len(image_paths), file_count=0)
             for i, file_path in enumerate(image_paths):
                 future_to_file[executor.submit(partial_processing_function, file_path)] = file_path
                 progress.update(task, advance=1)
-                
 
         with Progress(
-                TextColumn("[bold blue]{task.completed}/{task.total} files processed"),
-                BarColumn(),
-                TimeElapsedColumn(),
-                TimeRemainingColumn(),
+            TextColumn("[bold blue]{task.completed}/{task.total} files processed"),
+            BarColumn(),
+            TimeElapsedColumn(),
+            TimeRemainingColumn(),
         ) as progress:
             task = progress.add_task("Processing files...", total=len(image_paths), file_count=0)
             for future in as_completed(future_to_file):
@@ -117,6 +119,15 @@ def process_files(image_paths: List[str],
                 progress.update(task, advance=1)
 
     return image_info
+
+
+def start_orphan_checker():
+    """Checks for orphaned child processes and kills them."""
+    def exit_if_orphaned():
+        multiprocessing.parent_process.join()
+        os._exit(-1)
+
+    threading.Thread(target=exit_if_orphaned, daemon=True).start()
 
 
 def get_dicom_image_dimensions(image_paths: List[str], num_processes: int = 1) -> dict[str, List[int]]:
