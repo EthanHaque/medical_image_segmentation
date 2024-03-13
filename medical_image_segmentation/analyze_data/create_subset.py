@@ -377,7 +377,10 @@ def _get_dicom_image_hashes_helper(image_path: str) -> dict:
     dict
         A dictionary with one entry, "hash".
     """
-    arr = pydicom.dcmread(image_path).pixel_array
+    try:
+        arr = pydicom.dcmread(image_path).pixel_array
+    except AttributeError as e:
+        return {}
     arr.flags.writeable = False
     sha_hash = hashlib.sha256(arr).hexdigest()
     return {"hash": sha_hash}
@@ -398,6 +401,12 @@ def get_dicom_image_hashes_wrapper(dirs: List[str], output_path: str, num_proces
     with open(output_path, "w") as f:
         json.dump(hashes, f)
 
+    count = 0
+    for _, value in hashes.items():
+        if value:
+            count += 1
+
+    print(f"Successfully computed the hashes of the pixel data from {count} DICOM images")
 
 def parse_args():
     """Create args for command line interface."""
@@ -408,7 +417,7 @@ def parse_args():
     parser_get_hashes.add_argument("--dirs", nargs="+", type=str, help="Directories to search DICOM images for.")
     parser_get_hashes.add_argument("--output-path", type=str, help="Where to write the map from paths to hashes")
     parser_get_hashes.add_argument("--num_processes", type=int, default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
-                        help="Number of processes to use for parallel processing.")
+                                   help="Number of processes to use for parallel processing.")
 
     return parser.parse_args()
 
