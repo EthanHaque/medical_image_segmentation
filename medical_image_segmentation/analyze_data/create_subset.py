@@ -396,33 +396,10 @@ def parse_args():
 
 
 def main():
-    args = parse_args()
-    random.seed(args.seed)
-
-    subset_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/possible_image_paths"
-    if args.create_subset:
-        create_subset(args.subset_size, subset_path, args.num_processes)
-
-    with open(subset_path, "r") as f:
-        paths = f.read().splitlines()
-        paths = [path.strip() for path in paths]
-
-    write_path = "/scratch/gpfs/eh0560/data/med_datasets/segmentation_png"
-
-    # Randomizing to make expected remaining time more accurate.
-    random.shuffle(paths)
-    count, input_output_path_map = write_raw_image_subset(paths, write_path, num_processes=args.num_processes,
-                                                          write_to_null=args.write_to_null, num_subfolders=100)
-
-    input_output_path_map_json_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/input_output_path_map.json"
-    with open(input_output_path_map_json_path, "w") as f:
-        json.dump(input_output_path_map, f)
-
-    print(count)
-
-    final_subset_path = "/data/dicom_image_analysis_info/image_paths"
-    final_subset_map_to_original_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/image_map_to_original.json.json"
-    finalize_image_subset(1_000_000, input_output_path_map, final_subset_path, final_subset_map_to_original_path)
+    datasets_root_paths = ["/scratch/gpfs/eh0560/data/med_datasets", "/scratch/gpfs/RUSTOW/med_datasets"]
+    files = utils.get_file_paths(datasets_root_paths, lambda path: path.endswith(".dcm"))
+    hashes = get_dicom_image_hashes(files[:10])
+    print(hashes)
 
 
 if __name__ == "__main__":
