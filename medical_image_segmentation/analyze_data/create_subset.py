@@ -98,7 +98,7 @@ def write_raw_image_subset(image_paths: List[str], output_dir: str, num_processe
         raise ValueError("Duplicate paths contained in image_paths.")
     os.makedirs(output_dir, exist_ok=True)
 
-    statuses = utils.process_dicom_files(image_paths, write_raw_image_subset_helper, num_processes, output_dir, **kwargs)
+    statuses = utils.process_files(image_paths, write_raw_image_subset_helper, num_processes, output_dir, **kwargs)
 
     count = 0
     image_path_map = {}
@@ -286,8 +286,8 @@ def main():
 
     print(count)
 
-    final_subset_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/final_image_paths"
-    final_subset_map_to_original_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/final_image_map_to_original.json.json"
+    final_subset_path = "/data/dicom_image_analysis_info/image_paths"
+    final_subset_map_to_original_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/image_map_to_original.json.json"
     finalize_image_subset(1_000_000, input_output_path_map, final_subset_path, final_subset_map_to_original_path)
 
 
