@@ -437,10 +437,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Process DICOM images and write them as raw images.")
     sub_parsers = parser.add_subparsers(help="Sub-commands", dest="subcommand")
 
-    parser_get_hashes = sub_parsers.add_parser("hashes", help="Get the hashes of the dicom images.")
-    parser_get_hashes.add_argument("--dirs", nargs="+", type=str, help="Directories to search DICOM images for.")
-    parser_get_hashes.add_argument("--output-path", type=str, help="Where to write the map from paths to hashes")
-    parser_get_hashes.add_argument("--num_processes", type=int, default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
+    parser_get_dicom_hashes = sub_parsers.add_parser("hashes", help="Get the hashes of the dicom images.")
+    parser_get_dicom_hashes.add_argument("--dirs", nargs="+", type=str, help="Directories to search DICOM images for.")
+    parser_get_dicom_hashes.add_argument("--output-path", type=str, help="Where to write the map from paths to hashes")
+    parser_get_dicom_hashes.add_argument("--num_processes", type=int, default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
                                    help="Number of processes to use for parallel processing.")
 
     parser_get_dicom_sizes = sub_parsers.add_parser("dicom-sizes", help="Get the sizes of the dicom images")
