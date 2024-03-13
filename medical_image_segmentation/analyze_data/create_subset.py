@@ -340,20 +340,47 @@ def _get_raster_image_dimensions_helper(image_path: str) -> dict:
     width, height = im.size
     return {"width": width, "height": height}
 
-def get_dicom_image_hashes(image_paths: List[str], output_path: str, num_processes: int = 1) -> Tuple[int, dict]:
+
+def get_dicom_image_hashes(image_paths: List[str], num_processes: int = 1) -> dict[str, str]:
     """
+    Gets the hashes of all the pixel data from the dicom files specified in `image_paths`.
 
     Parameters
     ----------
-    image_paths
-    output_path
-    num_processes
+    image_paths : List[str] A list of file paths.
+    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
 
     Returns
     -------
-
+        A dictionary where the keys are the file paths and the value is the hash of the pixel data.
     """
-    pass
+    dimension_information = utils.process_files(image_paths, _get_dicom_image_hashes_helper, num_processes)
+    value_as_list = {}
+    for key, value in dimension_information.items():
+        if not value:
+            continue
+        value_as_list[key] = value["hash"]
+
+    return value_as_list
+
+
+def _get_dicom_image_hashes_helper(image_path: str) -> dict:
+    """
+    Helper processing function to get the hash of the imaging data from the DICOM file.
+
+    Parameters
+    ----------
+    image_path : str The path to the image.
+
+    Returns
+    -------
+    dict
+        A dictionary with one entry, "hash".
+    """
+    arr = pydicom.dcmread(image_path).pixel_array
+    arr.flags.writeable = False
+    sha_hash = hashlib.sha256(arr).hexdigest()
+    return {"hash": sha_hash}
 
 
 def parse_args():
