@@ -396,7 +396,7 @@ def get_dicom_image_hashes_wrapper(dirs: List[str], output_path: str, num_proces
     output_path : str A path where the hashes will be saved as JSON.
     num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
     """
-    image_paths = utils.get_file_paths(dirs, lambda path: path.endswith(".dcm"))[1_300_000:]
+    image_paths = utils.get_file_paths(dirs, lambda path: path.endswith(".dcm"))
     hashes = get_dicom_image_hashes(image_paths, num_processes)
     with open(output_path, "w") as f:
         json.dump(hashes, f)
@@ -407,6 +407,7 @@ def get_dicom_image_hashes_wrapper(dirs: List[str], output_path: str, num_proces
             count += 1
 
     print(f"Successfully computed the hashes of the pixel data from {count} DICOM images")
+
 
 def parse_args():
     """Create args for command line interface."""
