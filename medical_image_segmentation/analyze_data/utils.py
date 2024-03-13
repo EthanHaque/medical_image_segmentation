@@ -113,8 +113,11 @@ def process_files(image_paths: List[str],
                 file_path = future_to_file[future]
                 try:
                     result = future.result()
-                except Exception:
-                    raise RuntimeError(f"Error occurred during processing of {file_path}")
+                except Exception as e:
+                    for f in future_to_file.keys():
+                        f.cancel()
+                    raise RuntimeError(f"Error occurred during processing of {file_path}: {e}")
+
                 image_info[file_path] = result
                 progress.update(task, advance=1)
 
