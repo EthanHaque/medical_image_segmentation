@@ -79,7 +79,8 @@ def get_subset_dicom_image_paths(size: int, num_processes: int = 1) -> List[str]
     return sorted(subset_file_paths)
 
 
-def write_raw_image_subset(image_paths: List[str], output_dir: str, num_processes: int = 1, **kwargs) -> Tuple[int, dict]:
+def write_raw_image_subset(image_paths: List[str], output_dir: str, num_processes: int = 1, **kwargs) -> Tuple[
+    int, dict]:
     """
     Reads DICOM images from the image_paths and writes them as raw images to output_dir.
 
@@ -112,7 +113,8 @@ def write_raw_image_subset(image_paths: List[str], output_dir: str, num_processe
     return count, image_path_map
 
 
-def write_raw_image_subset_helper(output_dir, image_path: str, write_to_null: bool = False, num_subfolders: int = 0) -> dict:
+def write_raw_image_subset_helper(output_dir, image_path: str, write_to_null: bool = False,
+                                  num_subfolders: int = 0) -> dict:
     """
     Helper function to write an individual DICOM image to output dir.
 
@@ -190,7 +192,8 @@ def create_subset(size: int, output_path: str, num_processes: int = 1):
             f.write(image_path + "\n")
 
 
-def finalize_image_subset(size: int, original_image_to_new_image_map: dict, output_path: str, final_path_to_original_image_path: str):
+def finalize_image_subset(size: int, original_image_to_new_image_map: dict, output_path: str,
+                          final_path_to_original_image_path: str):
     """
     Given a map of original image paths to their new written image paths, determines which images to include in the
     finalized subset of the images.
@@ -203,8 +206,9 @@ def finalize_image_subset(size: int, original_image_to_new_image_map: dict, outp
     final_path_to_original_image_path : str The path to write the output file containing a map between the new image paths and the original image paths.
     """
     if len(original_image_to_new_image_map) < size:
-        raise ValueError(f"Not enough images to create subset of specified size. Has only {len(original_image_to_new_image_map)} images,"
-                         f"but requires {size}")
+        raise ValueError(
+            f"Not enough images to create subset of specified size. Has only {len(original_image_to_new_image_map)} images,"
+            f"but requires {size}")
 
     dataset_file_map = {}
     for image_path in original_image_to_new_image_map:
@@ -249,15 +253,14 @@ def finalize_image_subset(size: int, original_image_to_new_image_map: dict, outp
         json.dump(final_images_map, f)
 
 
-
-
 def parse_args():
+    """Create args for command line interface."""
     parser = argparse.ArgumentParser(description="Process DICOM images and write them as raw images.")
     parser.add_argument("--num_processes", type=int, default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
                         help="Number of processes to use for parallel processing.")
     parser.add_argument("--subset_size", type=int, default=1_050_000, help="Size of the subset to write")
-    parser.add_argument("--create_subset", action="store_true", help="Flag to enable subset creation")
-    parser.add_argument("--write_to_null", action="store_true", help="Flag to disable writing images to output directory")
+    parser.add_argument("--create_subset", action="store_true", help="Enable subset creation")
+    parser.add_argument("--write_to_null", action="store_true", help="Disable writing images to output directory")
     parser.add_argument("--seed", type=int, default=1, help="Random seed")
     return parser.parse_args()
 
@@ -278,7 +281,8 @@ def main():
 
     # Randomizing to make expected remaining time more accurate.
     random.shuffle(paths)
-    count, input_output_path_map = write_raw_image_subset(paths, write_path, num_processes=args.num_processes, write_to_null=args.write_to_null, num_subfolders=100)
+    count, input_output_path_map = write_raw_image_subset(paths, write_path, num_processes=args.num_processes,
+                                                          write_to_null=args.write_to_null, num_subfolders=100)
 
     input_output_path_map_json_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/input_output_path_map.json"
     with open(input_output_path_map_json_path, "w") as f:
