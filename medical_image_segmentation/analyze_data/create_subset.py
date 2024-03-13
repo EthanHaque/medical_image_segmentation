@@ -253,6 +253,109 @@ def finalize_image_subset(size: int, original_image_to_new_image_map: dict, outp
         json.dump(final_images_map, f)
 
 
+def get_dicom_image_dimensions(image_paths: List[str], num_processes: int = 1) -> dict[str, List[int]]:
+    """
+    Gets the width and height of every dicom file in the given list of image paths.
+
+    Parameters
+    ----------
+    image_paths : List[str] A list of file paths to get the width and height of.
+    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
+
+    Returns
+    -------
+    dict[str, List[int, int]]
+        A dictionary where the keys are the file paths and the values are a list where the first
+        element is the width and the second is the height of the DICOM image.
+    """
+    dimension_information = utils.process_files(image_paths, _get_dicom_image_dimensions_helper, num_processes)
+    value_as_list = {}
+    for key, value in dimension_information.items():
+        if not value:
+            continue
+        value_as_list[key] = [value["width"], value["height"]]
+
+    return value_as_list
+
+
+def _get_dicom_image_dimensions_helper(image_path: str) -> dict:
+    """
+    Helper processing function to get DICOM image dimensions
+
+    Parameters
+    ----------
+    image_path : str The path to the image.
+
+    Returns
+    -------
+    dict
+        A dictionary with two entries. One gives the image width and the other gives the image height.
+    """
+    image_info = pydicom.dcmread(image_path, stop_before_pixels=True)
+    if hasattr(image_info, "Rows") and hasattr(image_info, "Columns"):
+        return {"width": image_info.Rows, "height": image_info.Columns}
+    else:
+        return {}
+
+
+def get_raster_image_dimensions(image_paths: List[str], num_processes: int = 1) -> dict[str, List[int]]:
+    """
+    Gets the width and height of every image file in the given list of image paths.
+
+    Parameters
+    ----------
+    image_paths : List[str] A list of file paths to get the width and height of.
+    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
+
+    Returns
+    -------
+    dict[str, List[int, int]]
+        A dictionary where the keys are the file paths and the values are a list where the first
+        element is the width and the second is the height of the DICOM image.
+    """
+    dimension_information = utils.process_files(image_paths, _get_raster_image_dimensions_helper, num_processes)
+    value_as_list = {}
+    for key, value in dimension_information.items():
+        if not value:
+            continue
+        value_as_list[key] = [value["width"], value["height"]]
+
+    return value_as_list
+
+
+def _get_raster_image_dimensions_helper(image_path: str) -> dict:
+    """
+    Helper processing function to get raster image dimensions.
+
+    Parameters
+    ----------
+    image_path : str The path to the image.
+
+    Returns
+    -------
+    dict
+        A dictionary with two entries. One gives the image width and the other gives the image height.
+    """
+    im = Image.open(image_path)
+    width, height = im.size
+    return {"width": width, "height": height}
+
+def get_dicom_image_hashes(image_paths: List[str], output_path: str, num_processes: int = 1) -> Tuple[int, dict]:
+    """
+
+    Parameters
+    ----------
+    image_paths
+    output_path
+    num_processes
+
+    Returns
+    -------
+
+    """
+    pass
+
+
 def parse_args():
     """Create args for command line interface."""
     parser = argparse.ArgumentParser(description="Process DICOM images and write them as raw images.")
