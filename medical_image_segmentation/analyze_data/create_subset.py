@@ -383,23 +383,44 @@ def _get_dicom_image_hashes_helper(image_path: str) -> dict:
     return {"hash": sha_hash}
 
 
+def get_dicom_image_hashes_wrapper(dirs: List[str], output_path: str, num_processes: int = 1):
+    """
+    Wrapper to get the hashes of all the pixel data from the dicom files specified in `image_paths`.
+
+    Parameters
+    ----------
+    dirs : List[str] A list of directory paths to look for DICOM images.
+    output_path : str A path where the hashes will be saved as JSON.
+    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
+    """
+    image_paths = utils.get_file_paths(dirs, lambda path: path.endswith(".dcm"))
+    hashes = get_dicom_image_hashes(image_paths, num_processes)
+    with open(output_path, "w") as f:
+        json.dump(hashes, f)
+
+
 def parse_args():
     """Create args for command line interface."""
     parser = argparse.ArgumentParser(description="Process DICOM images and write them as raw images.")
-    parser.add_argument("--num_processes", type=int, default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
+    sub_parsers = parser.add_subparsers(help="Sub-commands", dest="subcommand")
+
+    parser_get_hashes = sub_parsers.add_parser("hashes", help="Get the hashes of the dicom images.")
+    parser_get_hashes.add_argument("--dirs", nargs="+", type=str, help="Directories to search DICOM images for.")
+    parser_get_hashes.add_argument("--output-path", type=str, help="Where to write the map from paths to hashes")
+    parser_get_hashes.add_argument("--num_processes", type=int, default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
                         help="Number of processes to use for parallel processing.")
-    parser.add_argument("--subset_size", type=int, default=1_050_000, help="Size of the subset to write")
-    parser.add_argument("--create_subset", action="store_true", help="Enable subset creation")
-    parser.add_argument("--write_to_null", action="store_true", help="Disable writing images to output directory")
-    parser.add_argument("--seed", type=int, default=1, help="Random seed")
+
     return parser.parse_args()
 
 
 def main():
-    datasets_root_paths = ["/scratch/gpfs/eh0560/data/med_datasets", "/scratch/gpfs/RUSTOW/med_datasets"]
-    files = utils.get_file_paths(datasets_root_paths, lambda path: path.endswith(".dcm"))
-    hashes = get_dicom_image_hashes(files[:10])
-    print(hashes)
+    args = parse_args()
+    if args.subcommand == "hashes":
+        get_dicom_image_hashes_wrapper(args.dirs, args.output_path, num_processes=args.num_processes)
+
+    # files = utils.get_file_paths(, lambda path: path.endswith(".dcm"))
+    # random.shuffle(files)
+    # hashes = get_dicom_image_hashes(files[:10000])
 
 
 if __name__ == "__main__":
