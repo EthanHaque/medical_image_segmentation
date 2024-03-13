@@ -253,46 +253,180 @@ def finalize_image_subset(size: int, original_image_to_new_image_map: dict, outp
         json.dump(final_images_map, f)
 
 
+def get_dicom_image_dimensions(image_paths: List[str], num_processes: int = 1) -> dict[str, List[int]]:
+    """
+    Gets the width and height of every dicom file in the given list of image paths.
+
+    Parameters
+    ----------
+    image_paths : List[str] A list of file paths to get the width and height of.
+    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
+
+    Returns
+    -------
+    dict[str, List[int, int]]
+        A dictionary where the keys are the file paths and the values are a list where the first
+        element is the width and the second is the height of the DICOM image.
+    """
+    dimension_information = utils.process_files(image_paths, _get_dicom_image_dimensions_helper, num_processes)
+    value_as_list = {}
+    for key, value in dimension_information.items():
+        if not value:
+            continue
+        value_as_list[key] = [value["width"], value["height"]]
+
+    return value_as_list
+
+
+def _get_dicom_image_dimensions_helper(image_path: str) -> dict:
+    """
+    Helper processing function to get DICOM image dimensions
+
+    Parameters
+    ----------
+    image_path : str The path to the image.
+
+    Returns
+    -------
+    dict
+        A dictionary with two entries. One gives the image width and the other gives the image height.
+    """
+    image_info = pydicom.dcmread(image_path, stop_before_pixels=True)
+    if hasattr(image_info, "Rows") and hasattr(image_info, "Columns"):
+        return {"width": image_info.Rows, "height": image_info.Columns}
+    else:
+        return {}
+
+
+def get_raster_image_dimensions(image_paths: List[str], num_processes: int = 1) -> dict[str, List[int]]:
+    """
+    Gets the width and height of every image file in the given list of image paths.
+
+    Parameters
+    ----------
+    image_paths : List[str] A list of file paths to get the width and height of.
+    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
+
+    Returns
+    -------
+    dict[str, List[int, int]]
+        A dictionary where the keys are the file paths and the values are a list where the first
+        element is the width and the second is the height of the DICOM image.
+    """
+    dimension_information = utils.process_files(image_paths, _get_raster_image_dimensions_helper, num_processes)
+    value_as_list = {}
+    for key, value in dimension_information.items():
+        if not value:
+            continue
+        value_as_list[key] = [value["width"], value["height"]]
+
+    return value_as_list
+
+
+def _get_raster_image_dimensions_helper(image_path: str) -> dict:
+    """
+    Helper processing function to get raster image dimensions.
+
+    Parameters
+    ----------
+    image_path : str The path to the image.
+
+    Returns
+    -------
+    dict
+        A dictionary with two entries. One gives the image width and the other gives the image height.
+    """
+    im = Image.open(image_path)
+    width, height = im.size
+    return {"width": width, "height": height}
+
+
+def get_dicom_image_hashes(image_paths: List[str], num_processes: int = 1) -> dict[str, str]:
+    """
+    Gets the hashes of all the pixel data from the dicom files specified in `image_paths`.
+
+    Parameters
+    ----------
+    image_paths : List[str] A list of file paths.
+    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
+
+    Returns
+    -------
+        A dictionary where the keys are the file paths and the value is the hash of the pixel data.
+    """
+    dimension_information = utils.process_files(image_paths, _get_dicom_image_hashes_helper, num_processes)
+    value_as_list = {}
+    for key, value in dimension_information.items():
+        if not value:
+            continue
+        value_as_list[key] = value["hash"]
+
+    return value_as_list
+
+
+def _get_dicom_image_hashes_helper(image_path: str) -> dict:
+    """
+    Helper processing function to get the hash of the imaging data from the DICOM file.
+
+    Parameters
+    ----------
+    image_path : str The path to the image.
+
+    Returns
+    -------
+    dict
+        A dictionary with one entry, "hash".
+    """
+    try:
+        arr = pydicom.dcmread(image_path).pixel_array
+        arr.flags.writeable = False
+        sha_hash = hashlib.sha256(arr).hexdigest()
+    except Exception as e:
+        return {}
+    return {"hash": sha_hash}
+
+
+def get_dicom_image_hashes_wrapper(dirs: List[str], output_path: str, num_processes: int = 1):
+    """
+    Wrapper to get the hashes of all the pixel data from the dicom files specified in `image_paths`.
+
+    Parameters
+    ----------
+    dirs : List[str] A list of directory paths to look for DICOM images.
+    output_path : str A path where the hashes will be saved as JSON.
+    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
+    """
+    image_paths = utils.get_file_paths(dirs, lambda path: path.endswith(".dcm"))
+    hashes = get_dicom_image_hashes(image_paths, num_processes)
+    with open(output_path, "w") as f:
+        json.dump(hashes, f)
+
+    count = 0
+    for _, value in hashes.items():
+        if value:
+            count += 1
+
+    print(f"Successfully computed the hashes of the pixel data from {count} DICOM images")
+
+
 def parse_args():
     """Create args for command line interface."""
     parser = argparse.ArgumentParser(description="Process DICOM images and write them as raw images.")
-    parser.add_argument("--num_processes", type=int, default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
-                        help="Number of processes to use for parallel processing.")
-    parser.add_argument("--subset_size", type=int, default=1_050_000, help="Size of the subset to write")
-    parser.add_argument("--create_subset", action="store_true", help="Enable subset creation")
-    parser.add_argument("--write_to_null", action="store_true", help="Disable writing images to output directory")
-    parser.add_argument("--seed", type=int, default=1, help="Random seed")
+    sub_parsers = parser.add_subparsers(help="Sub-commands", dest="subcommand")
+
+    parser_get_hashes = sub_parsers.add_parser("hashes", help="Get the hashes of the dicom images.")
+    parser_get_hashes.add_argument("--dirs", nargs="+", type=str, help="Directories to search DICOM images for.")
+    parser_get_hashes.add_argument("--output-path", type=str, help="Where to write the map from paths to hashes")
+    parser_get_hashes.add_argument("--num_processes", type=int, default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
+                                   help="Number of processes to use for parallel processing.")
+
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-    random.seed(args.seed)
-
-    subset_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/possible_image_paths"
-    if args.create_subset:
-        create_subset(args.subset_size, subset_path, args.num_processes)
-
-    with open(subset_path, "r") as f:
-        paths = f.read().splitlines()
-        paths = [path.strip() for path in paths]
-
-    write_path = "/scratch/gpfs/eh0560/data/med_datasets/segmentation_png"
-
-    # Randomizing to make expected remaining time more accurate.
-    random.shuffle(paths)
-    count, input_output_path_map = write_raw_image_subset(paths, write_path, num_processes=args.num_processes,
-                                                          write_to_null=args.write_to_null, num_subfolders=100)
-
-    input_output_path_map_json_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/input_output_path_map.json"
-    with open(input_output_path_map_json_path, "w") as f:
-        json.dump(input_output_path_map, f)
-
-    print(count)
-
-    final_subset_path = "/data/dicom_image_analysis_info/image_paths"
-    final_subset_map_to_original_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/image_map_to_original.json.json"
-    finalize_image_subset(1_000_000, input_output_path_map, final_subset_path, final_subset_map_to_original_path)
+    if args.subcommand == "hashes":
+        get_dicom_image_hashes_wrapper(args.dirs, args.output_path, num_processes=args.num_processes)
 
 
 if __name__ == "__main__":
