@@ -89,22 +89,22 @@ def process_files(image_paths: List[str],
         future_to_file = {}
 
         with Progress(
-                TextColumn("[bold blue]{task.completed}/{task.total} files batched"),
-                BarColumn(),
-                TimeElapsedColumn(),
-                TimeRemainingColumn(),
+            TextColumn("[bold blue]{task.completed}/{task.total} files batched"),
+            BarColumn(),
+            TimeElapsedColumn(),
+            TimeRemainingColumn(),
+            transient=True
         ) as progress:
             task = progress.add_task("Batching files...", total=len(image_paths), file_count=0)
             for i, file_path in enumerate(image_paths):
                 future_to_file[executor.submit(partial_processing_function, file_path)] = file_path
                 progress.update(task, advance=1)
-                
 
         with Progress(
-                TextColumn("[bold blue]{task.completed}/{task.total} files processed"),
-                BarColumn(),
-                TimeElapsedColumn(),
-                TimeRemainingColumn(),
+            TextColumn("[bold blue]{task.completed}/{task.total} files processed"),
+            BarColumn(),
+            TimeElapsedColumn(),
+            TimeRemainingColumn(),
         ) as progress:
             task = progress.add_task("Processing files...", total=len(image_paths), file_count=0)
             for future in as_completed(future_to_file):
