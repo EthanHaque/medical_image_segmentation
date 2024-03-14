@@ -344,6 +344,17 @@ def parse_args():
                                         default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
                                         help="Number of processes to use for parallel processing.")
 
+    parser_write_subset = sub_parsers.add_parser("write_subset", help="Write a subset of the DICOM images as PNGs.")
+    parser_write_subset.add_argument("--dirs", nargs="+", type=str, help="Directories to search DICOM images for.")
+    parser_write_subset.add_argument("--output_map_path", type=str, help="Where to write the map from the original DICOM images paths to the output image paths.")
+    parser_write_subset.add_argument("--output_image_directory", type=str, help="Root directory to write the output images to.")
+    parser_write_subset.add_argument("--size", type=int, help="Size of the subset to write.")
+    parser_write_subset.add_argument("--num_subfolders", type=int, default=0, help="Number of subfolders to split the images into. If 0, does not write to any subfolders.")
+    parser_write_subset.add_argument("--num_processes", type=int,
+                                         default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
+                                         help="Number of processes to use for parallel processing.")
+    parser_write_subset.add_argument("--write_to_null", action="store_true", help="Write all images to null file.")
+
     return parser.parse_args()
 
 
