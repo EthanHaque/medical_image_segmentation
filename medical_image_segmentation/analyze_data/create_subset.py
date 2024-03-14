@@ -3,7 +3,7 @@ import json
 import os
 import random
 import warnings
-from typing import List, Tuple
+from typing import List
 import argparse
 
 from PIL import Image
@@ -14,9 +14,9 @@ import medical_image_segmentation.analyze_data.utils as utils
 
 
 def write_subset_wrapper(dirs: List[str], map_output_path: str, image_output_directory: str,
-                 dimensions_map_json_path: str, hashes_map_json_path: str,
-                 write_to_null: bool = False, num_subfolders: int = 0, num_processes: int = 1,
-                 size: int = 1_000_000):
+                         dimensions_map_json_path: str, hashes_map_json_path: str,
+                         write_to_null: bool = False, num_subfolders: int = 0, num_processes: int = 1,
+                         size: int = 1_000_000):
     if not os.path.isfile(dimensions_map_json_path):
         raise FileNotFoundError(dimensions_map_json_path)
     if not os.path.isfile(hashes_map_json_path):
@@ -28,10 +28,10 @@ def write_subset_wrapper(dirs: List[str], map_output_path: str, image_output_dir
     with open(hashes_map_json_path, "r") as f:
         hashes_map = json.load(f)
 
-    statuses = write_subset(image_paths, image_output_directory, dimensions_map, hashes_map, write_to_null, num_subfolders, num_processes, size)
-
     success_count = 0
     original_path_to_new_path_map = {}
+    statuses = write_subset(image_paths, image_output_directory, dimensions_map, hashes_map, write_to_null,
+                            num_subfolders, num_processes, size)
     for path, status in statuses.items():
         if status["error"]:
             continue
@@ -46,9 +46,9 @@ def write_subset_wrapper(dirs: List[str], map_output_path: str, image_output_dir
 
 
 def write_subset(image_paths: List[str], image_output_directory: str,
-                 dimensions_map: dict[str, List[int, int]], hashes_map: dict[str, str],
+                 dimensions_map: dict[str, List[int]], hashes_map: dict[str, str],
                  write_to_null: bool = False, num_subfolders: int = 0, num_processes: int = 1,
-                 size: int = 1_000_000) -> dict[str, dict]:
+                 size: int = 1_000_000, max_retries: int = 10) -> dict[str, dict]:
     possible_image_paths = pick_possible_images(image_paths, dimensions_map, hashes_map, min_size=256, max_size=768)
     dataset_map = map_paths_to_dataset(possible_image_paths)
 
@@ -69,16 +69,31 @@ def write_subset(image_paths: List[str], image_output_directory: str,
         if dataset in not_whole:
             remaining_paths.append(path)
     random.shuffle(remaining_paths)
+    write_order.extend(remaining_paths)
 
-    write_order = write_order.extend(remaining_paths)
-    write_order = write_order[:size]
+    completed_runs = 0
+    successes = 0
+    failures = 0
+    statuses = {}
+    while completed_runs < max_retries and successes < size:
+        start_index = successes + failures
+        end_index = start_index + size - successes
+        run_statuses = utils.process_files(write_order[start_index: end_index], _write_subset_helper, num_processes, image_output_directory,
+                                           write_to_null=write_to_null, num_subfolders=num_subfolders)
+        statuses.update(run_statuses)
+        for status in run_statuses.values():
+            if status["error"] is None:
+                successes += 1
+            else:
+                failures += 1
 
-    statuses = utils.process_files(write_order, _write_subset_helper, num_processes, image_output_directory, write_to_null=write_to_null, num_subfolders=num_subfolders)
+        completed_runs += 1
 
     return statuses
 
+
 def _write_subset_helper(output_dir, image_path: str, write_to_null: bool = False,
-                                  num_subfolders: int = 0) -> dict:
+                         num_subfolders: int = 0) -> dict:
     """
     Helper function to write an individual DICOM image to output dir.
 
@@ -99,6 +114,9 @@ def _write_subset_helper(output_dir, image_path: str, write_to_null: bool = Fals
         - error An error message if the image is invalid. Is None if no errors occurred.
     """
     arr = pydicom.dcmread(image_path).pixel_array
+    if len(arr.shape) > 2:
+        e = ValueError(f"Invalid shape data {arr.shape} for image {image_path}")
+        return {"image_path": image_path, "output_path": None, "error": e}
     arr.flags.writeable = False
     sha_hash = hashlib.sha256(arr).hexdigest()
     os.makedirs(output_dir, exist_ok=True)
@@ -142,7 +160,7 @@ def _write_subset_helper(output_dir, image_path: str, write_to_null: bool = Fals
         return {"image_path": image_path, "output_path": None, "error": e}
 
 
-def pick_possible_images(image_paths: List[str], dimensions_map: dict[str, List[int, int]], hashes_map: dict[str, str],
+def pick_possible_images(image_paths: List[str], dimensions_map: dict[str, List[int]], hashes_map: dict[str, str],
                          min_size: int = 256, max_size: int = 768) -> List[str]:
     """
     Determines which file paths from the images could potentially be used to create a subset of data. Excludes
@@ -151,7 +169,7 @@ def pick_possible_images(image_paths: List[str], dimensions_map: dict[str, List[
     Parameters
     ----------
     image_paths : List[str] A list of file paths to DICOM images.
-    dimensions_map : dict[str, List[int, int]] Maps file paths to their width and height.
+    dimensions_map : dict[str, List[int]] Maps file paths to their width and height.
     hashes_map : dict[str, str] Maps file paths to a unique hash.
     min_size : int, optional [default: 256] The smallest side length an image is allowed to have inclusive.
     max_size : int, optional [default: 768] The largest side length an image is allowed to have inclusive.
@@ -203,7 +221,7 @@ def map_paths_to_dataset(image_paths: List[str]) -> dict[str, str]:
     dataset_map = {}
     for path in image_paths:
         dataset_name = _get_dataset_name(path)
-        dataset_map[dataset_name] = path
+        dataset_map[path] = dataset_name
 
     return dataset_map
 
@@ -242,7 +260,7 @@ def get_dicom_image_dimensions(image_paths: List[str], num_processes: int = 1) -
 
     Returns
     -------
-    dict[str, List[int, int]]
+    dict[str, List[int]]
         A dictionary where the keys are the file paths and the values are a list where the first
         element is the width and the second is the height of the DICOM image.
     """
@@ -365,15 +383,20 @@ def parse_args():
 
     parser_write_subset = sub_parsers.add_parser("write_subset", help="Write a subset of the DICOM images as PNGs.")
     parser_write_subset.add_argument("--dirs", nargs="+", type=str, help="Directories to search DICOM images for.")
-    parser_write_subset.add_argument("--output_map_path", type=str, help="Where to write the map from the original DICOM images paths to the output image paths.")
-    parser_write_subset.add_argument("--output_image_directory", type=str, help="Root directory to write the output images to.")
-    parser_write_subset.add_argument("--image_dimensions_json_path", type=str, help="Path to a json file that maps DICOM image paths to their dimensions.")
-    parser_write_subset.add_argument("--image_hashes_json_path", type=str, help="Path to a json file that maps DICOM images to a hash.")
+    parser_write_subset.add_argument("--output_map_path", type=str,
+                                     help="Where to write the map from the original DICOM images paths to the output image paths.")
+    parser_write_subset.add_argument("--output_image_directory", type=str,
+                                     help="Root directory to write the output images to.")
+    parser_write_subset.add_argument("--image_dimensions_json_path", type=str,
+                                     help="Path to a json file that maps DICOM image paths to their dimensions.")
+    parser_write_subset.add_argument("--image_hashes_json_path", type=str,
+                                     help="Path to a json file that maps DICOM images to a hash.")
     parser_write_subset.add_argument("--size", type=int, help="Size of the subset to write.")
-    parser_write_subset.add_argument("--num_subfolders", type=int, default=0, help="Number of subfolders to split the images into. If 0, does not write to any subfolders.")
+    parser_write_subset.add_argument("--num_subfolders", type=int, default=0,
+                                     help="Number of subfolders to split the images into. If 0, does not write to any subfolders.")
     parser_write_subset.add_argument("--num_processes", type=int,
-                                         default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
-                                         help="Number of processes to use for parallel processing.")
+                                     default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
+                                     help="Number of processes to use for parallel processing.")
     parser_write_subset.add_argument("--seed", type=int, help="Sets random seed", required=False)
     parser_write_subset.add_argument("--write_to_null", action="store_true", help="Write all images to null file.")
 
@@ -388,8 +411,10 @@ def main():
         get_dicom_image_dimensions_wrapper(args.dirs, args.output_path, num_processes=args.num_processes)
     if args.subcommand == "write_subset":
         random.seed(args.seed)
-        write_subset_wrapper(args.dircs, args.output_map_path, args.output_image_directory, args.image_dimensions_json_path,
-                             args.image_hashes_json_path, write_to_null=args.write_to_null, num_subfolders=args.num_subfolders,
+        write_subset_wrapper(args.dirs, args.output_map_path, args.output_image_directory,
+                             args.image_dimensions_json_path,
+                             args.image_hashes_json_path, write_to_null=args.write_to_null,
+                             num_subfolders=args.num_subfolders,
                              num_processes=args.num_processes, size=args.size)
 
 
