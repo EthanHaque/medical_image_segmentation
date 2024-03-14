@@ -332,14 +332,14 @@ def parse_args():
 
     parser_get_dicom_hashes = sub_parsers.add_parser("dicom_hashes", help="Get the hashes of the dicom images.")
     parser_get_dicom_hashes.add_argument("--dirs", nargs="+", type=str, help="Directories to search DICOM images for.")
-    parser_get_dicom_hashes.add_argument("--output_path", type=str, help="Where to write the map from paths to hashes")
+    parser_get_dicom_hashes.add_argument("--output_path", type=str, help="Where to write the map from paths to hashes.")
     parser_get_dicom_hashes.add_argument("--num_processes", type=int,
                                          default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
                                          help="Number of processes to use for parallel processing.")
 
-    parser_get_dicom_sizes = sub_parsers.add_parser("dicom_sizes", help="Get the sizes of the dicom images")
+    parser_get_dicom_sizes = sub_parsers.add_parser("dicom_sizes", help="Get the sizes of the dicom images.")
     parser_get_dicom_sizes.add_argument("--dirs", nargs="+", type=str, help="Directories to search DICOM images for.")
-    parser_get_dicom_sizes.add_argument("--output_path", type=str, help="Where to write the map from paths to sizes")
+    parser_get_dicom_sizes.add_argument("--output_path", type=str, help="Where to write the map from paths to sizes.")
     parser_get_dicom_sizes.add_argument("--num_processes", type=int,
                                         default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
                                         help="Number of processes to use for parallel processing.")
@@ -353,6 +353,7 @@ def parse_args():
     parser_write_subset.add_argument("--num_processes", type=int,
                                          default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
                                          help="Number of processes to use for parallel processing.")
+    parser_write_subset.add_argument("--seed", type=int, help="Sets random seed", required=False)
     parser_write_subset.add_argument("--write_to_null", action="store_true", help="Write all images to null file.")
 
     return parser.parse_args()
