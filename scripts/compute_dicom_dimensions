@@ -5,6 +5,6 @@ conda activate medical_image_segmentation
 cd /scratch/gpfs/eh0560/repos/medical-image-segmentation
 python \
 /scratch/gpfs/eh0560/repos/medical-image-segmentation/medical_image_segmentation/analyze_data/create_subset.py \
-dicom-sizes \
+dicom_sizes \
 --dirs /scratch/gpfs/eh0560/data/med_datasets /scratch/gpfs/RUSTOW/med_datasets \
---output-path /scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/dicom_image_dimensions.json
+--output_path /scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/dicom_image_dimensions.json

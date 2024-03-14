@@ -1,0 +1,24 @@
+#!/bin/bash
+module purge
+module load anaconda3/2023.9
+conda activate medical_image_segmentation
+cd /scratch/gpfs/eh0560/repos/medical-image-segmentation
+python \
+/scratch/gpfs/eh0560/repos/medical-image-segmentation/medical_image_segmentation/analyze_data/create_subset.py \
+write_subset \
+--dirs \
+"/scratch/gpfs/eh0560/data/med_datasets" "/scratch/gpfs/RUSTOW/med_datasets" \
+--output_map_path \
+/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/subset_info/original_to_new_map.json \
+--output_image_directory \
+/scratch/gpfs/eh0560/data/med_datasets/radiology_1M \
+--image_dimensions_json_path \
+/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/dicom_image_dimensions.json \
+--image_hashes_json_path \
+/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/dicom_image_analysis_info/dicom_image_hashes.json \
+--size \
+1000000 \
+--num_subfolders \
+100 \
+--seed \
+2
