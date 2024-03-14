@@ -330,7 +330,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Process DICOM images and write them as raw images.")
     sub_parsers = parser.add_subparsers(help="Sub-commands", dest="subcommand")
 
-    parser_get_dicom_hashes = sub_parsers.add_parser("hashes", help="Get the hashes of the dicom images.")
+    parser_get_dicom_hashes = sub_parsers.add_parser("dicom_hashes", help="Get the hashes of the dicom images.")
     parser_get_dicom_hashes.add_argument("--dirs", nargs="+", type=str, help="Directories to search DICOM images for.")
     parser_get_dicom_hashes.add_argument("--output-path", type=str, help="Where to write the map from paths to hashes")
     parser_get_dicom_hashes.add_argument("--num_processes", type=int,
@@ -349,7 +349,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    if args.subcommand == "hashes":
+    if args.subcommand == "dicom_hashes":
         get_dicom_image_hashes_wrapper(args.dirs, args.output_path, num_processes=args.num_processes)
     if args.subcommand == "dicom_sizes":
         get_dicom_image_dimensions_wrapper(args.dirs, args.output_path, num_processes=args.num_processes)
