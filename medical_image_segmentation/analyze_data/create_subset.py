@@ -337,7 +337,7 @@ def parse_args():
                                          default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
                                          help="Number of processes to use for parallel processing.")
 
-    parser_get_dicom_sizes = sub_parsers.add_parser("dicom-sizes", help="Get the sizes of the dicom images")
+    parser_get_dicom_sizes = sub_parsers.add_parser("dicom_sizes", help="Get the sizes of the dicom images")
     parser_get_dicom_sizes.add_argument("--dirs", nargs="+", type=str, help="Directories to search DICOM images for.")
     parser_get_dicom_sizes.add_argument("--output-path", type=str, help="Where to write the map from paths to sizes")
     parser_get_dicom_sizes.add_argument("--num_processes", type=int,
@@ -351,7 +351,7 @@ def main():
     args = parse_args()
     if args.subcommand == "hashes":
         get_dicom_image_hashes_wrapper(args.dirs, args.output_path, num_processes=args.num_processes)
-    if args.subcommand == "dicom-sizes":
+    if args.subcommand == "dicom_sizes":
         get_dicom_image_dimensions_wrapper(args.dirs, args.output_path, num_processes=args.num_processes)
 
 
