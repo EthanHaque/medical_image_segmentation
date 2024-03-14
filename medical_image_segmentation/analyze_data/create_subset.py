@@ -39,9 +39,26 @@ def write_subset(image_paths: List[str], map_output_path: str, image_output_dire
     random.shuffle(remaining_paths)
 
     write_order = write_order.extend(remaining_paths)
+    write_order = write_order[:size]
+
+    statuses = utils.process_files(write_order, _write_subset_helper, num_processes, image_output_directory, write_to_null=write_to_null, num_subfolders=num_subfolders)
+
+    success_count = 0
+    original_path_to_new_path_map = {}
+    for path, status in statuses.items():
+        if status["error"]:
+            continue
+        else:
+            success_count += 1
+            original_path_to_new_path_map[status["image_path"]] = status["output_path"]
+
+    with open(map_output_path, "w") as f:
+        json.dump(original_path_to_new_path_map, f)
+
+    print(f"Successfully wrote the pixel data from {success_count} DICOM images")
 
 
-def write_raw_image_subset_helper(output_dir, image_path: str, write_to_null: bool = False,
+def _write_subset_helper(output_dir, image_path: str, write_to_null: bool = False,
                                   num_subfolders: int = 0) -> dict:
     """
     Helper function to write an individual DICOM image to output dir.
@@ -52,7 +69,7 @@ def write_raw_image_subset_helper(output_dir, image_path: str, write_to_null: bo
     image_path: str The path to the DICOM image to write. The name of the writen file will
     be the hash of the DICOM image.
     write_to_null: bool [default: False] If true, writes the DICOM images to the null file.
-    num_subfolders: int [default: 1] The number of folders to split the images into.
+    num_subfolders: int [default: 0] The number of folders to split the images into.
 
     Returns
     -------
@@ -98,10 +115,12 @@ def write_raw_image_subset_helper(output_dir, image_path: str, write_to_null: bo
             with open("/dev/null", "wb") as f:
                 image.save(f, format='PNG', bits=16)
         else:
+            if os.path.exists(output_path):
+                raise ValueError(f"Path {output_path} already exists")
             image.save(output_path, format='PNG', bits=16)
         return {"image_path": image_path, "output_path": output_path, "error": None}
     except Exception as e:
-        return {"image_path": image_path, "output_path": output_path, "error": e}
+        return {"image_path": image_path, "output_path": None, "error": e}
 
 
 def pick_possible_images(image_paths: List[str], dimensions_map: dict[str, List[int, int]], hashes_map: dict[str, str],
