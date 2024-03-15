@@ -1,6 +1,6 @@
 import os
 
-from ffcv.fields import NDArrayField, FloatField
+from ffcv.fields import NDArrayField
 
 import argparse
 import json
@@ -84,7 +84,7 @@ def main():
     args = parse_args()
 
     image_paths = get_image_paths(args.original_to_new_map_path)
-    resize_dimensions = (args.width, args.height)
+    resize_dimensions = (args.height, args.width)
 
     writer = DatasetWriter(args.output_file_path, {
         "image": NDArrayField(shape=resize_dimensions, dtype=np.dtype("float32"))
