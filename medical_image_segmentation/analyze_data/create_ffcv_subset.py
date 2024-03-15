@@ -1,6 +1,7 @@
 import os
 
 from ffcv.fields import NDArrayField
+from ffcv.writer import DatasetWriter
 
 import argparse
 import json
@@ -34,7 +35,7 @@ def get_image_paths(original_to_new_map_path: str) -> List[str]:
 
 class DICOMImageDataset:
     def __init__(self, image_paths: List[str], output_shape: Tuple[int, int]):
-        self.image_paths = image_paths
+        self.image_paths = image_paths[:100]
         self.image_shape = output_shape
 
     def __getitem__(self, idx):
@@ -47,7 +48,9 @@ class DICOMImageDataset:
 
         image = Image.fromarray(image_arr)
         image = image.resize(self.image_shape, Image.NEAREST)
-        return np.asarray(image)
+
+        # wrapping in tuple so that return value has correct shape (size 1).
+        return (np.asarray(image),)
 
     def __len__(self):
         return len(self.image_paths)
