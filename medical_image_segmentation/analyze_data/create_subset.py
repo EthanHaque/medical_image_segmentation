@@ -354,9 +354,9 @@ def get_raster_image_dimensions_wrapper(dirs: List[str], output_path: str, num_p
     ----------
     dirs : List[str] A list of directory paths to look for raster imagse.
     output_path : str The path to write the map of image paths to dimensions as JSON.
-    num_processes : int, optional [default = 1]: The number of processes to split the the tasks among.
+    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
     """
-    image_paths = utils.get_file_paths(dirs, lambda path: path.endswith(".dcm"))
+    image_paths = utils.get_file_paths(dirs, lambda path: path.endswith(".png"))
     dimensions = get_raster_image_dimensions(image_paths, num_processes)
     with open(output_path, "w") as f:
         json.dump(dimensions, f)
