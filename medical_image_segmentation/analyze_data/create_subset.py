@@ -301,6 +301,75 @@ def map_paths_to_dataset(image_paths: List[str]) -> dict[str, str]:
 
     return dataset_map
 
+def get_raster_image_dimensions(image_paths: List[str], num_processes: int = 1) -> dict[str, List[int]]:
+    """
+    Get the width and height of every image in the given list of image paths.
+
+    Parameters
+    ----------
+    image_paths : List[str] A list of image file paths.
+    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
+
+    Returns
+    -------
+    dict[str, List[int]]
+        A dictionary where the keys are the file paths and the values are a list where the first
+        element is the width and the second is the height of the image.
+    """
+    image_informaiton = utils.process_files(
+        image_paths, _get_raster_image_dimensions_helper, num_processes
+    )
+    value_as_list = {}
+    for key, value in image_informaiton.items():
+        if not value:
+            continue
+        value_as_list[key] = [value["width"], value["height"]]
+
+    return value_as_list
+
+
+def _get_raster_image_dimensions_helper(image_path: str) -> dict:
+    """
+    Helper processing function to get the image dimensions.
+
+    Parameters
+    ----------
+    image_path : str The path to the image.
+
+    Returns
+    -------
+    dict
+        A dictionary with two entries: "width" and "height".
+    """
+    image = Image.open(image_path)
+    width, height = image.size
+    return {"width": width, "height": height}
+
+
+def get_raster_image_dimensions_wrapper(dirs: List[str], output_path: str, num_processes: int = 1):
+    """
+    Wrapper to get the dimensions of all the images in "dirs".
+
+    Parameters
+    ----------
+    dirs : List[str] A list of directory paths to look for raster imagse.
+    output_path : str The path to write the map of image paths to dimensions as JSON.
+    num_processes : int, optional [default = 1]: The number of processes to split the the tasks among.
+    """
+    image_paths = utils.get_file_paths(dirs, lambda path: path.endswith(".dcm"))
+    dimensions = get_raster_image_dimensions(image_paths, num_processes)
+    with open(output_path, "w") as f:
+        json.dump(dimensions, f)
+
+    count = 0
+    for _, value in dimensions.items():
+        if value:
+            count += 1
+
+    print(
+        f"Successfully computed the dimensions of {count} images"
+    )
+
 
 def get_dicom_image_dimensions_wrapper(
     dirs: List[str], output_path: str, num_processes: int = 1
