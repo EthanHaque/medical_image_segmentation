@@ -1,5 +1,6 @@
 import time
 import unittest
+
 from medical_image_segmentation.analyze_data.utils import process_files
 
 
@@ -11,7 +12,6 @@ def dummy_processing_function(file_path: str, *args, **kwargs) -> dict:
 
 
 class TestProcessFiles(unittest.TestCase):
-
     def test_single_process(self):
         """Test processing with a single process."""
         image_paths = ["image1.jpg", "image2.jpg", "image3.jpg"]
@@ -44,5 +44,5 @@ class TestProcessFiles(unittest.TestCase):
             self.assertIn(path, results)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
