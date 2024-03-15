@@ -10,10 +10,18 @@ from PIL import Image
 import pydicom
 
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn, TimeRemainingColumn
+from rich.progress import (
+    Progress,
+    BarColumn,
+    TextColumn,
+    TimeElapsedColumn,
+    TimeRemainingColumn,
+)
 
 
-def get_file_paths(roots: Union[str, List[str]], matching_function: Callable[[str], bool]) -> list[Union[str, bytes]]:
+def get_file_paths(
+    roots: Union[str, List[str]], matching_function: Callable[[str], bool]
+) -> list[Union[str, bytes]]:
     """
     Gathers all file paths from the given directories which end with the given filetypes.
 
@@ -62,10 +70,13 @@ def get_file_type_counts(roots: Union[str, List[str]]) -> dict[str, int]:
     return dict(Counter(extensions))
 
 
-def process_files(image_paths: List[str],
-                  processing_function: Callable[[str, ...], dict],
-                  num_processes: int = 1,
-                  *args, **kwargs) -> dict[str, dict]:
+def process_files(
+    image_paths: List[str],
+    processing_function: Callable[[str, ...], dict],
+    num_processes: int = 1,
+    *args,
+    **kwargs,
+) -> dict[str, dict]:
     """
     Processes files using the given processing function and returns the results as a dictionary where
     each key is a file path and each value is some information about the file.
@@ -83,10 +94,14 @@ def process_files(image_paths: List[str],
         the processing function.
     """
     if num_processes < 1:
-        raise ValueError(f"num_processes must be greater than 1, but got {num_processes}")
+        raise ValueError(
+            f"num_processes must be greater than 1, but got {num_processes}"
+        )
 
     image_info = {}
-    with ProcessPoolExecutor(max_workers=num_processes, initializer=start_orphan_checker) as executor:
+    with ProcessPoolExecutor(
+        max_workers=num_processes, initializer=start_orphan_checker
+    ) as executor:
         partial_processing_function = partial(processing_function, *args, **kwargs)
         future_to_file = {}
 
@@ -95,11 +110,15 @@ def process_files(image_paths: List[str],
             BarColumn(),
             TimeElapsedColumn(),
             TimeRemainingColumn(),
-            transient=True
+            transient=True,
         ) as progress:
-            task = progress.add_task("Batching files...", total=len(image_paths), file_count=0)
+            task = progress.add_task(
+                "Batching files...", total=len(image_paths), file_count=0
+            )
             for i, file_path in enumerate(image_paths):
-                future_to_file[executor.submit(partial_processing_function, file_path)] = file_path
+                future_to_file[
+                    executor.submit(partial_processing_function, file_path)
+                ] = file_path
                 progress.update(task, advance=1)
 
         with Progress(
@@ -108,7 +127,9 @@ def process_files(image_paths: List[str],
             TimeElapsedColumn(),
             TimeRemainingColumn(),
         ) as progress:
-            task = progress.add_task("Processing files...", total=len(image_paths), file_count=0)
+            task = progress.add_task(
+                "Processing files...", total=len(image_paths), file_count=0
+            )
             for future in as_completed(future_to_file):
                 file_path = future_to_file[future]
                 try:
@@ -116,7 +137,9 @@ def process_files(image_paths: List[str],
                 except Exception as e:
                     for f in future_to_file.keys():
                         f.cancel()
-                    raise RuntimeError(f"Error occurred during processing of {file_path}: {e}")
+                    raise RuntimeError(
+                        f"Error occurred during processing of {file_path}: {e}"
+                    )
 
                 image_info[file_path] = result
                 progress.update(task, advance=1)
@@ -126,6 +149,7 @@ def process_files(image_paths: List[str],
 
 def start_orphan_checker():
     """Checks for orphaned child processes and kills them."""
+
     def exit_if_orphaned():
         multiprocessing.parent_process().join()
         os._exit(-1)
@@ -133,9 +157,11 @@ def start_orphan_checker():
     threading.Thread(target=exit_if_orphaned, daemon=True).start()
 
 
-
 if __name__ == "__main__":
-    dir_path = ["/scratch/gpfs/eh0560/data/med_datasets", "/scratch/gpfs/RUSTOW/med_datasets"]
+    dir_path = [
+        "/scratch/gpfs/eh0560/data/med_datasets",
+        "/scratch/gpfs/RUSTOW/med_datasets",
+    ]
     files = get_file_paths(dir_path, lambda path: path.endswith(".dcm"))[:10000]
     print(len(files))
     print(get_file_type_counts(dir_path))
