@@ -26,8 +26,7 @@ RUN conda install -y -n ffcv-ssl \
         numpy \
         -c conda-forge
 
-RUN conda run -n ffcv-ssl pip install pydicom rich pillow
-
+RUN conda run -n ffcv-ssl pip install pydicom rich pillow python-gdcm pylibjpeg[all]
 
 RUN git clone https://github.com/facebookresearch/FFCV-SSL.git
 RUN conda run -n ffcv-ssl pip install -e FFCV-SSL
