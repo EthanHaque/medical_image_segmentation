@@ -301,7 +301,6 @@ def map_paths_to_dataset(image_paths: List[str]) -> dict[str, str]:
 
     return dataset_map
 
-
 def get_raster_image_dimensions(image_paths: List[str], num_processes: int = 1) -> dict[str, List[int]]:
     """
     Get the width and height of every image in the given list of image paths.
@@ -611,6 +610,22 @@ def parse_args():
         "--write_to_null", action="store_true", help="Write all images to null file."
     )
 
+    parser_get_raster_sizes = sub_parsers.add_parser(
+        "raster_sizes", help="Get the sizes of raster images"
+    )
+    parser_get_raster_sizes.add_argument(
+        "--dirs", nargs="+", type=str, help="Directories to search DICOM images for."
+    )
+    parser_get_raster_sizes.add_argument(
+        "--output_path", type=str, help="Where to write the map from paths to sizes."
+    )
+    parser_get_raster_sizes.add_argument(
+        "--num_processes",
+        type=int,
+        default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
+        help="Number of processes to use for parallel processing.",
+    )
+
     return parser.parse_args()
 
 
@@ -622,6 +637,10 @@ def main():
         )
     if args.subcommand == "dicom_sizes":
         get_dicom_image_dimensions_wrapper(
+            args.dirs, args.output_path, num_processes=args.num_processes
+        )
+    if args.subcommand == "raster_sizes":
+        get_raster_image_dimensions_wrapper(
             args.dirs, args.output_path, num_processes=args.num_processes
         )
     if args.subcommand == "write_subset":

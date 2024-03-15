@@ -1,0 +1,10 @@
+#!/bin/bash
+module purge
+module load anaconda3/2023.9
+conda activate medical_image_segmentation
+cd /scratch/gpfs/eh0560/repos/medical-image-segmentation
+python \
+/scratch/gpfs/eh0560/repos/medical-image-segmentation/medical_image_segmentation/analyze_data/create_subset.py \
+raster_sizes \
+--dirs /scratch/gpfs/eh0560/data/med_datasets /scratch/gpfs/RUSTOW/med_datasets \
+--output_path /scratch/gpfs/eh0560/repos/medical-image-segmentation/data/subset_info/image_dimensions.json
