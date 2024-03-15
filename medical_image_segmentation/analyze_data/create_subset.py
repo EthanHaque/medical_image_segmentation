@@ -14,15 +14,15 @@ import medical_image_segmentation.analyze_data.utils as utils
 
 
 def write_subset_wrapper(
-    dirs: List[str],
-    map_output_path: str,
-    image_output_directory: str,
-    dimensions_map_json_path: str,
-    hashes_map_json_path: str,
-    write_to_null: bool = False,
-    num_subfolders: int = 0,
-    num_processes: int = 1,
-    size: int = 1_000_000,
+        dirs: List[str],
+        map_output_path: str,
+        image_output_directory: str,
+        dimensions_map_json_path: str,
+        hashes_map_json_path: str,
+        write_to_null: bool = False,
+        num_subfolders: int = 0,
+        num_processes: int = 1,
+        size: int = 1_000_000,
 ):
     """
     Wrapper to write a subset of DICOM images as a common raster format.
@@ -79,15 +79,15 @@ def write_subset_wrapper(
 
 
 def write_subset(
-    image_paths: List[str],
-    image_output_directory: str,
-    dimensions_map: dict[str, List[int]],
-    hashes_map: dict[str, str],
-    write_to_null: bool = False,
-    num_subfolders: int = 0,
-    num_processes: int = 1,
-    size: int = 1_000_000,
-    max_retries: int = 10,
+        image_paths: List[str],
+        image_output_directory: str,
+        dimensions_map: dict[str, List[int]],
+        hashes_map: dict[str, str],
+        write_to_null: bool = False,
+        num_subfolders: int = 0,
+        num_processes: int = 1,
+        size: int = 1_000_000,
+        max_retries: int = 10,
 ) -> dict[str, dict]:
     """
     Writes DICOM images as a common raster format.
@@ -156,7 +156,7 @@ def write_subset(
 
 
 def _write_subset_helper(
-    output_dir, image_path: str, write_to_null: bool = False, num_subfolders: int = 0
+        output_dir, image_path: str, write_to_null: bool = False, num_subfolders: int = 0
 ) -> dict:
     """
     Helper function to write an individual DICOM image to output dir.
@@ -227,11 +227,11 @@ def _write_subset_helper(
 
 
 def pick_possible_images(
-    image_paths: List[str],
-    dimensions_map: dict[str, List[int]],
-    hashes_map: dict[str, str],
-    min_size: int = 256,
-    max_size: int = 768,
+        image_paths: List[str],
+        dimensions_map: dict[str, List[int]],
+        hashes_map: dict[str, str],
+        min_size: int = 256,
+        max_size: int = 768,
 ) -> List[str]:
     """
     Determines which file paths from the images could potentially be used to create a subset of data. Excludes
@@ -258,10 +258,10 @@ def pick_possible_images(
 
         width, height = dimensions_map[path]
         if (
-            (width > max_size)
-            or (height > max_size)
-            or (width < min_size)
-            or (height < min_size)
+                (width > max_size)
+                or (height > max_size)
+                or (width < min_size)
+                or (height < min_size)
         ):
             continue
 
@@ -300,6 +300,7 @@ def map_paths_to_dataset(image_paths: List[str]) -> dict[str, str]:
         dataset_map[path] = dataset_name
 
     return dataset_map
+
 
 def get_raster_image_dimensions(image_paths: List[str], num_processes: int = 1) -> dict[str, List[int]]:
     """
@@ -372,7 +373,7 @@ def get_raster_image_dimensions_wrapper(dirs: List[str], output_path: str, num_p
 
 
 def get_dicom_image_dimensions_wrapper(
-    dirs: List[str], output_path: str, num_processes: int = 1
+        dirs: List[str], output_path: str, num_processes: int = 1
 ):
     """
     Wrapper to get the dimensions of all the pixel data from the dicom files in "dirs".
@@ -399,7 +400,7 @@ def get_dicom_image_dimensions_wrapper(
 
 
 def get_dicom_image_dimensions(
-    image_paths: List[str], num_processes: int = 1
+        image_paths: List[str], num_processes: int = 1
 ) -> dict[str, List[int]]:
     """
     Gets the width and height of every dicom file in the given list of image paths.
@@ -448,7 +449,7 @@ def _get_dicom_image_dimensions_helper(image_path: str) -> dict:
 
 
 def get_dicom_image_hashes(
-    image_paths: List[str], num_processes: int = 1
+        image_paths: List[str], num_processes: int = 1
 ) -> dict[str, str]:
     """
     Gets the hashes of all the pixel data from the dicom files specified in `image_paths`.
@@ -497,7 +498,7 @@ def _get_dicom_image_hashes_helper(image_path: str) -> dict:
 
 
 def get_dicom_image_hashes_wrapper(
-    dirs: List[str], output_path: str, num_processes: int = 1
+        dirs: List[str], output_path: str, num_processes: int = 1
 ):
     """
     Wrapper to get the hashes of all the pixel data from the dicom files in "dirs".
