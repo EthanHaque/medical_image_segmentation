@@ -14,15 +14,15 @@ import medical_image_segmentation.analyze_data.utils as utils
 
 
 def write_subset_wrapper(
-    dirs: List[str],
-    map_output_path: str,
-    image_output_directory: str,
-    dimensions_map_json_path: str,
-    hashes_map_json_path: str,
-    write_to_null: bool = False,
-    num_subfolders: int = 0,
-    num_processes: int = 1,
-    size: int = 1_000_000,
+        dirs: List[str],
+        map_output_path: str,
+        image_output_directory: str,
+        dimensions_map_json_path: str,
+        hashes_map_json_path: str,
+        write_to_null: bool = False,
+        num_subfolders: int = 0,
+        num_processes: int = 1,
+        size: int = 1_000_000,
 ):
     """
     Wrapper to write a subset of DICOM images as a common raster format.
@@ -79,15 +79,15 @@ def write_subset_wrapper(
 
 
 def write_subset(
-    image_paths: List[str],
-    image_output_directory: str,
-    dimensions_map: dict[str, List[int]],
-    hashes_map: dict[str, str],
-    write_to_null: bool = False,
-    num_subfolders: int = 0,
-    num_processes: int = 1,
-    size: int = 1_000_000,
-    max_retries: int = 10,
+        image_paths: List[str],
+        image_output_directory: str,
+        dimensions_map: dict[str, List[int]],
+        hashes_map: dict[str, str],
+        write_to_null: bool = False,
+        num_subfolders: int = 0,
+        num_processes: int = 1,
+        size: int = 1_000_000,
+        max_retries: int = 10,
 ) -> dict[str, dict]:
     """
     Writes DICOM images as a common raster format.
@@ -156,7 +156,7 @@ def write_subset(
 
 
 def _write_subset_helper(
-    output_dir, image_path: str, write_to_null: bool = False, num_subfolders: int = 0
+        output_dir, image_path: str, write_to_null: bool = False, num_subfolders: int = 0
 ) -> dict:
     """
     Helper function to write an individual DICOM image to output dir.
@@ -227,11 +227,11 @@ def _write_subset_helper(
 
 
 def pick_possible_images(
-    image_paths: List[str],
-    dimensions_map: dict[str, List[int]],
-    hashes_map: dict[str, str],
-    min_size: int = 256,
-    max_size: int = 768,
+        image_paths: List[str],
+        dimensions_map: dict[str, List[int]],
+        hashes_map: dict[str, str],
+        min_size: int = 256,
+        max_size: int = 768,
 ) -> List[str]:
     """
     Determines which file paths from the images could potentially be used to create a subset of data. Excludes
@@ -258,10 +258,10 @@ def pick_possible_images(
 
         width, height = dimensions_map[path]
         if (
-            (width > max_size)
-            or (height > max_size)
-            or (width < min_size)
-            or (height < min_size)
+                (width > max_size)
+                or (height > max_size)
+                or (width < min_size)
+                or (height < min_size)
         ):
             continue
 
@@ -301,9 +301,78 @@ def map_paths_to_dataset(image_paths: List[str]) -> dict[str, str]:
 
     return dataset_map
 
+def get_raster_image_dimensions(image_paths: List[str], num_processes: int = 1) -> dict[str, List[int]]:
+    """
+    Get the width and height of every image in the given list of image paths.
+
+    Parameters
+    ----------
+    image_paths : List[str] A list of image file paths.
+    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
+
+    Returns
+    -------
+    dict[str, List[int]]
+        A dictionary where the keys are the file paths and the values are a list where the first
+        element is the width and the second is the height of the image.
+    """
+    image_informaiton = utils.process_files(
+        image_paths, _get_raster_image_dimensions_helper, num_processes
+    )
+    value_as_list = {}
+    for key, value in image_informaiton.items():
+        if not value:
+            continue
+        value_as_list[key] = [value["width"], value["height"]]
+
+    return value_as_list
+
+
+def _get_raster_image_dimensions_helper(image_path: str) -> dict:
+    """
+    Helper processing function to get the image dimensions.
+
+    Parameters
+    ----------
+    image_path : str The path to the image.
+
+    Returns
+    -------
+    dict
+        A dictionary with two entries: "width" and "height".
+    """
+    image = Image.open(image_path)
+    width, height = image.size
+    return {"width": width, "height": height}
+
+
+def get_raster_image_dimensions_wrapper(dirs: List[str], output_path: str, num_processes: int = 1):
+    """
+    Wrapper to get the dimensions of all the images in "dirs".
+
+    Parameters
+    ----------
+    dirs : List[str] A list of directory paths to look for raster imagse.
+    output_path : str The path to write the map of image paths to dimensions as JSON.
+    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
+    """
+    image_paths = utils.get_file_paths(dirs, lambda path: path.endswith(".png"))
+    dimensions = get_raster_image_dimensions(image_paths, num_processes)
+    with open(output_path, "w") as f:
+        json.dump(dimensions, f)
+
+    count = 0
+    for _, value in dimensions.items():
+        if value:
+            count += 1
+
+    print(
+        f"Successfully computed the dimensions of {count} images"
+    )
+
 
 def get_dicom_image_dimensions_wrapper(
-    dirs: List[str], output_path: str, num_processes: int = 1
+        dirs: List[str], output_path: str, num_processes: int = 1
 ):
     """
     Wrapper to get the dimensions of all the pixel data from the dicom files in "dirs".
@@ -330,7 +399,7 @@ def get_dicom_image_dimensions_wrapper(
 
 
 def get_dicom_image_dimensions(
-    image_paths: List[str], num_processes: int = 1
+        image_paths: List[str], num_processes: int = 1
 ) -> dict[str, List[int]]:
     """
     Gets the width and height of every dicom file in the given list of image paths.
@@ -379,7 +448,7 @@ def _get_dicom_image_dimensions_helper(image_path: str) -> dict:
 
 
 def get_dicom_image_hashes(
-    image_paths: List[str], num_processes: int = 1
+        image_paths: List[str], num_processes: int = 1
 ) -> dict[str, str]:
     """
     Gets the hashes of all the pixel data from the dicom files specified in `image_paths`.
@@ -428,7 +497,7 @@ def _get_dicom_image_hashes_helper(image_path: str) -> dict:
 
 
 def get_dicom_image_hashes_wrapper(
-    dirs: List[str], output_path: str, num_processes: int = 1
+        dirs: List[str], output_path: str, num_processes: int = 1
 ):
     """
     Wrapper to get the hashes of all the pixel data from the dicom files in "dirs".
@@ -541,6 +610,22 @@ def parse_args():
         "--write_to_null", action="store_true", help="Write all images to null file."
     )
 
+    parser_get_raster_sizes = sub_parsers.add_parser(
+        "raster_sizes", help="Get the sizes of raster images"
+    )
+    parser_get_raster_sizes.add_argument(
+        "--dirs", nargs="+", type=str, help="Directories to search DICOM images for."
+    )
+    parser_get_raster_sizes.add_argument(
+        "--output_path", type=str, help="Where to write the map from paths to sizes."
+    )
+    parser_get_raster_sizes.add_argument(
+        "--num_processes",
+        type=int,
+        default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
+        help="Number of processes to use for parallel processing.",
+    )
+
     return parser.parse_args()
 
 
@@ -552,6 +637,10 @@ def main():
         )
     if args.subcommand == "dicom_sizes":
         get_dicom_image_dimensions_wrapper(
+            args.dirs, args.output_path, num_processes=args.num_processes
+        )
+    if args.subcommand == "raster_sizes":
+        get_raster_image_dimensions_wrapper(
             args.dirs, args.output_path, num_processes=args.num_processes
         )
     if args.subcommand == "write_subset":
