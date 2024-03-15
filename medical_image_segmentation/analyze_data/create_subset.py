@@ -1,14 +1,14 @@
+import argparse
 import hashlib
 import json
 import os
 import random
 import warnings
 from typing import List
-import argparse
 
-from PIL import Image
 import numpy as np
 import pydicom
+from PIL import Image
 
 import medical_image_segmentation.analyze_data.utils as utils
 
@@ -422,7 +422,7 @@ def _get_dicom_image_hashes_helper(image_path: str) -> dict:
         arr = pydicom.dcmread(image_path).pixel_array
         arr.flags.writeable = False
         sha_hash = hashlib.sha256(arr).hexdigest()
-    except Exception as e:
+    except Exception:
         return {}
     return {"hash": sha_hash}
 

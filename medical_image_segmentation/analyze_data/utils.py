@@ -1,18 +1,14 @@
 import multiprocessing
+import os
 import threading
 from collections import Counter
-from functools import partial
-from typing import List, Union, Callable, Tuple
-import os
-
-from PIL import Image
-
-import pydicom
-
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from functools import partial
+from typing import Callable, List, Union
+
 from rich.progress import (
-    Progress,
     BarColumn,
+    Progress,
     TextColumn,
     TimeElapsedColumn,
     TimeRemainingColumn,
