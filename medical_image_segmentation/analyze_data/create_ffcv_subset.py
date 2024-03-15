@@ -1,18 +1,8 @@
-# from ffcv.fields import NDArrayField, FloatField
-#
-# class LinearRegressionDataset:
-#     def __getitem__(self, idx):
-#         return (X[idx], np.array(Y[idx]).astype('float32'))
-#
-#     def __len__(self):
-#         return len(X)
-#
-# writer = DatasetWriter('/tmp/linreg_data.beton', {
-#     'covariate': NDArrayField(shape=(D,), dtype=np.dtype('float32')),
-#     'label': NDArrayField(shape=(1,), dtype=np.dtype('float32')),
-# }, num_workers=16)
-#
-# writer.from_indexed_dataset(LinearRegressionDataset())
+import os
+
+from ffcv.fields import NDArrayField, FloatField
+
+import argparse
 import json
 from typing import Tuple, List
 
@@ -61,3 +51,49 @@ class DICOMImageDataset:
 
     def __len__(self):
         return len(self.image_paths)
+
+
+def parse_args():
+    """Create args for command line interface."""
+    parser = argparse.ArgumentParser(
+        description="Process DICOM images and write them as a ffcv dataset."
+    )
+    parser.add_argument(
+        "--original_to_new_map_path", type=str, help="Map from original image paths to new image paths. Used to find the correct DICOM images to use."
+    )
+    parser.add_argument(
+        "--output_file_path", type=str, help="Path to write .beton file to."
+    )
+    parser.add_argument(
+        "--width", type=int, help="Width to resize the images to."
+    )
+    parser.add_argument(
+        "--height", type=int, help="Height to resize the images to."
+    )
+    parser.add_argument(
+        "--num_processes",
+        type=int,
+        default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
+        help="Number of processes to use for parallel processing.",
+    )
+
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+
+    image_paths = get_image_paths(args.original_to_new_map_path)
+    resize_dimensions = (args.width, args.height)
+
+    writer = DatasetWriter(args.output_file_path, {
+        "image": NDArrayField(shape=resize_dimensions, dtype=np.dtype("float32"))
+    }, num_workers=args.num_processes)
+
+    dataset = DICOMImageDataset(image_paths, resize_dimensions)
+
+    writer.from_indexed_dataset(dataset)
+
+
+if __name__ == "__main__":
+    main()
