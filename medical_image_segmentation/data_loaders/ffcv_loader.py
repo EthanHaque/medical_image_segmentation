@@ -39,8 +39,8 @@ def create_train_loader_ssl(this_device: str, beton_file_path: str, batch_size: 
 if __name__ == "__main__":
     this_device = f"cuda:0"
     beton_file_path = "/scratch/gpfs/RUSTOW/med_datasets/ffcv_datasets/radiology_1M.beton"
-    batch_size = 256
-    num_workers = 8
+    batch_size = 8
+    num_workers = 2
     distributed = False
     in_memory = True
 
@@ -52,8 +52,8 @@ if __name__ == "__main__":
         view_2 = loaders[1]
         concat_image = np.concatenate([view_1, view_2], axis=2)
 
-        # for pair in range(concat_image.shape[0]):
-        #     image_arr = concat_image[pair]
-        #     plt.figure(figsize=(10, 6))
-        #     plt.imshow(image_arr, cmap="binary")
-        #     plt.show()
+        for pair in range(concat_image.shape[0]):
+            image_arr = concat_image[pair]
+            plt.figure(figsize=(10, 6))
+            plt.imshow(image_arr, cmap="binary")
+            plt.show()
