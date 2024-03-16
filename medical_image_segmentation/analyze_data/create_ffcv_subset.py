@@ -35,7 +35,7 @@ def get_image_paths(original_to_new_map_path: str) -> List[str]:
 
 class DICOMImageDataset:
     def __init__(self, image_paths: List[str], output_shape: Tuple[int, int]):
-        self.image_paths = image_paths[:100]
+        self.image_paths = image_paths
         self.image_shape = output_shape
 
     def __getitem__(self, idx):
@@ -47,10 +47,16 @@ class DICOMImageDataset:
         image_arr = ((image_arr - arr_min) / (arr_max - arr_min)).astype(np.float32)
 
         image = Image.fromarray(image_arr)
-        image = image.resize(self.image_shape, Image.NEAREST)
+        image = image.resize(self.image_shape, Image.BICUBIC)
+
+        # normalizing again after resizing
+        image_arr = np.asarray(image)
+        arr_min = image_arr.min()
+        arr_max = image_arr.max()
+        image_arr = ((image_arr - arr_min) / (arr_max - arr_min)).astype(np.float32)
 
         # wrapping in tuple so that return value has correct shape (size 1).
-        return (np.asarray(image),)
+        return (image_arr,)
 
     def __len__(self):
         return len(self.image_paths)
@@ -79,6 +85,9 @@ def parse_args():
         default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
         help="Number of processes to use for parallel processing.",
     )
+    parser.add_argument(
+        "--test", action="store_true", help="Makes a small subset."
+    )
 
     return parser.parse_args()
 
@@ -87,6 +96,9 @@ def main():
     args = parse_args()
 
     image_paths = get_image_paths(args.original_to_new_map_path)
+    if args.test:
+        image_paths = image_paths[:100]
+
     resize_dimensions = (args.height, args.width)
 
     writer = DatasetWriter(args.output_file_path, {
