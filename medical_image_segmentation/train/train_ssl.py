@@ -49,7 +49,7 @@ class SelfSupervisedLearner(pl.LightningModule):
             RandomResizedCropRGBImageDecoder((IMAGE_SIZE, IMAGE_SIZE)),
             # ToTensor(),
             # ToDevice(torch.device("cuda:0"), non_blocking=True),
-            # ToTorchImage(),
+            ToTorchImage(),
             # NormalizeImage(imagenet_mean, imagenet_std, np.float32)
         ]
 
