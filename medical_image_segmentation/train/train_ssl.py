@@ -15,7 +15,7 @@ from ffcv.transforms import ToTensor, Squeeze, ToTorchImage, NormalizeImage, ToD
 
 EPOCHS = 2
 LR = 3e-4
-NUM_GPUS = int(os.environ.get("SLURM_GPUS_ON_NODE", "1"))
+NUM_GPUS = int(os.environ.get("SLURM_GPUS_ON_NODE", "2"))
 BATCH_SIZE = 256
 IMAGE_SIZE = 224
 NUM_WORKERS = int(os.environ.get("SLURM_CPUS_PER_TASK", "4"))
@@ -92,6 +92,7 @@ if __name__ == '__main__':
     trainer = pl.Trainer(
         strategy='ddp_find_unused_parameters_true',
         devices=NUM_GPUS,
+        accelerator='gpu',
         max_epochs=EPOCHS,
         accumulate_grad_batches=1,
         sync_batchnorm=True
