@@ -76,7 +76,6 @@ class SelfSupervisedLearner(pl.LightningModule):
         )
         return loader
 
-
 if __name__ == '__main__':
     resnet = models.resnet50(weights=None)
 
