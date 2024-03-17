@@ -41,48 +41,45 @@ class SelfSupervisedLearner(pl.LightningModule):
         if self.learner.use_momentum:
             self.learner.update_moving_average()
 
+    def train_dataloader(self):
+        imagenet_mean = np.array([0.485, 0.456, 0.406]) * 255
+        imagenet_std = np.array([0.229, 0.224, 0.225]) * 255
 
-def setup_imagenet_dataloader(root):
-    imagenet_mean = np.array([0.485, 0.456, 0.406]) * 255
-    imagenet_std = np.array([0.229, 0.224, 0.225]) * 255
+        image_pipeline = [
+            RandomResizedCropRGBImageDecoder((IMAGE_SIZE, IMAGE_SIZE)),
+            ToTensor(),
+            # ToDevice(torch.device("cuda:0"), non_blocking=True),
+            ToTorchImage(),
+            NormalizeImage(imagenet_mean, imagenet_std, np.float32)
+        ]
 
-    image_pipeline = [
-        RandomResizedCropRGBImageDecoder((IMAGE_SIZE, IMAGE_SIZE)),
-        ToTensor(),
-        # ToDevice(torch.device("cuda:0"), non_blocking=True),
-        ToTorchImage(),
-        NormalizeImage(imagenet_mean, imagenet_std, np.float32)
-    ]
+        label_pipeline = [
+            IntDecoder(),
+            ToTensor(),
+            Squeeze(),
+            # ToDevice(torch.device("cuda:0"), non_blocking=True),
+        ]
 
-    label_pipeline = [
-        IntDecoder(),
-        ToTensor(),
-        Squeeze(),
-        # ToDevice(torch.device("cuda:0"), non_blocking=True),
-    ]
-
-    order = OrderOption.RANDOM if NUM_GPUS > 1 else OrderOption.QUASI_RANDOM
-    loader = Loader(
-        root,
-        batch_size=BATCH_SIZE,
-        num_workers=NUM_WORKERS,
-        order=order,
-        os_cache=True,
-        drop_last=True,
-        pipelines={
-            'image': image_pipeline,
-            'label': label_pipeline
-        },
-        distributed=NUM_GPUS > 1
-    )
-    return loader
+        order = OrderOption.RANDOM if NUM_GPUS > 1 else OrderOption.QUASI_RANDOM
+        loader = Loader(
+            "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
+            batch_size=BATCH_SIZE,
+            num_workers=NUM_WORKERS,
+            order=order,
+            os_cache=True,
+            drop_last=True,
+            pipelines={
+                'image': image_pipeline,
+                'label': label_pipeline
+            },
+            distributed=NUM_GPUS > 1
+        )
+        return loader
 
 
 if __name__ == '__main__':
     resnet = models.resnet50(weights=None)
 
-    train_loader = setup_imagenet_dataloader(
-        '/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton')
 
     model = SelfSupervisedLearner(
         resnet,
@@ -100,4 +97,4 @@ if __name__ == '__main__':
         sync_batchnorm=True
     )
 
-    trainer.fit(model, train_loader)
+    trainer.fit(model)
