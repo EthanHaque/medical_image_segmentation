@@ -16,7 +16,7 @@ from ffcv.transforms import ToTensor, Squeeze, ToTorchImage, NormalizeImage, ToD
 EPOCHS = 2
 LR = 3e-4
 NUM_GPUS = int(os.environ.get("SLURM_GPUS_ON_NODE", "2"))
-BATCH_SIZE = 512
+BATCH_SIZE = 256
 IMAGE_SIZE = 224
 NUM_WORKERS = int(os.environ.get("SLURM_CPUS_PER_TASK", "4"))
 
