@@ -47,16 +47,16 @@ class SelfSupervisedLearner(pl.LightningModule):
 
         image_pipeline = [
             RandomResizedCropRGBImageDecoder((IMAGE_SIZE, IMAGE_SIZE)),
-            ToTensor(),
+            # ToTensor(),
             # ToDevice(torch.device("cuda:0"), non_blocking=True),
-            ToTorchImage(),
-            NormalizeImage(imagenet_mean, imagenet_std, np.float32)
+            # ToTorchImage(),
+            # NormalizeImage(imagenet_mean, imagenet_std, np.float32)
         ]
 
         label_pipeline = [
             IntDecoder(),
-            ToTensor(),
-            Squeeze(),
+            # ToTensor(),
+            # Squeeze(),
             # ToDevice(torch.device("cuda:0"), non_blocking=True),
         ]
 
