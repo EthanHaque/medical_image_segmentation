@@ -53,7 +53,7 @@ class SelfSupervisedLearner(pl.LightningModule):
             ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
             ffcv.transforms.ToTorchImage(),
             ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float16),
-            ffcv.transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 2))
+            ffcv.transforms.GaussianBlur(1.0, kernel_size=(5, 9), sigma=(0.1, 2))
         ]
 
         image_pipeline_1 = [
