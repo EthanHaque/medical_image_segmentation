@@ -72,7 +72,7 @@ class SelfSupervisedLearner(pl.LightningModule):
         label_pipeline = [
             ffcv.fields.basics.IntDecoder(),
             ffcv.transforms.ToTensor(),
-            ffcv.transforms.Tqueeze(),
+            ffcv.transforms.Squeeze(),
             ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
         ]
 
