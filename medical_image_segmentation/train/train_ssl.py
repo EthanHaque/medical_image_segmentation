@@ -54,7 +54,7 @@ class SelfSupervisedLearner(pl.LightningModule):
             ffcv.transforms.ToTensor(),
             ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
             ffcv.transforms.ToTorchImage(),
-            ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float16),
+            ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float32),
             torchvision.transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 2))
         ]
 
@@ -67,7 +67,7 @@ class SelfSupervisedLearner(pl.LightningModule):
             ffcv.transforms.ToTensor(),
             ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
             ffcv.transforms.ToTorchImage(),
-            ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float16)
+            ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float32)
         ]
 
         label_pipeline = [
