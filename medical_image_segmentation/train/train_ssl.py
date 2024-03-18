@@ -118,6 +118,7 @@ if __name__ == '__main__':
         max_epochs=EPOCHS,
         accumulate_grad_batches=1,
         sync_batchnorm=True,
+        resume_from_checkpoint="lightning_logs/version_0/checkpoints/epoch=37-step=5928.ckpt"
     )
 
     trainer.fit(model)
