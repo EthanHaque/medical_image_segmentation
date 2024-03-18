@@ -9,9 +9,7 @@ import pytorch_lightning as pl
 
 
 from ffcv.loader import Loader, OrderOption
-from ffcv.fields.rgb_image import RandomResizedCropRGBImageDecoder
-from ffcv.fields.basics import IntDecoder
-from ffcv.transforms import ToTensor, Squeeze, ToTorchImage, NormalizeImage, ToDevice
+import ffcv
 
 EPOCHS = 2
 LR = 3e-4
@@ -30,6 +28,7 @@ class SelfSupervisedLearner(pl.LightningModule):
         return self.learner(images)
 
     def training_step(self, batch, _):
+        print(batch)
         images, labels = batch
         loss = self.forward(images)
         return {'loss': loss}
@@ -45,22 +44,45 @@ class SelfSupervisedLearner(pl.LightningModule):
         imagenet_mean = np.array([0.485, 0.456, 0.406]) * 255
         imagenet_std = np.array([0.229, 0.224, 0.225]) * 255
 
-        image_pipeline = [
-            RandomResizedCropRGBImageDecoder((IMAGE_SIZE, IMAGE_SIZE)),
-            ToTensor(),
-            ToDevice(self.trainer.local_rank, non_blocking=True),
-            ToTorchImage(),
-            NormalizeImage(imagenet_mean, imagenet_std, np.float32)
+        image_pipeline_0 = [
+            ffcv.fields.rgb_image.RandomResizedCropRGBImageDecoder((IMAGE_SIZE, IMAGE_SIZE)),
+            ffcv.transforms.RandomHorizontalFlip(),
+            ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
+            ffcv.transforms.RandomGrayscale(0.2),
+            ffcv.transforms.ToTensor(),
+            ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
+            ffcv.transforms.ToTorchImage(),
+            ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float16),
+            ffcv.transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 2))
+        ]
+
+        image_pipeline_1 = [
+            ffcv.fields.rgb_image.RandomResizedCropRGBImageDecoder((IMAGE_SIZE, IMAGE_SIZE)),
+            ffcv.transforms.RandomHorizontalFlip(),
+            ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
+            ffcv.transforms.RandomGrayscale(0.2),
+            ffcv.transforms.RandomSolarization(0.2, 128),
+            ffcv.transforms.ToTensor(),
+            ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
+            ffcv.transforms.ToTorchImage(),
+            ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float16)
         ]
 
         label_pipeline = [
-            IntDecoder(),
-            ToTensor(),
-            Squeeze(),
-            ToDevice(self.trainer.local_rank, non_blocking=True),
+            ffcv.fields.basics.IntDecoder(),
+            ffcv.transforms.Tensor(),
+            ffcv.transforms.Tqueeze(),
+            ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
         ]
 
         order = OrderOption.RANDOM if NUM_GPUS > 1 else OrderOption.QUASI_RANDOM
+        pipelines = {
+            "image": image_pipeline_0,
+            "image_0": image_pipeline_1,
+            "label": label_pipeline,
+        }
+        custom_field_mapper = {"image_0": "image"}
+
         loader = Loader(
             "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
             batch_size=BATCH_SIZE,
@@ -68,17 +90,14 @@ class SelfSupervisedLearner(pl.LightningModule):
             order=order,
             os_cache=True,
             drop_last=True,
-            pipelines={
-                'image': image_pipeline,
-                'label': label_pipeline
-            },
-            distributed=NUM_GPUS > 1
+            pipelines=pipelines,
+            distributed=NUM_GPUS > 1,
+            custom_field_mapper=custom_field_mapper
         )
         return loader
 
 if __name__ == '__main__':
     resnet = models.resnet50(weights=None)
-
 
     model = SelfSupervisedLearner(
         resnet,
