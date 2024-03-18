@@ -127,4 +127,7 @@ if __name__ == '__main__':
         sync_batchnorm=True,
     )
 
-    trainer.fit(model, ckpt_path=args.checkpoint_path)
+    if args.checkpoint_path:
+        trainer.fit(model, ckpt_path=args.checkpoint_path)
+    else:
+        trainer.fit(model)
