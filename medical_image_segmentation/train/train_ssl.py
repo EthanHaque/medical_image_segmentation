@@ -116,7 +116,8 @@ if __name__ == '__main__':
         max_epochs=EPOCHS,
         accumulate_grad_batches=1,
         sync_batchnorm=True,
-        max_steps=100
+        max_steps=100,
+        profiler="simple"
     )
 
     trainer.fit(model)
