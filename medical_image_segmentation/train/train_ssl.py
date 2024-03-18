@@ -74,8 +74,6 @@ class SelfSupervisedLearner(pl.LightningModule):
         if epoch > args.warmup_epochs:
             lr *= cosine_schedule(epoch, args.epochs - args.warmup_epochs)
 
-        print(lr)
-
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
 
