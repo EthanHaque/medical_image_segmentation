@@ -117,7 +117,7 @@ if __name__ == '__main__':
         accumulate_grad_batches=1,
         sync_batchnorm=True,
         max_steps=100,
-        profiler="simple"
+        profiler="advanced"
     )
 
     trainer.fit(model)
