@@ -47,22 +47,22 @@ class SelfSupervisedLearner(pl.LightningModule):
 
         image_pipeline_0 = [
             ffcv.fields.rgb_image.RandomResizedCropRGBImageDecoder((IMAGE_SIZE, IMAGE_SIZE)),
-            # ffcv.transforms.RandomHorizontalFlip(),
-            # ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
-            # ffcv.transforms.RandomGrayscale(0.2),
+            ffcv.transforms.RandomHorizontalFlip(),
+            ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
+            ffcv.transforms.RandomGrayscale(0.2),
             ffcv.transforms.ToTensor(),
             ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
             ffcv.transforms.ToTorchImage(),
             ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float32),
-            # torchvision.transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 2))
+            torchvision.transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 2))
         ]
 
         image_pipeline_1 = [
             ffcv.fields.rgb_image.RandomResizedCropRGBImageDecoder((IMAGE_SIZE, IMAGE_SIZE)),
-            # ffcv.transforms.RandomHorizontalFlip(),
-            # ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
-            # ffcv.transforms.RandomGrayscale(0.2),
-            # ffcv.transforms.RandomSolarization(0.2, 128),
+            ffcv.transforms.RandomHorizontalFlip(),
+            ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
+            ffcv.transforms.RandomGrayscale(0.2),
+            ffcv.transforms.RandomSolarization(0.2, 128),
             ffcv.transforms.ToTensor(),
             ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
             ffcv.transforms.ToTorchImage(),
