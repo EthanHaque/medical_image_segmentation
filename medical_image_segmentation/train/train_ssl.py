@@ -21,10 +21,27 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num_workers", type=int, default=int(os.environ.get("SLURM_CPUS_PER_TASK", "4")), help="Number of workers for data loading")
     parser.add_argument("--num_gpus", type=int, default=int(os.environ.get("SLURM_GPUS_ON_NODE", "2")), help="Number of GPUs for training")
     parser.add_argument("--checkpoint_path", type=str, help="Path to checkpoint file to restore training")
+    parser.add_argument("--warmup_epochs", type=int, default=10, help="Number of epochs to warm up to set learning rate")
 
     return parser.parse_args()
 
+# this is pretty awful
 args = parse_args()
+
+
+def linear_warmup(current_epoch: int, number_rampup_epochs: int) -> float:
+    if current_epoch < 0:
+        raise ValueError(f"current_epoch must be positive, got {current_epoch}")
+    if number_rampup_epochs < 0:
+        raise ValueError(f"number_rampup_epochs must be positive, got {number_rampup_epochs}")
+
+    if current_epoch > number_rampup_epochs:
+        return 1.0
+    else:
+        return current_epoch / number_rampup_epochs
+
+def cosine_schedule(current_epoch: int, number_rampdown_epochs: int) -> float:
+    return 0.5 * (1 + np.cos(np.pi * current_epoch / number_rampdown_epochs))
 
 class SelfSupervisedLearner(pl.LightningModule):
     def __init__(self, net, **kwargs):
@@ -46,6 +63,19 @@ class SelfSupervisedLearner(pl.LightningModule):
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=args.lr)
+
+    def optimizer_step(self, epoch, batch_idx, optimizer, optimizer_closure):
+        optimizer.step(closure=optimizer_closure)
+
+        lr = linear_warmup(epoch, args.warmup_epochs) * args.lr
+        if epoch > args.warmup_epochs:
+            lr *= cosine_schedule(epoch, args.epochs - args.warmup_epochs)
+
+        print(lr)
+
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = lr
+
 
     def on_before_zero_grad(self, _):
         if self.learner.use_momentum:
