@@ -1,6 +1,5 @@
 import os
 import torch
-from torchvision import models
 import torchvision
 
 import numpy as np
@@ -99,7 +98,7 @@ class SelfSupervisedLearner(pl.LightningModule):
         return loader
 
 if __name__ == '__main__':
-    resnet = models.resnet50(weights=None)
+    resnet = torchvision.models.resnet18(weights=None)
 
     model = SelfSupervisedLearner(
         resnet,
