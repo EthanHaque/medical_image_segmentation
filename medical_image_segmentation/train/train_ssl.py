@@ -29,8 +29,9 @@ class SelfSupervisedLearner(pl.LightningModule):
         return self.learner(images)
 
     def training_step(self, batch, _):
-        print(batch)
-        images, labels = batch
+        images_0 = batch[0]
+        images_1 = batch[2]
+        images = torch.cat((images_0, images_1), dim=0)
         loss = self.forward(images)
         return {'loss': loss}
 
