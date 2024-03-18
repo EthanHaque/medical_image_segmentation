@@ -11,11 +11,11 @@ import pytorch_lightning as pl
 from ffcv.loader import Loader, OrderOption
 import ffcv
 
-EPOCHS = 2
+EPOCHS = 300
 LR = 3e-4
 NUM_GPUS = int(os.environ.get("SLURM_GPUS_ON_NODE", "2"))
-BATCH_SIZE = 256
-IMAGE_SIZE = 224
+BATCH_SIZE = 512
+IMAGE_SIZE = 160
 NUM_WORKERS = int(os.environ.get("SLURM_CPUS_PER_TASK", "4"))
 
 
