@@ -67,6 +67,9 @@ class SelfSupervisedLearner(pl.LightningModule):
     def optimizer_step(self, epoch, batch_idx, optimizer, optimizer_closure):
         optimizer.step(closure=optimizer_closure)
 
+        # epoch starts at 0, so we increment by 1
+        epoch += 1
+
         lr = linear_warmup(epoch, args.warmup_epochs) * args.lr
         if epoch > args.warmup_epochs:
             lr *= cosine_schedule(epoch, args.epochs - args.warmup_epochs)
