@@ -1,3 +1,4 @@
+# Adapted from https://github.com/lucidrains/byol-pytorch
 import copy
 import random
 from functools import wraps
@@ -6,8 +7,6 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import torch.distributed as dist
-
-# from torchvision import transforms as T
 
 # helper functions
 
