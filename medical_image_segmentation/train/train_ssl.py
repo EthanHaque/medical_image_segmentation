@@ -14,7 +14,7 @@ import ffcv
 EPOCHS = 2
 LR = 3e-4
 NUM_GPUS = int(os.environ.get("SLURM_GPUS_ON_NODE", "2"))
-BATCH_SIZE = 128
+BATCH_SIZE = 256
 IMAGE_SIZE = 224
 NUM_WORKERS = int(os.environ.get("SLURM_CPUS_PER_TASK", "4"))
 
@@ -115,8 +115,6 @@ if __name__ == '__main__':
         max_epochs=EPOCHS,
         accumulate_grad_batches=1,
         sync_batchnorm=True,
-        max_steps=100,
-        profiler="advanced"
     )
 
     trainer.fit(model)
