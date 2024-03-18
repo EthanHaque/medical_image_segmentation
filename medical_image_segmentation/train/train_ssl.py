@@ -14,7 +14,7 @@ import ffcv
 EPOCHS = 2
 LR = 3e-4
 NUM_GPUS = int(os.environ.get("SLURM_GPUS_ON_NODE", "2"))
-BATCH_SIZE = 256
+BATCH_SIZE = 16
 IMAGE_SIZE = 224
 NUM_WORKERS = int(os.environ.get("SLURM_CPUS_PER_TASK", "4"))
 
@@ -88,7 +88,7 @@ class SelfSupervisedLearner(pl.LightningModule):
             batch_size=BATCH_SIZE,
             num_workers=NUM_WORKERS,
             order=order,
-            os_cache=True,
+            os_cache=False,
             drop_last=True,
             pipelines=pipelines,
             distributed=NUM_GPUS > 1,
