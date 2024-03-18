@@ -1,3 +1,4 @@
+import argparse
 import os
 import torch
 import torchvision
@@ -11,13 +12,19 @@ import pytorch_lightning as pl
 from ffcv.loader import Loader, OrderOption
 import ffcv
 
-EPOCHS = 300
-LR = 3e-4
-NUM_GPUS = int(os.environ.get("SLURM_GPUS_ON_NODE", "2"))
-BATCH_SIZE = 2048
-IMAGE_SIZE = 56
-NUM_WORKERS = int(os.environ.get("SLURM_CPUS_PER_TASK", "4"))
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Self-Supervised Learning with BYOL and PyTorch")
+    parser.add_argument("--epochs", type=int, default=300, help="Number of training epochs")
+    parser.add_argument("--lr", type=float, default=3e-4, help="Learning rate")
+    parser.add_argument("--batch_size", type=int, default=2048, help="Batch size")
+    parser.add_argument("--image_size", type=int, default=256, help="Image size")
+    parser.add_argument("--num_workers", type=int, default=int(os.environ.get("SLURM_CPUS_PER_TASK", "4")), help="Number of workers for data loading")
+    parser.add_argument("--num_gpus", type=int, default=int(os.environ.get("SLURM_GPUS_ON_NODE", "2")), help="Number of GPUs for training")
+    parser.add_argument("--checkpoint_path", type=str, help="Path to checkpoint file to restore training")
 
+    return parser.parse_args()
+
+args = parse_args()
 
 class SelfSupervisedLearner(pl.LightningModule):
     def __init__(self, net, **kwargs):
@@ -38,7 +45,7 @@ class SelfSupervisedLearner(pl.LightningModule):
         return {'loss': loss}
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=LR)
+        return torch.optim.Adam(self.parameters(), lr=args.lr)
 
     def on_before_zero_grad(self, _):
         if self.learner.use_momentum:
@@ -49,7 +56,7 @@ class SelfSupervisedLearner(pl.LightningModule):
         imagenet_std = np.array([0.229, 0.224, 0.225]) * 255
 
         image_pipeline_0 = [
-            ffcv.fields.rgb_image.RandomResizedCropRGBImageDecoder((IMAGE_SIZE, IMAGE_SIZE)),
+            ffcv.fields.rgb_image.RandomResizedCropRGBImageDecoder((args.image_size, args.image_size)),
             ffcv.transforms.RandomHorizontalFlip(),
             ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
             ffcv.transforms.RandomGrayscale(0.2),
@@ -61,7 +68,7 @@ class SelfSupervisedLearner(pl.LightningModule):
         ]
 
         image_pipeline_1 = [
-            ffcv.fields.rgb_image.RandomResizedCropRGBImageDecoder((IMAGE_SIZE, IMAGE_SIZE)),
+            ffcv.fields.rgb_image.RandomResizedCropRGBImageDecoder((args.image_size, args.image_size)),
             ffcv.transforms.RandomHorizontalFlip(),
             ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
             ffcv.transforms.RandomGrayscale(0.2),
@@ -79,7 +86,7 @@ class SelfSupervisedLearner(pl.LightningModule):
             ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
         ]
 
-        order = OrderOption.RANDOM if NUM_GPUS > 1 else OrderOption.QUASI_RANDOM
+        order = OrderOption.RANDOM if args.num_gpus > 1 else OrderOption.QUASI_RANDOM
         pipelines = {
             "image": image_pipeline_0,
             "image_0": image_pipeline_1,
@@ -89,13 +96,13 @@ class SelfSupervisedLearner(pl.LightningModule):
 
         loader = Loader(
             "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
-            batch_size=BATCH_SIZE,
-            num_workers=NUM_WORKERS,
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
             order=order,
             os_cache=True,
             drop_last=True,
             pipelines=pipelines,
-            distributed=NUM_GPUS > 1,
+            distributed=args.num_gpus > 1,
             custom_field_mapper=custom_field_mapper
         )
         return loader
@@ -105,7 +112,7 @@ if __name__ == '__main__':
 
     model = SelfSupervisedLearner(
         resnet,
-        image_size=IMAGE_SIZE,
+        image_size=args.image_size,
         hidden_layer='avgpool',
         projection_size=256,
         projection_hidden_size=4096,
@@ -113,11 +120,11 @@ if __name__ == '__main__':
     )
     trainer = pl.Trainer(
         strategy='ddp_find_unused_parameters_true',
-        devices=NUM_GPUS,
+        devices=args.num_gpus,
         accelerator='gpu',
-        max_epochs=EPOCHS,
+        max_epochs=args.epochs,
         accumulate_grad_batches=1,
         sync_batchnorm=True,
     )
 
-    trainer.fit(model, ckpt_path="lightning_logs/version_0/checkpoints/epoch=37-step=5928.ckpt")
+    trainer.fit(model, ckpt_path=args.checkpoint_path)
