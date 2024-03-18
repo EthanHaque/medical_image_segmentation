@@ -14,7 +14,7 @@ import ffcv
 EPOCHS = 300
 LR = 3e-4
 NUM_GPUS = int(os.environ.get("SLURM_GPUS_ON_NODE", "2"))
-BATCH_SIZE = 1024
+BATCH_SIZE = 2048
 IMAGE_SIZE = 56
 NUM_WORKERS = int(os.environ.get("SLURM_CPUS_PER_TASK", "4"))
 
@@ -32,6 +32,9 @@ class SelfSupervisedLearner(pl.LightningModule):
         images_1 = batch[2]
         images = torch.cat((images_0, images_1), dim=0)
         loss = self.forward(images)
+
+        self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
         return {'loss': loss}
 
     def configure_optimizers(self):
