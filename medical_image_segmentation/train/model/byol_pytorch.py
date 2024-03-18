@@ -189,28 +189,6 @@ class BYOL(nn.Module):
         super().__init__()
         self.net = net
 
-        # default SimCLR augmentation
-
-        # DEFAULT_AUG = torch.nn.Sequential(
-        #     RandomApply(
-        #         T.ColorJitter(0.8, 0.8, 0.8, 0.2),
-        #         p = 0.3
-        #     ),
-        #     T.RandomGrayscale(p=0.2),
-        #     T.RandomHorizontalFlip(),
-        #     RandomApply(
-        #         T.GaussianBlur((3, 3), (1.0, 2.0)),
-        #         p = 0.2
-        #     ),
-        #     T.RandomResizedCrop((image_size, image_size)),
-        #     T.Normalize(
-        #         mean=torch.tensor([0.485, 0.456, 0.406]),
-        #         std=torch.tensor([0.229, 0.224, 0.225])),
-        # )
-        #
-        # self.augment1 = default(augment_fn, DEFAULT_AUG)
-        # self.augment2 = default(augment_fn2, self.augment1)
-
         self.online_encoder = NetWrapper(
             net,
             projection_size,
@@ -259,11 +237,6 @@ class BYOL(nn.Module):
         if return_embedding:
             return self.online_encoder(x, return_projection = return_projection)
 
-        # image_one, image_two = self.augment1(x), self.augment2(x)
-
-        # images = torch.cat((image_one, image_two), dim = 0)
-
-        # online_projections, _ = self.online_encoder(images)
         online_projections, _ = self.online_encoder(x)
         online_predictions = self.online_predictor(online_projections)
 
