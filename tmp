@@ -1,0 +1,8 @@
+#!/bin/bash
+
+while true; do
+    clear
+    python medical_image_segmentation/analyze_data/plot_loss_in_terminal.py  lightning_logs/version_8/metrics.csv
+    sleep 90  
+done
+
