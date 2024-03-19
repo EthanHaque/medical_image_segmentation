@@ -29,20 +29,6 @@ def parse_args() -> argparse.Namespace:
 args = parse_args()
 
 
-def linear_warmup(current_epoch: int, number_rampup_epochs: int) -> float:
-    if current_epoch < 0:
-        raise ValueError(f"current_epoch must be positive, got {current_epoch}")
-    if number_rampup_epochs < 0:
-        raise ValueError(f"number_rampup_epochs must be positive, got {number_rampup_epochs}")
-
-    if current_epoch > number_rampup_epochs:
-        return 1.0
-    else:
-        return current_epoch / number_rampup_epochs
-
-def cosine_schedule(current_epoch: int, number_rampdown_epochs: int) -> float:
-    return 0.5 * (1 + np.cos(np.pi * current_epoch / number_rampdown_epochs))
-
 class SelfSupervisedLearner(pl.LightningModule):
     def __init__(self, net, **kwargs):
         super().__init__()
@@ -62,20 +48,13 @@ class SelfSupervisedLearner(pl.LightningModule):
         return {'loss': loss}
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=args.lr)
+        optimizer = torch.optim.Adam(self.parameters(), lr=args.lr)
 
-    def optimizer_step(self, epoch, batch_idx, optimizer, optimizer_closure):
-        optimizer.step(closure=optimizer_closure)
+        warmup_scheduler = torch.optim.lr_scheduler.LinearLr(optimizer, start_factor=0.1, total_iters=args.warmup_epochs)
+        cosine_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs - args.warmup_epochs)
+        scheduler = torch.optim.lr_scheduler.SequentialLR(optimizer, schedulers=[warmup_scheduler, cosine_scheduler], milestones=[args.warmup_epochs])
 
-        # epoch starts at 0, so we increment by 1
-        epoch += 1
-
-        lr = linear_warmup(epoch, args.warmup_epochs) * args.lr
-        if epoch > args.warmup_epochs:
-            lr *= cosine_schedule(epoch, args.epochs - args.warmup_epochs)
-
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = lr
+        return [optimizer], [scheduler]
 
 
     def on_before_zero_grad(self, _):
@@ -149,6 +128,11 @@ if __name__ == '__main__':
         projection_hidden_size=4096,
         moving_average_decay=0.99
     )
+
+
+    callbacks = [
+        pl.callbacks.LearningRateMonitor(logging_interval="epoch")
+    ]
     trainer = pl.Trainer(
         strategy='ddp_find_unused_parameters_true',
         devices=args.num_gpus,
@@ -156,6 +140,7 @@ if __name__ == '__main__':
         max_epochs=args.epochs,
         accumulate_grad_batches=1,
         sync_batchnorm=True,
+        callbacks=callbacks,
     )
 
     if args.checkpoint_path:
