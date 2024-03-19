@@ -40,9 +40,6 @@ class KNNOnlineEvaluator(Callback):
         self.k = k
         self.temperature = temperature
 
-    def setup(self, trainer: Trainer, pl_module: LightningModule, stage: Optional[str] = None) -> None:
-        self.num_classes = trainer.datamodule.num_classes
-
     def predict(self, query_feature: Tensor, feature_bank: Tensor, target_bank: Tensor) -> Tensor:
         """
         Args:
