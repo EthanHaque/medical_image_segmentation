@@ -29,7 +29,6 @@ def main():
     plt.title("Metrics over Epochs")
     plt.xlabel("Epoch")
     plt.ylabel("Metric Value")
-    plt.legend()
     plt.show()
 
 if __name__ == "__main__":
