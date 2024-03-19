@@ -179,7 +179,7 @@ if __name__ == '__main__':
 
     callbacks = [
         pl.callbacks.LearningRateMonitor(logging_interval="epoch"),
-        KNNOnlineEvaluator(),
+        KNNOnlineEvaluator(num_classes=1000),
 
     ]
     trainer = pl.Trainer(

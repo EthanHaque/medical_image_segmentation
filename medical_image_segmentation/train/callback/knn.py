@@ -30,20 +30,18 @@ class KNNOnlineEvaluator(Callback):
         )
     """
 
-    def __init__(self, k: int = 200, temperature: float = 0.07) -> None:
+    def __init__(self, k: int = 200, temperature: float = 0.07, num_classes: int = 1000) -> None:
         """
         Args:
             k: k for k nearest neighbor
             temperature: temperature. See tau in section 3.4 of https://arxiv.org/pdf/1805.01978.pdf.
         """
-        self.num_classes: Optional[int] = None
-        self.dataset: Optional[int] = None
+        self.num_classes = num_classes
         self.k = k
         self.temperature = temperature
 
     def setup(self, trainer: Trainer, pl_module: LightningModule, stage: Optional[str] = None) -> None:
         self.num_classes = trainer.datamodule.num_classes
-        self.dataset = trainer.datamodule.name
 
     def predict(self, query_feature: Tensor, feature_bank: Tensor, target_bank: Tensor) -> Tensor:
         """
@@ -77,11 +75,6 @@ class KNNOnlineEvaluator(Callback):
         return pred_scores.argsort(dim=-1, descending=True)
 
     def to_device(self, batch: Tensor, device: Union[str, torch.device]) -> Tuple[Tensor, Tensor]:
-        # get the labeled batch
-        if self.dataset == "stl10":
-            labeled_batch = batch[1]
-            batch = labeled_batch
-
         inputs, y = batch
 
         # last input is for online eval
