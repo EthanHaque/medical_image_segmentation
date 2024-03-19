@@ -23,6 +23,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--checkpoint_path", type=str, help="Path to checkpoint file to restore training")
     parser.add_argument("--warmup_epochs", type=int, default=10, help="Number of epochs to warm up to set learning rate")
     parser.add_argument("--optimizer", type=str, default="adam", help="Optimizer to use")
+    parser.add_argument("--dry", action="store_true", help="Dry run")
 
     return parser.parse_args()
 
@@ -37,6 +38,21 @@ class SelfSupervisedLearner(pl.LightningModule):
 
     def forward(self, images):
         return self.learner(images)
+
+    def on_train_start(self):
+        hparams = {
+            "hp/epochs": args.epochs,
+            "hp/batch_size": args.batch_size,
+            "hp/learning_rate": args.learning_rate,
+            "hp/image_size": args.image_size,
+            "hp/num_gpus": args.num_gpus,
+            "hp/num_workers": args.num_workers,
+            "hp/checkpoint_path": args.checkpoint_path,
+            "hp/warmup_epochs": args.warmup_epochs,
+            "hp/optimizer": args.optimizer,
+            "hp/dry": args.dry
+        }
+        self.logger.log_hyperparams(self.hparams, hparams)
 
     def training_step(self, batch, _):
         images_0 = batch[0]
@@ -128,7 +144,8 @@ class SelfSupervisedLearner(pl.LightningModule):
 
         return loader
 
-if __name__ == '__main__':
+def setup_train_objects():
+    """Creates objects for training."""
     resnet = torchvision.models.resnet18(weights=None)
 
     model = SelfSupervisedLearner(
@@ -140,6 +157,7 @@ if __name__ == '__main__':
         moving_average_decay=0.99
     )
 
+    logger = pl.loggers.TensorBoardLogger("logs", default_hp_metric=False, log_momentum=True, log_weight_decay=True)
 
     callbacks = [
         pl.callbacks.LearningRateMonitor(logging_interval="epoch")
@@ -152,9 +170,24 @@ if __name__ == '__main__':
         accumulate_grad_batches=1,
         sync_batchnorm=True,
         callbacks=callbacks,
+        logger=logger,
     )
+
+    return model, trainer
+
+
+def main():
+    """Dispatches to correct method calls based on args"""
+    model, trainer = setup_train_objects()
+
+    if args.dry_run:
+        return
 
     if args.checkpoint_path:
         trainer.fit(model, ckpt_path=args.checkpoint_path)
     else:
         trainer.fit(model)
+
+
+if __name__ == '__main__':
+    main()
