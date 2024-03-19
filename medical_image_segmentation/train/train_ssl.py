@@ -121,6 +121,11 @@ class SelfSupervisedLearner(pl.LightningModule):
             distributed=args.num_gpus > 1,
             custom_field_mapper=custom_field_mapper
         )
+
+        # adding in to test iterating over all the batches one time before starting training.
+        for _ in loader:
+            continue
+
         return loader
 
 if __name__ == '__main__':
