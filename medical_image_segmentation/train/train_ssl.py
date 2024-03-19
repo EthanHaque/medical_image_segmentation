@@ -49,9 +49,9 @@ class SelfSupervisedLearner(pl.LightningModule):
         return {'loss': loss}
 
     def configure_optimizers(self):
-        if self.optimizer == 'adam':
+        if args.optimizer == 'adam':
             optimizer = torch.optim.Adam(self.parameters(), lr=args.lr)
-        elif self.optimizer == "sgd":
+        elif args.optimizer == "sgd":
             optimizer = torch.optim.SGD(self.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
         else:
             raise NotImplementedError(f"Optimizer {self.optimizer} not implemented as option")
