@@ -22,6 +22,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num_gpus", type=int, default=int(os.environ.get("SLURM_GPUS_ON_NODE", "2")), help="Number of GPUs for training")
     parser.add_argument("--checkpoint_path", type=str, help="Path to checkpoint file to restore training")
     parser.add_argument("--warmup_epochs", type=int, default=10, help="Number of epochs to warm up to set learning rate")
+    parser.add_argument("--optimizer", type=str, default="adam", help="Optimizer to use")
 
     return parser.parse_args()
 
@@ -48,7 +49,12 @@ class SelfSupervisedLearner(pl.LightningModule):
         return {'loss': loss}
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=args.lr)
+        if self.optimizer == 'adam':
+            optimizer = torch.optim.Adam(self.parameters(), lr=args.lr)
+        elif self.optimizer == "sgd":
+            optimizer = torch.optim.SGD(self.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
+        else:
+            raise NotImplementedError(f"Optimizer {self.optimizer} not implemented as option")
 
         warmup_scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=0.1, total_iters=args.warmup_epochs)
         cosine_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs - args.warmup_epochs)
