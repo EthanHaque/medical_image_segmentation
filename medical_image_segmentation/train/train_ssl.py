@@ -115,7 +115,7 @@ class SelfSupervisedLearner(pl.LightningModule):
             batch_size=args.batch_size,
             num_workers=args.num_workers,
             order=order,
-            os_cache=True,
+            os_cache=False,
             drop_last=True,
             pipelines=pipelines,
             distributed=args.num_gpus > 1,
