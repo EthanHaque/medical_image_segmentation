@@ -157,10 +157,10 @@ def setup_train_objects():
         moving_average_decay=0.99
     )
 
-    logger = pl.loggers.TensorBoardLogger("logs", default_hp_metric=False, log_momentum=True, log_weight_decay=True)
+    logger = pl.loggers.TensorBoardLogger("logs", default_hp_metric=False)
 
     callbacks = [
-        pl.callbacks.LearningRateMonitor(logging_interval="epoch")
+        pl.callbacks.LearningRateMonitor(logging_interval="epoch", log_momentum=True, log_weight_decay=True)
     ]
     trainer = pl.Trainer(
         strategy='ddp_find_unused_parameters_true',
