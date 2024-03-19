@@ -12,6 +12,8 @@ import pytorch_lightning as pl
 from ffcv.loader import Loader, OrderOption
 import ffcv
 
+from callback.knn import KNNOnlineEvaluator
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Self-Supervised Learning with BYOL and PyTorch")
     parser.add_argument("--epochs", type=int, default=300, help="Number of training epochs")
@@ -123,6 +125,45 @@ class SelfSupervisedLearner(pl.LightningModule):
         )
         return loader
 
+
+    def val_dataloader(self):
+        imagenet_mean = np.array([0.485, 0.456, 0.406]) * 255
+        imagenet_std = np.array([0.229, 0.224, 0.225]) * 255
+
+        image_pipeline = [
+            ffcv.fields.rgb_image.CenterCropRGBImageDecoder((args.image_size, args.image_size)),
+            ffcv.transforms.ToTensor(),
+            ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
+            ffcv.transforms.ToTorchImage(),
+            ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float32),
+        ]
+
+        label_pipeline = [
+            ffcv.fields.basics.IntDecoder(),
+            ffcv.transforms.ToTensor(),
+            ffcv.transforms.Squeeze(),
+            ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
+        ]
+
+        order = OrderOption.SEQUENTIAL
+        pipelines = {
+            "image": image_pipeline,
+            "label": label_pipeline,
+        }
+
+        loader = Loader(
+            "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_val.beton",
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+            order=order,
+            os_cache=True,
+            drop_last=True,
+            pipelines=pipelines,
+            distributed=args.num_gpus > 1,
+        )
+        return loader
+
+
 if __name__ == '__main__':
     resnet = torchvision.models.resnet18(weights=None)
 
@@ -137,7 +178,9 @@ if __name__ == '__main__':
 
 
     callbacks = [
-        pl.callbacks.LearningRateMonitor(logging_interval="epoch")
+        pl.callbacks.LearningRateMonitor(logging_interval="epoch"),
+        KNNOnlineEvaluator(),
+
     ]
     trainer = pl.Trainer(
         strategy='ddp_find_unused_parameters_true',
