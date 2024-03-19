@@ -36,7 +36,6 @@ def main():
     if args.ymin is not None or args.ymax is not None:
         plt.ylim(args.ymin, args.ymax)
 
-    plt.legend()
     plt.show()
 
 
