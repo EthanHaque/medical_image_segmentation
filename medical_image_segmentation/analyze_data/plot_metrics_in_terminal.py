@@ -6,6 +6,8 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--metrics", nargs="+", required=True, help="Which headers to plot")
     parser.add_argument("--filenames", nargs='+', help="One or more CSV files to process")
+    parser.add_argument("--ymin", type=float, required=False, help="Minimum y value to plot")
+    parser.add_argument("--ymax", type=float, required=False, help="Maximum y value to plot")
 
     return parser.parse_args()
 
@@ -29,7 +31,14 @@ def main():
     plt.title("Metrics over Epochs")
     plt.xlabel("Epoch")
     plt.ylabel("Metric Value")
+
+    # Set the y-axis limits if specified
+    if args.ymin is not None or args.ymax is not None:
+        plt.ylim(args.ymin, args.ymax)
+
+    plt.legend()
     plt.show()
+
 
 if __name__ == "__main__":
     main()
