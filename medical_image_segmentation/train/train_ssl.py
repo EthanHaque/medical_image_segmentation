@@ -180,7 +180,7 @@ def main():
     """Dispatches to correct method calls based on args"""
     model, trainer = setup_train_objects()
 
-    if args.dry_run:
+    if args.dry:
         return
 
     if args.checkpoint_path:
