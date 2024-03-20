@@ -92,40 +92,18 @@ class SelfSupervisedLearner(pl.LightningModule):
         return loader
 
     def val_dataloader(self):
-        imagenet_mean = np.array([0.485, 0.456, 0.406]) * 255
-        imagenet_std = np.array([0.229, 0.224, 0.225]) * 255
-
-        image_pipeline = [
-            ffcv.fields.rgb_image.CenterCropRGBImageDecoder((args.image_size, args.image_size)),
-            ffcv.transforms.ToTensor(),
-            ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
-            ffcv.transforms.ToTorchImage(),
-            ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float32),
-        ]
-
-        label_pipeline = [
-            ffcv.fields.basics.IntDecoder(),
-            ffcv.transforms.ToTensor(),
-            ffcv.transforms.Squeeze(),
-            ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
-        ]
-
-        order = OrderOption.SEQUENTIAL
-        pipelines = {
-            "image": image_pipeline,
-            "label": label_pipeline,
-        }
-
-        loader = Loader(
-            "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_val.beton",
+        subset_size = args.subset_size if args.subset_size else -1
+        loader = create_train_loader_ssl(
+            this_device=self.trainer.local_rank,
+            beton_file_path="/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_val.beton",
             batch_size=args.batch_size,
             num_workers=args.num_workers,
-            order=order,
-            os_cache=True,
-            drop_last=True,
-            pipelines=pipelines,
-            distributed=args.num_gpus > 1,
+            image_size=args.image_size,
+            num_gpus=args.num_gpus,
+            in_memory=True,
+            subset_size=subset_size,
         )
+
         return loader
 
 
