@@ -72,7 +72,6 @@ class KNNOnlineEvaluator(Callback):
         return pred_scores.argsort(dim=-1, descending=True)
 
     def to_device(self, batch: Tensor, device: Union[str, torch.device]) -> Tuple[Tensor, Tensor]:
-        print(batch, len(batch))
         original_images = batch[0]
         labels = batch[1]
         # images_aug_1 = batch[2]
