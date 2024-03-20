@@ -125,9 +125,6 @@ class KNNOnlineEvaluator(Callback):
 
                 pred_labels = self.predict(feature, feature_bank, target_bank)
 
-                print(pred_labels.shape)
-                print(target.shape)
-
                 total_num += x.shape[0]
                 total_top1 += (pred_labels[:, 0] == target).float().sum().item()
 
