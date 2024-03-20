@@ -13,7 +13,7 @@ from ffcv.loader import Loader, OrderOption
 import ffcv
 
 from callback.knn import KNNOnlineEvaluator
-from medical_image_segmentation.train.data_loaders.ffcv_loader import create_train_loader_ssl
+from medical_image_segmentation.train.data_loaders.ffcv_loader import create_train_loader_ssl, create_val_loader_ssl
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Self-Supervised Learning with BYOL and PyTorch")
@@ -99,7 +99,7 @@ class SelfSupervisedLearner(pl.LightningModule):
 
     def val_dataloader(self):
         subset_size = args.val_subset_size if args.val_subset_size else -1
-        loader = create_train_loader_ssl(
+        loader = create_val_loader_ssl(
             this_device=self.trainer.local_rank,
             beton_file_path="/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_val.beton",
             batch_size=args.batch_size,
