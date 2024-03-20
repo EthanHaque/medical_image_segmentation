@@ -34,7 +34,7 @@ def compute_embeddings(model: torch.nn.Module, loader: DataLoader, device: torch
         x = images.to(device)
         target = labels.to(device)
 
-        feature = model.forward(x, return_embeddings=True)[0].flatten(start_dim=1)
+        feature = model.forward(x, return_embedding=True)[0].flatten(start_dim=1)
         feature = F.normalize(feature, dim=1)
 
         embeddings.append(feature)
