@@ -42,8 +42,8 @@ class SelfSupervisedLearner(pl.LightningModule):
         super().__init__()
         self.learner = BYOL(net, **kwargs)
 
-    def forward(self, images):
-        return self.learner(images)
+    def forward(self, images, return_embedding=False):
+        return self.learner(images, return_embedding=return_embedding)
 
     def on_train_start(self):
         self.logger.log_hyperparams(args)
