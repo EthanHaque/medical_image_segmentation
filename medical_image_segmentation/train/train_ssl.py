@@ -12,6 +12,8 @@ import pytorch_lightning as pl
 from ffcv.loader import Loader, OrderOption
 import ffcv
 
+import medical_image_segmentation.train.data_loaders as data_loaders
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Self-Supervised Learning with BYOL and PyTorch")
     parser.add_argument("--epochs", type=int, default=300, help="Number of training epochs")
@@ -74,73 +76,17 @@ class SelfSupervisedLearner(pl.LightningModule):
             self.learner.update_moving_average()
 
     def train_dataloader(self):
-        imagenet_mean = np.array([0.485, 0.456, 0.406]) * 255
-        imagenet_std = np.array([0.229, 0.224, 0.225]) * 255
-
-        image_pipeline_0 = [
-            ffcv.fields.rgb_image.RandomResizedCropRGBImageDecoder((args.image_size, args.image_size)),
-            ffcv.transforms.RandomHorizontalFlip(),
-            ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
-            ffcv.transforms.RandomGrayscale(0.2),
-            ffcv.transforms.ToTensor(),
-            ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
-            ffcv.transforms.ToTorchImage(),
-            ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float32),
-            torchvision.transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 2))
-        ]
-
-        image_pipeline_1 = [
-            ffcv.fields.rgb_image.RandomResizedCropRGBImageDecoder((args.image_size, args.image_size)),
-            ffcv.transforms.RandomHorizontalFlip(),
-            ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
-            ffcv.transforms.RandomGrayscale(0.2),
-            ffcv.transforms.RandomSolarization(0.2, 128),
-            ffcv.transforms.ToTensor(),
-            ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
-            ffcv.transforms.ToTorchImage(),
-            ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float32)
-        ]
-
-        label_pipeline = [
-            ffcv.fields.basics.IntDecoder(),
-            ffcv.transforms.ToTensor(),
-            ffcv.transforms.Squeeze(),
-            ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
-        ]
-
-        order = OrderOption.RANDOM if args.num_gpus > 1 else OrderOption.QUASI_RANDOM
-        pipelines = {
-            "image": image_pipeline_0,
-            "image_0": image_pipeline_1,
-            "label": label_pipeline,
-        }
-        custom_field_mapper = {"image_0": "image"}
-        
-        if args.subset_size:
-            loader = Loader(
-                "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
-                batch_size=args.batch_size,
-                num_workers=args.num_workers,
-                order=order,
-                os_cache=True,
-                drop_last=True,
-                pipelines=pipelines,
-                distributed=args.num_gpus > 1,
-                custom_field_mapper=custom_field_mapper,
-                indices=list(range(args.subset_size)),
-            )
-        else:
-            loader = Loader(
-                "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
-                batch_size=args.batch_size,
-                num_workers=args.num_workers,
-                order=order,
-                os_cache=True,
-                drop_last=True,
-                pipelines=pipelines,
-                distributed=args.num_gpus > 1,
-                custom_field_mapper=custom_field_mapper,
-            )
+        subset_size = args.subset_size if args.subset_size else -1
+        loader = data_loaders.ffcv_loader.create_train_loader_ssl(
+            this_device=self.trainer.local_rank,
+            beton_file_path="/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+            image_size=args.image_size,
+            num_gpus=args.num_gpus,
+            in_memory=True,
+            subset_size=subset_size,
+        )
 
         return loader
 
