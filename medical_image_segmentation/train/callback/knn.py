@@ -116,12 +116,9 @@ class KNNOnlineEvaluator(Callback):
         # go through val data to predict the label by weighted knn search
         for val_dataloader in trainer.val_dataloaders:
             for batch in val_dataloader:
-                print("\n\n\n\n\n")
-                print(len(batch))
-                print("\n\n\n\n\n")
                 images = batch[0]
                 labels = batch[1]
-                x = original_images.to(pl_module.device)
+                x = images.to(pl_module.device)
                 target = labels.to(pl_module.device)
                 feature = pl_module.forward(x, return_embedding=True)[0].flatten(start_dim=1)
                 feature = F.normalize(feature, dim=1)
