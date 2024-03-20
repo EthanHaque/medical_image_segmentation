@@ -213,5 +213,4 @@ if __name__ == "__main__":
             horizontalalignment="center",
         )
     plt.subplots_adjust(0.03, 0.0, 1, 0.9)
-    plt.savefig("visual_images_ssl.png", dpi=80)
-    plt.close()
+    plt.show()
