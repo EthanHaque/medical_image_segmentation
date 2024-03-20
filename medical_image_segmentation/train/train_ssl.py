@@ -28,7 +28,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--optimizer", type=str, default="adam", help="Optimizer to use")
     parser.add_argument("--dry", action="store_true", help="Dry run")
     parser.add_argument("--float_matmul_precision", type=str, default="highest", help="Setting float32 matrix multiplication precision. See https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_preci")
-    parser.add_argument("--subset_size", type=int, required=False)
+    parser.add_argument("--train_subset_size", type=int, required=False)
+    parser.add_argument("--val_subset_size", type=int, required=False)
 
     return parser.parse_args()
 
@@ -77,7 +78,7 @@ class SelfSupervisedLearner(pl.LightningModule):
             self.learner.update_moving_average()
 
     def train_dataloader(self):
-        subset_size = args.subset_size if args.subset_size else -1
+        subset_size = args.train_subset_size if args.train_subset_size else -1
         loader = create_train_loader_ssl(
             this_device=self.trainer.local_rank,
             beton_file_path="/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
@@ -92,7 +93,7 @@ class SelfSupervisedLearner(pl.LightningModule):
         return loader
 
     def val_dataloader(self):
-        subset_size = args.subset_size if args.subset_size else -1
+        subset_size = args.vaL_subset_size if args.val_subset_size else -1
         loader = create_train_loader_ssl(
             this_device=self.trainer.local_rank,
             beton_file_path="/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_val.beton",
