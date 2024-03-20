@@ -7,6 +7,8 @@ from pytorch_lightning import Callback, LightningModule, Trainer
 from pytorch_lightning.accelerators import Accelerator
 from torch import Tensor
 from torch.nn import functional as F  # noqa: N812
+from pytorch_lightning.utilities.rank_zero import rank_zero_only
+from tqdm import tqdm
 
 
 
@@ -86,7 +88,7 @@ class KNNOnlineEvaluator(Callback):
         target_bank = []
 
         # go through train data to generate feature bank
-        for batch in trainer.train_dataloader:
+        for batch in tqdm_rank_zero_only(trainer.train_dataloader, desc="Generating feature bank"):
             original_images = batch[0]
             labels = batch[1]
             x = original_images.to(pl_module.device)
@@ -114,7 +116,7 @@ class KNNOnlineEvaluator(Callback):
             target_bank = concat_all_gather(target_bank, pl_module)
 
         # go through val data to predict the label by weighted knn search
-        for batch in trainer.val_dataloaders:
+        for batch in tqdm_rank_zero_only(trainer.val_dataloaders, desc="Predicting labels"):
             images = batch[0]
             labels = batch[1]
             x = images.to(pl_module.device)
@@ -132,3 +134,8 @@ class KNNOnlineEvaluator(Callback):
 
 def concat_all_gather(tensor: Tensor, pl_module: LightningModule) -> Tensor:
     return pl_module.all_gather(tensor).view(-1, *tensor.shape[1:])
+
+@rank_zero_only
+def tqdm_rank_zero_only(*args, **kwargs):
+    return tqdm(*args, **kwargs)
+
