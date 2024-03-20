@@ -100,6 +100,8 @@ class KNNOnlineEvaluator(Callback):
             x, target = self.to_device(batch, pl_module.device)
             logits = pl_module(x)
             print(logits.shape)
+            print(x.shape)
+            print(target.shape)
             feature = pl_module(x).flatten(start_dim=1)
             feature = F.normalize(feature, dim=1)
 
