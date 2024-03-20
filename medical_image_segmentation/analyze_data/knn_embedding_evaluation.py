@@ -60,20 +60,33 @@ def main():
 
     model.eval()
 
-    loader = create_train_loader_ssl(
+    train_loader = create_train_loader_ssl(
         this_device=torch.device("cuda:0"),
         beton_file_path="/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
         batch_size=128,
-        num_workers=4,
+        num_workers=8,
         num_gpus=1,
         image_size=56,
         in_memory=False,
         subset_size=1024,
     )
 
-    embeddings, ground_truth = compute_embeddings(model, loader, torch.device("cuda:0"))
-    print(embeddings.shape)
-    print(ground_truth.shape)
+    val_loader = create_val_loader_ssl(
+        this_device=torch.device("cuda:0"),
+        beton_file_path="/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_val.beton",
+        batch_size=128,
+        num_workers=8,
+        num_gpus=1,
+        image_size=56,
+        in_memory=False,
+        subset_size=128,
+    )
+
+    train_embeddings, train_ground_truth = compute_embeddings(model, train_loader, torch.device("cuda:0"))
+    val_embeddings, val_ground_truth = compute_embeddings(model, val_loader, torch.device("cuda:0"))
+
+    print(train_embeddings.shape, val_embeddings.shape)
+    print(train_ground_truth.shape, val_ground_truth.shape)
 
 
 
