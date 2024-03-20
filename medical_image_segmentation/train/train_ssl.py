@@ -121,12 +121,12 @@ def setup_train_objects():
     )
 
     logger = pl.loggers.CSVLogger("logs")
-
     callbacks = [
         pl.callbacks.LearningRateMonitor(logging_interval="epoch"),
         KNNOnlineEvaluator(num_classes=1000),
         pl.callbacks.LearningRateMonitor(logging_interval="epoch", log_momentum=True, log_weight_decay=True)
     ]
+
     trainer = pl.Trainer(
         strategy='ddp_find_unused_parameters_true',
         devices=args.num_gpus,
