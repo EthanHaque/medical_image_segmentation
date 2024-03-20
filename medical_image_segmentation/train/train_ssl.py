@@ -138,10 +138,6 @@ class SelfSupervisedLearner(pl.LightningModule):
             custom_field_mapper=custom_field_mapper
         )
 
-        # adding in to test iterating over all the batches one time before starting training.
-        for _ in loader:
-            continue
-
         return loader
 
 def setup_train_objects():
