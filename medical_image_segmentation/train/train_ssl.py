@@ -30,6 +30,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--float_matmul_precision", type=str, default="highest", help="Setting float32 matrix multiplication precision. See https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_preci")
     parser.add_argument("--train_subset_size", type=int, required=False)
     parser.add_argument("--val_subset_size", type=int, required=False)
+    parser.add_argument("--val_every", type=int, default=1, help="Runs validation step every n epochs")
 
     return parser.parse_args()
 
@@ -142,6 +143,7 @@ def setup_train_objects():
         sync_batchnorm=True,
         callbacks=callbacks,
         logger=logger,
+        check_val_every_n_epoch=args.val_every,
     )
 
     return model, trainer
