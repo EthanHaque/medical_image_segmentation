@@ -49,11 +49,11 @@ def compute_embeddings(model: torch.nn.Module, loader: DataLoader, device: torch
 
 def main():
     image_size = 56
-    batch_size = 128
-    num_workers = 8
+    batch_size = 2048
+    num_workers = 4
     num_gpus = 1
-    train_subset_size = 1024
-    val_subset_size = 128
+    train_subset_size = -1
+    val_subset_size = 2048
     k = 5
 
     resnet = torchvision.models.resnet18(weights=None)
@@ -95,11 +95,17 @@ def main():
     val_embeddings, val_ground_truth = compute_embeddings(model, val_loader, torch.device("cuda:0"))
 
     nearest_neighbors = KNeighborsClassifier(n_neighbors=k, metric="cosine")
+    
+    print("Computing fit...")
     nearest_neighbors.fit(train_embeddings, train_ground_truth)
+    print("Fit complete.")
 
+    print("Computing predictions...")
     predictions = nearest_neighbors.predict(val_embeddings)
-    print(predictions.shape, predictions)
-
+    print("Predictions complete.")
+    
+    num_correct = (predictions == val_ground_truth).sum()
+    print(num_correct/val_ground_truth.shape[0])
 
 
 if __name__ == '__main__':
