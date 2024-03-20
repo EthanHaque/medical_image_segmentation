@@ -43,7 +43,7 @@ class SelfSupervisedLearner(pl.LightningModule):
         hparams = {
             "hp/epochs": args.epochs,
             "hp/batch_size": args.batch_size,
-            "hp/learning_rate": args.learning_rate,
+            "hp/learning_rate": args.lr,
             "hp/image_size": args.image_size,
             "hp/num_gpus": args.num_gpus,
             "hp/num_workers": args.num_workers,
