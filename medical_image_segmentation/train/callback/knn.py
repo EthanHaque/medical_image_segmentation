@@ -77,9 +77,7 @@ class KNNOnlineEvaluator(Callback):
         # images_aug_1 = batch[2]
         # images_aug_2 = batch[3]
 
-        # last input is for online eval
-        x = original_images[-1]
-        x = x.to(device)
+        x = original_images.to(device)
         y = labels.to(device)
 
         return x, y
