@@ -67,7 +67,8 @@ def main():
         num_workers=4,
         num_gpus=1,
         image_size=56,
-        in_memory=False
+        in_memory=False,
+        subset_size=1024,
     )
 
     embeddings, ground_truth = compute_embeddings(model, loader)
