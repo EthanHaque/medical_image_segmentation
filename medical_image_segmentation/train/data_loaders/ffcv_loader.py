@@ -157,7 +157,7 @@ if __name__ == "__main__":
         subset_size=16,
     )
     for batch in loader:
-        print(batch.shape)
+        print(batch)
     loader = create_train_loader_ssl(
         torch.device("cuda:0"),
         "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
