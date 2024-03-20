@@ -1,0 +1,12 @@
+#!/bin/bash
+apptainer exec --nv docker/ffcv-ssl_latest.sif \
+bash -c "source activate; \
+conda activate ffcv-ssl; \
+python medical_image_segmentation/train/train_ssl.py \
+    --image_size 56 \
+    --batch_size 2048 \
+    --float_matmul_precision medium \
+    --epochs 100 \
+    --val_every 2 \
+    --checkpoint_path logs/lightning_logs/version_70/checkpoints/epoch=11-step=3744.ckpt"
+
