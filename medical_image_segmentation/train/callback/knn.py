@@ -117,8 +117,8 @@ class KNNOnlineEvaluator(Callback):
         )
         # gather representations from other gpus
         if accel.is_distributed:
-            feature_bank = concat_all_gather(feature_bank, trainer.accelerator)
-            target_bank = concat_all_gather(target_bank, trainer.accelerator)
+            feature_bank = concat_all_gather(feature_bank, pl_module)
+            target_bank = concat_all_gather(target_bank, pl_module)
 
         # go through val data to predict the label by weighted knn search
         for val_dataloader in trainer.val_dataloaders:
@@ -135,5 +135,5 @@ class KNNOnlineEvaluator(Callback):
         pl_module.log("online_knn_val_acc", total_top1 / total_num, on_step=False, on_epoch=True, sync_dist=True)
 
 
-def concat_all_gather(tensor: Tensor, accelerator: Accelerator) -> Tensor:
-    return accelerator.all_gather(tensor).view(-1, *tensor.shape[1:])
+def concat_all_gather(tensor: Tensor, pl_module: LightningModule) -> Tensor:
+    return pl_module.all_gather(tensor).view(-1, *tensor.shape[1:])
