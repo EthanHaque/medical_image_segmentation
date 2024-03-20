@@ -13,6 +13,7 @@ from ffcv.loader import Loader, OrderOption
 import ffcv
 
 from callback.knn import KNNOnlineEvaluator
+from medical_image_segmentation.train.data_loaders.ffcv_loader import create_train_loader_ssl
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Self-Supervised Learning with BYOL and PyTorch")
@@ -20,11 +21,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--lr", type=float, default=3e-4, help="Learning rate")
     parser.add_argument("--batch_size", type=int, default=2048, help="Batch size")
     parser.add_argument("--image_size", type=int, default=256, help="Image size")
-    parser.add_argument("--num_workers", type=int, default=int(os.environ.get("SLURM_CPUS_PER_TASK", "4")), help="Number of workers for data loading")
-    parser.add_argument("--num_gpus", type=int, default=int(os.environ.get("SLURM_GPUS_ON_NODE", "2")), help="Number of GPUs for training")
+    parser.add_argument("--num_workers", type=int, default=int(os.environ.get("SLURM_CPUS_PER_TASK", "16")), help="Number of workers for data loading")
+    parser.add_argument("--num_gpus", type=int, default=int(os.environ.get("SLURM_GPUS_ON_NODE", "4")), help="Number of GPUs for training")
     parser.add_argument("--checkpoint_path", type=str, help="Path to checkpoint file to restore training")
     parser.add_argument("--warmup_epochs", type=int, default=10, help="Number of epochs to warm up to set learning rate")
     parser.add_argument("--optimizer", type=str, default="adam", help="Optimizer to use")
+    parser.add_argument("--dry", action="store_true", help="Dry run")
+    parser.add_argument("--float_matmul_precision", type=str, default="highest", help="Setting float32 matrix multiplication precision. See https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_preci")
+    parser.add_argument("--subset_size", type=int, required=False)
 
     return parser.parse_args()
 
@@ -39,6 +43,9 @@ class SelfSupervisedLearner(pl.LightningModule):
 
     def forward(self, images):
         return self.learner(images)
+
+    def on_train_start(self):
+        self.logger.log_hyperparams(args)
 
     def training_step(self, batch, _):
         images_0 = batch[0]
@@ -70,61 +77,19 @@ class SelfSupervisedLearner(pl.LightningModule):
             self.learner.update_moving_average()
 
     def train_dataloader(self):
-        imagenet_mean = np.array([0.485, 0.456, 0.406]) * 255
-        imagenet_std = np.array([0.229, 0.224, 0.225]) * 255
-
-        image_pipeline_0 = [
-            ffcv.fields.rgb_image.RandomResizedCropRGBImageDecoder((args.image_size, args.image_size)),
-            ffcv.transforms.RandomHorizontalFlip(),
-            ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
-            ffcv.transforms.RandomGrayscale(0.2),
-            ffcv.transforms.ToTensor(),
-            ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
-            ffcv.transforms.ToTorchImage(),
-            ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float32),
-            torchvision.transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 2))
-        ]
-
-        image_pipeline_1 = [
-            ffcv.fields.rgb_image.RandomResizedCropRGBImageDecoder((args.image_size, args.image_size)),
-            ffcv.transforms.RandomHorizontalFlip(),
-            ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
-            ffcv.transforms.RandomGrayscale(0.2),
-            ffcv.transforms.RandomSolarization(0.2, 128),
-            ffcv.transforms.ToTensor(),
-            ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
-            ffcv.transforms.ToTorchImage(),
-            ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float32)
-        ]
-
-        label_pipeline = [
-            ffcv.fields.basics.IntDecoder(),
-            ffcv.transforms.ToTensor(),
-            ffcv.transforms.Squeeze(),
-            ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
-        ]
-
-        order = OrderOption.RANDOM if args.num_gpus > 1 else OrderOption.QUASI_RANDOM
-        pipelines = {
-            "image": image_pipeline_0,
-            "image_0": image_pipeline_1,
-            "label": label_pipeline,
-        }
-        custom_field_mapper = {"image_0": "image"}
-
-        loader = Loader(
-            "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
+        subset_size = args.subset_size if args.subset_size else -1
+        loader = create_train_loader_ssl(
+            this_device=self.trainer.local_rank,
+            beton_file_path="/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
             batch_size=args.batch_size,
             num_workers=args.num_workers,
-            order=order,
-            os_cache=True,
-            drop_last=True,
-            pipelines=pipelines,
-            distributed=args.num_gpus > 1,
-            custom_field_mapper=custom_field_mapper
+            image_size=args.image_size,
+            num_gpus=args.num_gpus,
+            in_memory=True,
+            subset_size=subset_size,
         )
-        return loader
 
+        return loader
 
     def val_dataloader(self):
         imagenet_mean = np.array([0.485, 0.456, 0.406]) * 255
@@ -164,7 +129,8 @@ class SelfSupervisedLearner(pl.LightningModule):
         return loader
 
 
-if __name__ == '__main__':
+def setup_train_objects():
+    """Creates objects for training."""
     resnet = torchvision.models.resnet18(weights=None)
 
     model = SelfSupervisedLearner(
@@ -176,11 +142,12 @@ if __name__ == '__main__':
         moving_average_decay=0.99
     )
 
+    logger = pl.loggers.CSVLogger("logs")
 
     callbacks = [
         pl.callbacks.LearningRateMonitor(logging_interval="epoch"),
         KNNOnlineEvaluator(num_classes=1000),
-
+        pl.callbacks.LearningRateMonitor(logging_interval="epoch", log_momentum=True, log_weight_decay=True)
     ]
     trainer = pl.Trainer(
         strategy='ddp_find_unused_parameters_true',
@@ -190,9 +157,25 @@ if __name__ == '__main__':
         accumulate_grad_batches=1,
         sync_batchnorm=True,
         callbacks=callbacks,
+        logger=logger,
     )
+
+    return model, trainer
+
+
+def main():
+    """Dispatches to correct method calls based on args"""
+    torch.set_float32_matmul_precision(args.float_matmul_precision)
+    model, trainer = setup_train_objects()
+
+    if args.dry:
+        return
 
     if args.checkpoint_path:
         trainer.fit(model, ckpt_path=args.checkpoint_path)
     else:
         trainer.fit(model)
+
+
+if __name__ == '__main__':
+    main()
