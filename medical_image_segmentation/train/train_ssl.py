@@ -49,9 +49,11 @@ class SelfSupervisedLearner(pl.LightningModule):
         self.logger.log_hyperparams(args)
 
     def training_step(self, batch, _):
-        images_0 = batch[0]
-        images_1 = batch[2]
-        images = torch.cat((images_0, images_1), dim=0)
+        # original_images = batch[0]
+        # labels = batch[1]
+        images_aug_1 = batch[2]
+        images_aug_2 = batch[3]
+        images = torch.cat((images_aug_1, images_aug_2), dim=0)
         loss = self.forward(images)
 
         self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True, sync_dist=True)
