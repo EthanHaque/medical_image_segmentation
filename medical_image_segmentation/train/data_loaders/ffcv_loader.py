@@ -156,7 +156,7 @@ if __name__ == "__main__":
     )
 
     images = [[], [], []]
-    for (x1, y, x2, x3) in tqdm(loader, total=3):
+    for (x1, y, x2, x3) in tqdm(loader):
         for i, x in enumerate([x1, x2, x3]):
             images[i].append(
                 torchvision.utils.make_grid(
