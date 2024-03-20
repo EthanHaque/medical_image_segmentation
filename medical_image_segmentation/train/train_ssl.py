@@ -24,6 +24,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--warmup_epochs", type=int, default=10, help="Number of epochs to warm up to set learning rate")
     parser.add_argument("--optimizer", type=str, default="adam", help="Optimizer to use")
     parser.add_argument("--dry", action="store_true", help="Dry run")
+    parser.add_argument("--float_matmul_precision", type=str, default="highest", help="Setting float32 matrix multiplication precision. See https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_preci")
 
     return parser.parse_args()
 
@@ -174,6 +175,7 @@ def setup_train_objects():
 
 def main():
     """Dispatches to correct method calls based on args"""
+    torch.set_float32_matmul_precision(args.float_matmul_precision)
     model, trainer = setup_train_objects()
 
     if args.dry:
