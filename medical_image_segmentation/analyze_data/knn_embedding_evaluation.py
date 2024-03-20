@@ -48,7 +48,7 @@ def compute_embeddings(model: torch.nn.Module, loader: DataLoader, device: torch
 def main():
     resnet = torchvision.models.resnet18(weights=None)
 
-    model = SelfSupervisedLearner.load_from_checkpoint("logs/lightning_logs/version_71/checkpoints/epoch\=51-step\=16224.ckpt")
+    model = SelfSupervisedLearner.load_from_checkpoint(r"logs/lightning_logs/version_71/checkpoints/epoch=51-step=16224.ckpt")
     model.eval()
 
     loader = create_train_loader_ssl(
