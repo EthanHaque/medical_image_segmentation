@@ -71,16 +71,6 @@ class KNNOnlineEvaluator(Callback):
         # pred_labels
         return pred_scores.argsort(dim=-1, descending=True)
 
-    def to_device(self, batch: Tensor, device: Union[str, torch.device]) -> Tuple[Tensor, Tensor]:
-        original_images = batch[0]
-        labels = batch[1]
-        # images_aug_1 = batch[2]
-        # images_aug_2 = batch[3]
-
-        x = original_images.to(device)
-        y = labels.to(device)
-
-        return x, y
 
     @torch.no_grad()
     def on_validation_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
@@ -97,7 +87,10 @@ class KNNOnlineEvaluator(Callback):
 
         # go through train data to generate feature bank
         for batch in trainer.train_dataloader:
-            x, target = self.to_device(batch, pl_module.device)
+            original_images = batch[0]
+            labels = batch[1]
+            x = original_images.to(pl_module.device)
+            target = labels.to(pl_module.device)
             feature = pl_module.forward(x, return_embedding=True)[0].flatten(start_dim=1)
             feature = F.normalize(feature, dim=1)
 
@@ -123,8 +116,11 @@ class KNNOnlineEvaluator(Callback):
         # go through val data to predict the label by weighted knn search
         for val_dataloader in trainer.val_dataloaders:
             for batch in val_dataloader:
-                x, target = self.to_device(batch, pl_module.device)
-                feature = pl_module(x).flatten(start_dim=1)
+                images = batch[0]
+                labels = batch[1]
+                x = original_images.to(pl_module.device)
+                target = labels.to(pl_module.device)
+                feature = pl_module.forward(x, return_embedding=True)[0].flatten(start_dim=1)
                 feature = F.normalize(feature, dim=1)
 
                 pred_labels = self.predict(feature, feature_bank, target_bank)
