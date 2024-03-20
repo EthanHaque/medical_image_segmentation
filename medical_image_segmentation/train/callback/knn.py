@@ -98,10 +98,7 @@ class KNNOnlineEvaluator(Callback):
         # go through train data to generate feature bank
         for batch in trainer.train_dataloader:
             x, target = self.to_device(batch, pl_module.device)
-            logits = pl_module(x)
-            print(x.shape)
-            print(target.shape)
-            print(logits.shape)
+            print(pl_module)
             feature = pl_module(x).flatten(start_dim=1)
             feature = F.normalize(feature, dim=1)
 
