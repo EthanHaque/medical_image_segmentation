@@ -14,7 +14,7 @@ def create_train_loader_ssl(this_device: str, beton_file_path: str, batch_size: 
     imagenet_std = np.array([0.229, 0.224, 0.225]) * 255
 
     image_pipeline = [
-        ffcv.fields.rgb_image.CenterCropRGBImageDecoder((image_size, image_size)),
+        ffcv.fields.rgb_image.CenterCropRGBImageDecoder((image_size, image_size), ratio=image_size/256),
         ffcv.transforms.ToTensor(),
         ffcv.transforms.ToDevice(this_device, non_blocking=True),
         ffcv.transforms.ToTorchImage(),
@@ -97,7 +97,7 @@ def create_val_loader_ssl(this_device: str, beton_file_path: str, batch_size: in
     imagenet_std = np.array([0.229, 0.224, 0.225]) * 255
 
     image_pipeline = [
-        ffcv.fields.rgb_image.CenterCropRGBImageDecoder((image_size, image_size)),
+        ffcv.fields.rgb_image.CenterCropRGBImageDecoder((image_size, image_size), ratio=image_size/256),
         ffcv.transforms.ToTensor(),
         ffcv.transforms.ToDevice(this_device, non_blocking=True),
         ffcv.transforms.ToTorchImage(),
