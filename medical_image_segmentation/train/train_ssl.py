@@ -25,6 +25,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--optimizer", type=str, default="adam", help="Optimizer to use")
     parser.add_argument("--dry", action="store_true", help="Dry run")
     parser.add_argument("--float_matmul_precision", type=str, default="highest", help="Setting float32 matrix multiplication precision. See https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_preci")
+    parser.add_argument("--subset_size", type=int, required=False)
 
     return parser.parse_args()
 
@@ -114,18 +115,32 @@ class SelfSupervisedLearner(pl.LightningModule):
             "label": label_pipeline,
         }
         custom_field_mapper = {"image_0": "image"}
-
-        loader = Loader(
-            "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train_4096.beton",
-            batch_size=args.batch_size,
-            num_workers=args.num_workers,
-            order=order,
-            os_cache=True,
-            drop_last=True,
-            pipelines=pipelines,
-            distributed=args.num_gpus > 1,
-            custom_field_mapper=custom_field_mapper
-        )
+        
+        if args.subset_size:
+            loader = Loader(
+                "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
+                batch_size=args.batch_size,
+                num_workers=args.num_workers,
+                order=order,
+                os_cache=True,
+                drop_last=True,
+                pipelines=pipelines,
+                distributed=args.num_gpus > 1,
+                custom_field_mapper=custom_field_mapper,
+                indices=list(range(args.subset_size)),
+            )
+        else:
+            loader = Loader(
+                "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
+                batch_size=args.batch_size,
+                num_workers=args.num_workers,
+                order=order,
+                os_cache=True,
+                drop_last=True,
+                pipelines=pipelines,
+                distributed=args.num_gpus > 1,
+                custom_field_mapper=custom_field_mapper,
+            )
 
         return loader
 
