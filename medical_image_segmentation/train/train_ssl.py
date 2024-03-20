@@ -58,6 +58,9 @@ class SelfSupervisedLearner(pl.LightningModule):
 
         return {'loss': loss}
 
+    def validation_step(self, batch, _):
+        return
+
     def configure_optimizers(self):
         if args.optimizer == 'adam':
             optimizer = torch.optim.Adam(self.parameters(), lr=args.lr)
