@@ -178,10 +178,6 @@ if __name__ == "__main__":
         images[i] *= 255
         images[i] = images[i].cpu().numpy().transpose(1, 2, 0).astype("int")
 
-    for i in images:
-        for j in images:
-            print(j.shape)
-
     images = np.concatenate(images, 0)
 
     fig, axs = plt.subplots(1, 1, figsize=(9, 3))
