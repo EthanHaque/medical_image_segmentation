@@ -127,7 +127,7 @@ class SelfSupervisedLearner(pl.LightningModule):
         custom_field_mapper = {"image_0": "image"}
 
         loader = Loader(
-            "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
+            "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train_4096.beton",
             batch_size=args.batch_size,
             num_workers=args.num_workers,
             order=order,
