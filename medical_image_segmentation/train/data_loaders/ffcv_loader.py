@@ -163,7 +163,7 @@ if __name__ == "__main__":
                     x,
                     normalize=True,
                     scale_each=True,
-                    nrows=4,
+                    nrow=4,
                 )
             )
         if len(images[-1]) == 3:
