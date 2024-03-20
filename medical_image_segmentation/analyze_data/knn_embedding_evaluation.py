@@ -7,6 +7,7 @@ from torch.nn import functional as F
 import torch
 import numpy as np
 from medical_image_segmentation.train.data_loaders.ffcv_loader import create_train_loader_ssl, create_val_loader_ssl
+from tqdm import tqdm
 
 
 @torch.no_grad()
@@ -26,7 +27,7 @@ def compute_embeddings(model: torch.nn.Module, loader: DataLoader, device: torch
     """
     embeddings = []
     ground_truth = []
-    for batch in loader:
+    for batch in tqdm(loader, desc="Computing embeddings"):
         images = batch[0]
         labels = batch[1]
 
