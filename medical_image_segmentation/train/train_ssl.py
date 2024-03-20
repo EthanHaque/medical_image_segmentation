@@ -41,19 +41,7 @@ class SelfSupervisedLearner(pl.LightningModule):
         return self.learner(images)
 
     def on_train_start(self):
-        hparams = {
-            "hp/epochs": args.epochs,
-            "hp/batch_size": args.batch_size,
-            "hp/learning_rate": args.lr,
-            "hp/image_size": args.image_size,
-            "hp/num_gpus": args.num_gpus,
-            "hp/num_workers": args.num_workers,
-            "hp/checkpoint_path": args.checkpoint_path,
-            "hp/warmup_epochs": args.warmup_epochs,
-            "hp/optimizer": args.optimizer,
-            "hp/dry": args.dry
-        }
-        self.logger.log_hyperparams(hparams)
+        self.logger.log_hyperparams(args)
 
     def training_step(self, batch, _):
         images_0 = batch[0]
