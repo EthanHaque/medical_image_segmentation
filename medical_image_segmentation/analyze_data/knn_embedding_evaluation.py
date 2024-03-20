@@ -47,11 +47,18 @@ def compute_embeddings(model: torch.nn.Module, loader: DataLoader, device: torch
 
 
 def main():
+    image_size = 56
+    batch_size = 128
+    num_workers = 8
+    num_gpus = 1
+    train_subset_size = 1024
+    val_subset_size = 128
+
     resnet = torchvision.models.resnet18(weights=None)
 
     model = SelfSupervisedLearner.load_from_checkpoint(r"logs/lightning_logs/version_71/checkpoints/epoch=51-step=16224.ckpt",
                                                        net=resnet,
-                                                       image_size=56,
+                                                       image_size=image_size,
                                                        hidden_layer="avgpool",
                                                        projection_size=256,
                                                        projection_hidden_size=4096,
@@ -63,23 +70,23 @@ def main():
     train_loader = create_train_loader_ssl(
         this_device=torch.device("cuda:0"),
         beton_file_path="/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
-        batch_size=128,
-        num_workers=8,
-        num_gpus=1,
-        image_size=56,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        num_gpus=num_gpus,
+        image_size=image_size,
         in_memory=False,
-        subset_size=1024,
+        subset_size=train_subset_size,
     )
 
     val_loader = create_val_loader_ssl(
         this_device=torch.device("cuda:0"),
         beton_file_path="/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_val.beton",
-        batch_size=128,
-        num_workers=8,
-        num_gpus=1,
-        image_size=56,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        num_gpus=num_gpus,
+        image_size=image_size,
         in_memory=False,
-        subset_size=128,
+        subset_size=val_subset_size,
     )
 
     train_embeddings, train_ground_truth = compute_embeddings(model, train_loader, torch.device("cuda:0"))
