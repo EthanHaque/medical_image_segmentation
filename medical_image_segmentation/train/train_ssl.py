@@ -96,7 +96,7 @@ class SelfSupervisedLearner(pl.LightningModule):
         return loader
 
     def val_dataloader(self):
-        subset_size = args.vaL_subset_size if args.val_subset_size else -1
+        subset_size = args.val_subset_size if args.val_subset_size else -1
         loader = create_train_loader_ssl(
             this_device=self.trainer.local_rank,
             beton_file_path="/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_val.beton",
