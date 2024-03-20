@@ -12,7 +12,7 @@ import pytorch_lightning as pl
 from ffcv.loader import Loader, OrderOption
 import ffcv
 
-import medical_image_segmentation.train.data_loaders as data_loaders
+from medical_image_segmentation.train.data_loaders.ffcv_loader import create_train_loader_ssl
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Self-Supervised Learning with BYOL and PyTorch")
@@ -77,7 +77,7 @@ class SelfSupervisedLearner(pl.LightningModule):
 
     def train_dataloader(self):
         subset_size = args.subset_size if args.subset_size else -1
-        loader = data_loaders.ffcv_loader.create_train_loader_ssl(
+        loader = create_train_loader_ssl(
             this_device=self.trainer.local_rank,
             beton_file_path="/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
             batch_size=args.batch_size,
