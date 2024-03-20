@@ -73,12 +73,15 @@ class KNNOnlineEvaluator(Callback):
 
     def to_device(self, batch: Tensor, device: Union[str, torch.device]) -> Tuple[Tensor, Tensor]:
         print(batch, len(batch))
-        inputs, y = batch
+        original_images = batch[0]
+        labels = batch[1]
+        # images_aug_1 = batch[2]
+        # images_aug_2 = batch[3]
 
         # last input is for online eval
-        x = inputs[-1]
+        x = original_images[-1]
         x = x.to(device)
-        y = y.to(device)
+        y = labels.to(device)
 
         return x, y
 
