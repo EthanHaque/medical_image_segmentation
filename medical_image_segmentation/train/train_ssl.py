@@ -12,7 +12,7 @@ import pytorch_lightning as pl
 from ffcv.loader import Loader, OrderOption
 import ffcv
 
-from callback.knn import KNNOnlineEvaluator
+from medical_image_segmentation.train.callback.knn import KNNOnlineEvaluator
 from medical_image_segmentation.train.data_loaders.ffcv_loader import create_train_loader_ssl, create_val_loader_ssl
 
 def parse_args() -> argparse.Namespace:
