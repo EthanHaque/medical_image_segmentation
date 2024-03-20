@@ -72,6 +72,7 @@ class KNNOnlineEvaluator(Callback):
         return pred_scores.argsort(dim=-1, descending=True)
 
     def to_device(self, batch: Tensor, device: Union[str, torch.device]) -> Tuple[Tensor, Tensor]:
+        print(batch, len(batch))
         inputs, y = batch
 
         # last input is for online eval
