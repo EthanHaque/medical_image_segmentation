@@ -8,6 +8,7 @@ import torch
 import numpy as np
 from medical_image_segmentation.train.data_loaders.ffcv_loader import create_train_loader_ssl, create_val_loader_ssl
 from tqdm import tqdm
+from sklearn.neighbors import KNeighborsClassifier
 
 
 @torch.no_grad()
@@ -53,6 +54,7 @@ def main():
     num_gpus = 1
     train_subset_size = 1024
     val_subset_size = 128
+    k = 5
 
     resnet = torchvision.models.resnet18(weights=None)
 
@@ -92,8 +94,11 @@ def main():
     train_embeddings, train_ground_truth = compute_embeddings(model, train_loader, torch.device("cuda:0"))
     val_embeddings, val_ground_truth = compute_embeddings(model, val_loader, torch.device("cuda:0"))
 
-    print(train_embeddings.shape, val_embeddings.shape)
-    print(train_ground_truth.shape, val_ground_truth.shape)
+    nearest_neighbors = KNeighborsClassifier(n_neighbors=k, metric="cosine")
+    nearest_neighbors.fit(train_embeddings, train_ground_truth)
+
+    predictions = nearest_neighbors.predict(val_embeddings)
+    print(predictions.shape, predictions)
 
 
 
