@@ -71,7 +71,7 @@ def main():
         subset_size=1024,
     )
 
-    embeddings, ground_truth = compute_embeddings(model, loader, torch.device("cuda:1"))
+    embeddings, ground_truth = compute_embeddings(model, loader, torch.device("cuda:0"))
     print(embeddings.shape)
     print(ground_truth.shape)
 
