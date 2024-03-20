@@ -90,11 +90,16 @@ class KNNOnlineEvaluator(Callback):
         if trainer.train_dataloader is None:
             return
 
-        total_top1, total_num, feature_bank, target_bank = 0.0, 0, [], []
+        total_top1 = 0
+        total_num = 0
+        feature_bank = []
+        target_bank = []
 
         # go through train data to generate feature bank
         for batch in trainer.train_dataloader:
             x, target = self.to_device(batch, pl_module.device)
+            logits = pl_module(x)
+            print(logits.shape)
             feature = pl_module(x).flatten(start_dim=1)
             feature = F.normalize(feature, dim=1)
 
