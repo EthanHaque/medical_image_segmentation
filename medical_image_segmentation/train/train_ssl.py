@@ -52,7 +52,7 @@ class SelfSupervisedLearner(pl.LightningModule):
             "hp/optimizer": args.optimizer,
             "hp/dry": args.dry
         }
-        self.logger.log_hyperparams(self.hparams, hparams)
+        self.logger.log_hyperparams(hparams)
 
     def training_step(self, batch, _):
         images_0 = batch[0]
