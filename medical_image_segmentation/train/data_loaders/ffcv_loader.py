@@ -146,18 +146,6 @@ def create_val_loader_ssl(this_device: str, beton_file_path: str, batch_size: in
     return loader
 
 if __name__ == "__main__":
-    loader = create_val_loader_ssl(
-        torch.device("cuda:0"),
-        "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_val.beton",
-        batch_size=4,
-        num_workers=1,
-        image_size=56,
-        num_gpus=1,
-        in_memory=False,
-        subset_size=16,
-    )
-    for batch in loader:
-        print(batch)
     loader = create_train_loader_ssl(
         torch.device("cuda:0"),
         "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
