@@ -105,7 +105,7 @@ class SelfSupervisedLearner(pl.LightningModule):
             else:
                 return iterator
 
-        for _ in tqdm_rank_zero_only(loader, desc="Prefecting train data"):
+        for _ in tqdm_rank_zero_only(loader, desc="Prefetching train data"):
             pass
 
         return loader
