@@ -12,6 +12,8 @@ import pytorch_lightning as pl
 from ffcv.loader import Loader, OrderOption
 import ffcv
 
+from tqdm import tqdm
+
 from medical_image_segmentation.train.callback.knn import KNNOnlineEvaluator
 from medical_image_segmentation.train.data_loaders.ffcv_loader import create_train_loader_ssl, create_val_loader_ssl
 
@@ -96,6 +98,15 @@ class SelfSupervisedLearner(pl.LightningModule):
             in_memory=True,
             subset_size=subset_size,
         )
+
+        def tqdm_rank_zero_only(iterator, *args, **kwargs):
+            if self.trainer.is_global_zero:
+                return tqdm(iterator, *args, **kwargs)
+            else:
+                return iterator
+
+        for _ in tqdm_rank_zero_only(loader, desc="Prefecting train data"):
+            pass
 
         return loader
 
