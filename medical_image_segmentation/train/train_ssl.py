@@ -156,6 +156,7 @@ def setup_train_objects():
         callbacks=callbacks,
         logger=logger,
         check_val_every_n_epoch=args.val_every,
+        log_every_n_steps=5
     )
 
     return model, trainer
