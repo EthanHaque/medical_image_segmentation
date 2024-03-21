@@ -3,9 +3,9 @@ apptainer exec --nv docker/ffcv-ssl_latest.sif \
 bash -c "source activate; \
 conda activate ffcv-ssl; \
 python medical_image_segmentation/train/train_ssl.py \
-    --image_size 112 \
+    --image_size 32 \
     --batch_size 1024 \
     --float_matmul_precision medium \
     --epochs 100 \
-    --val_every 4"
+    --val_every 1"
 
