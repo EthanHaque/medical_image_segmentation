@@ -25,7 +25,7 @@ def create_train_loader_ssl(this_device: str, beton_file_path: str, batch_size: 
     image_pipeline_1 = [
         ffcv.fields.rgb_image.RandomResizedCropRGBImageDecoder((image_size, image_size)),
         ffcv.transforms.RandomHorizontalFlip(),
-        # ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
+        ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
         ffcv.transforms.RandomGrayscale(0.2),
         ffcv.transforms.ToTensor(),
         ffcv.transforms.ToDevice(this_device, non_blocking=True),
@@ -37,7 +37,7 @@ def create_train_loader_ssl(this_device: str, beton_file_path: str, batch_size: 
     image_pipeline_2 = [
         ffcv.fields.rgb_image.RandomResizedCropRGBImageDecoder((image_size, image_size)),
         ffcv.transforms.RandomHorizontalFlip(),
-        # ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
+        ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
         ffcv.transforms.RandomGrayscale(0.2),
         ffcv.transforms.RandomSolarization(0.2, 128),
         ffcv.transforms.ToTensor(),
