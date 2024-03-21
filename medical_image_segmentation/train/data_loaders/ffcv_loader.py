@@ -151,7 +151,7 @@ if __name__ == "__main__":
         "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
         batch_size=4,
         num_workers=1,
-        image_size=56,
+        image_size=112,
         num_gpus=1,
         in_memory=False,
         subset_size=16,
