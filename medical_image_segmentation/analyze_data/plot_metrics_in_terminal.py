@@ -5,7 +5,7 @@ import argparse
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--metrics", nargs="+", required=True, help="Which headers to plot")
-    parser.add_argument("--filenames", nargs='+', help="One or more CSV files to process")
+    parser.add_argument("--files", nargs='+', help="One or more CSV files to process")
     parser.add_argument("--ymin", type=float, required=False, help="Minimum y value to plot")
     parser.add_argument("--ymax", type=float, required=False, help="Maximum y value to plot")
 
@@ -28,8 +28,8 @@ def main():
         else:
             print(f"Warning: Metric '{metric}' not found in the CSV files.")
 
-    plt.title("Metrics over Epochs")
-    plt.xlabel("Epoch")
+    plt.title("Metrics over Time")
+    plt.xlabel("Time")
     plt.ylabel("Metric Value")
 
     # Set the y-axis limits if specified
