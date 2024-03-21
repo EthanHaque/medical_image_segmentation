@@ -48,9 +48,9 @@ def create_train_loader_ssl(this_device: str, beton_file_path: str, batch_size: 
 
     label_pipeline = [
         ffcv.fields.basics.IntDecoder(),
-        # ffcv.transforms.ToTensor(),
+        ffcv.transforms.ToTensor(),
         ffcv.transforms.Squeeze(),
-        # ffcv.transforms.ToDevice(this_device, non_blocking=True),
+        ffcv.transforms.ToDevice(this_device, non_blocking=True),
     ]
 
     order = OrderOption.RANDOM if num_gpus > 1 else OrderOption.QUASI_RANDOM
