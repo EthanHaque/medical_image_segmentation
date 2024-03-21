@@ -31,6 +31,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--train_subset_size", type=int, required=False)
     parser.add_argument("--val_subset_size", type=int, required=False)
     parser.add_argument("--val_every", type=int, default=1, help="Runs validation step every n epochs")
+    parser.add_argument("--run_single_validation", action="store_true", help="Run a single validation step.")
 
     return parser.parse_args()
 
@@ -155,6 +156,13 @@ def main():
     model, trainer = setup_train_objects()
 
     if args.dry:
+        return
+
+    if args.run_single_validation:
+        if args.checkpoint_path:
+            trainer.validate(model, ckpt_path=args.checkpoint_path)
+        else:
+            print("Please provide a checkpoint path using --checkpoint_path to run a single validation step.")
         return
 
     if args.checkpoint_path:
