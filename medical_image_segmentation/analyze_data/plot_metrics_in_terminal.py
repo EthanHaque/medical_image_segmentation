@@ -15,7 +15,7 @@ def main():
     args = parse_args()
 
     combined_df = pd.DataFrame()
-    for filename in args.filenames:
+    for filename in args.files:
         df = pd.read_csv(filename)
         combined_df = pd.concat([combined_df, df], ignore_index=True)
 
