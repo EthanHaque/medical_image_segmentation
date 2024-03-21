@@ -6,6 +6,5 @@ python medical_image_segmentation/train/train_ssl.py \
     --image_size 112 \
     --batch_size 1024 \
     --float_matmul_precision medium \
-    --epochs 100 \
-    --val_every 4"
-
+    --run_single_validation \
+    --checkpoint_path "
