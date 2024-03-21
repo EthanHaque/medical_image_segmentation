@@ -31,7 +31,7 @@ class KNNOnlineEvaluator(Callback):
         )
     """
 
-    def __init__(self, k: int = 1, temperature: float = 0.07, num_classes: int = 1000) -> None:
+    def __init__(self, k: int = 200, temperature: float = 0.07, num_classes: int = 1000) -> None:
         """
         Args:
             k: k for k nearest neighbor
