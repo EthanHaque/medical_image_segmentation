@@ -31,7 +31,7 @@ def create_train_loader_ssl(this_device: str, beton_file_path: str, batch_size: 
         ffcv.transforms.ToDevice(this_device, non_blocking=True),
         ffcv.transforms.ToTorchImage(),
         ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float32),
-        ffcv.transforms.GaussianBlur(blur_prob=0.2)
+        torchvision.transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 2)),
     ]
 
     image_pipeline_2 = [
