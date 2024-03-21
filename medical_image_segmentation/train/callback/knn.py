@@ -134,7 +134,7 @@ class KNNOnlineEvaluator(Callback):
             total_num += x.shape[0]
             total_top1 += (pred_labels[:, 0] == target).float().sum().item()
 
-        pl_module.log("online_knn_val_acc", total_top1 / total_num, on_step=False, on_epoch=True, sync_dist=True)
+        pl_module.log("online_knn_val_acc", total_top1 / total_num, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
 
 
 def concat_all_gather(tensor: Tensor, pl_module: LightningModule) -> Tensor:
