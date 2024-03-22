@@ -31,20 +31,19 @@ def create_train_loader_ssl(this_device: str, beton_file_path: str, batch_size: 
         ffcv.transforms.ToTorchImage(),
         ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float32),
         torchvision.transforms.ColorJitter(0.4, 0.4, 0.2, 0.1),
-        torchvision.transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 2)),
+        torchvision.transforms.GaussianBlur(kernel_size=(3, 3), sigma=(0.1, 2)),
     ]
 
     image_pipeline_2 = [
         ffcv.fields.rgb_image.RandomResizedCropRGBImageDecoder((image_size, image_size)),
         ffcv.transforms.RandomHorizontalFlip(),
         ffcv.transforms.RandomGrayscale(0.2),
-        # ffcv.transforms.RandomSolarization(0.2, 128),
+        ffcv.transforms.RandomSolarization(0.2, 128),
         ffcv.transforms.ToTensor(),
         ffcv.transforms.ToDevice(this_device, non_blocking=True),
         ffcv.transforms.ToTorchImage(),
         ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float32),
-        torchvision.transforms.ColorJitter(0.4, 0.4, 0.2, 0.1),
-    ]
+        torchvision.transforms.ColorJitter(0.4, 0.4, 0.2, 0.1), ]
 
     label_pipeline = [
         ffcv.fields.basics.IntDecoder(),
