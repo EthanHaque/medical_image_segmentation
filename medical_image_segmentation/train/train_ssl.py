@@ -129,6 +129,7 @@ class SelfSupervisedLearner(pl.LightningModule):
 def setup_train_objects():
     """Creates objects for training."""
     resnet = torchvision.models.resnet18(weights=None)
+    resnet.conv1 = torch.nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
 
     model = SelfSupervisedLearner(
         resnet,
