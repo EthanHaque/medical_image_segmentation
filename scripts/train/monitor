@@ -10,7 +10,7 @@ versions=("$@")
 while true; do
     clear
     python medical_image_segmentation/analyze_data/plot_metrics_in_terminal.py \
-        --metrics train_loss_epoch \
+        --metrics online_knn_val_acc \
         --files $(printf "logs/lightning_logs/version_%s/metrics.csv " "${versions[@]}")
-    sleep 90
+    sleep 30
 done
