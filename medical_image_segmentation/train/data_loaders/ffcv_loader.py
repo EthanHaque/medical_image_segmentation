@@ -30,7 +30,7 @@ def create_train_loader_ssl(this_device: str, beton_file_path: str, batch_size: 
         ffcv.transforms.ToDevice(this_device, non_blocking=True),
         ffcv.transforms.ToTorchImage(),
         ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float32),
-        torchvision.transforms.ColorJitter(0.4, 0.4, 0.2, 0.1),
+        torchvision.transforms.ColorJitter(0.8, 0.4, 0.2, 0.1),
         torchvision.transforms.GaussianBlur(kernel_size=(3, 3), sigma=(0.1, 2)),
     ]
 
@@ -43,7 +43,7 @@ def create_train_loader_ssl(this_device: str, beton_file_path: str, batch_size: 
         ffcv.transforms.ToDevice(this_device, non_blocking=True),
         ffcv.transforms.ToTorchImage(),
         ffcv.transforms.NormalizeImage(imagenet_mean, imagenet_std, np.float32),
-        torchvision.transforms.ColorJitter(0.4, 0.4, 0.2, 0.1), ]
+        torchvision.transforms.ColorJitter(0.8, 0.4, 0.2, 0.1), ]
 
     label_pipeline = [
         ffcv.fields.basics.IntDecoder(),
