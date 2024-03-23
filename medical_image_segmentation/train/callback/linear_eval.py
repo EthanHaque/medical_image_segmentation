@@ -50,23 +50,19 @@ class SSLLinearEval(Callback):  # pragma: no cover
                                               ).to(pl_module.device)
 
         # switch fo PL compatibility reasons
-        accel = (
-            trainer.accelerator_connector
-            if hasattr(trainer, "accelerator_connector")
-            else trainer._accelerator_connector
-        )
-        if accel.is_distributed:
-            if accel.use_ddp:
+        strategy = trainer.strategy
+        if strategy is not None and strategy.is_distributed:
+            if isinstance(strategy, pl.strategies.DDPStrategy):
                 from torch.nn.parallel import DistributedDataParallel
 
                 self.online_evaluator = DistributedDataParallel(self.online_evaluator, device_ids=[pl_module.device])
-            elif accel.use_dp:
+            elif isinstance(strategy, pl.strategies.DPStrategy):
                 from torch.nn.parallel import DataParallel
 
                 self.online_evaluator = DataParallel(self.online_evaluator, device_ids=[pl_module.device])
             else:
                 rank_zero_warn(
-                    "Does not support this type of distributed accelerator. The online evaluator will not sync."
+                    "Does not support this type of distributed strategy. The online evaluator will not sync."
                 )
 
         self.optimizer = torch.optim.Adam(self.online_evaluator.parameters(), lr=1e-4)
