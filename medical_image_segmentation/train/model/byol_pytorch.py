@@ -176,7 +176,7 @@ class BYOL(pl.LightningModule):
             'loss_linear': loss_linear,
             'lr': self.trainer.optimizers[0].param_groups[0]['lr'],
             'momentum': self.current_momentum}
-        self.log_dict(logs, on_step=False, on_epoch=True, sync_dist=True)
+        self.log_dict(logs, on_step=False, on_epoch=True, sync_dist=True, prog_bar=True, logger=True)
         return loss + loss_linear * self.hparams.linear_loss_weight
 
     def on_train_batch_end(self, outputs, batch, batch_idx):
@@ -245,7 +245,7 @@ class BYOL(pl.LightningModule):
 
         # gather results and log
         logs = {'val/acc@1': acc1, 'val/acc@5': acc5}
-        self.log_dict(logs, on_step=False, on_epoch=True, sync_dist=True)
+        self.log_dict(logs, on_step=False, on_epoch=True, sync_dist=True, prog_bar=True, logger=True)
 
     @torch.no_grad()
     def accuracy(self, preds, targets, k=(1, 5)):
