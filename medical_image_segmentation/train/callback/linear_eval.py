@@ -35,8 +35,6 @@ class SSLLinearEval(Callback):  # pragma: no cover
 
         self.optimizer: Optional[Optimizer] = None
         self.online_evaluator: Optional[nn.Sequential] = None
-        self.num_classes: Optional[int] = None
-        self.dataset: Optional[str] = None
         self.num_classes: Optional[int] = num_classes
         self.dataset: Optional[str] = dataset
 
