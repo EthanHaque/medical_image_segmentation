@@ -4,6 +4,8 @@ import torch.nn as nn
 import pytorch_lightning as pl
 from medical_image_segmentation.train.optimizer.lars import LARS
 from medical_image_segmentation.train.scheduler.cosine_annealing import LinearWarmupCosineAnnealingLR
+from medical_image_segmentation.train.data_loaders.ffcv_loader import create_train_loader_ssl, create_val_loader_ssl
+from tqdm import tqdm
 
 from byol.nets import Encoder, MLP
 
@@ -183,6 +185,43 @@ class BYOL(pl.LightningModule):
         self.current_momentum = self.hparams.final_momentum - \
                                 (self.hparams.final_momentum - self.hparams.base_momentum) * \
                                 (math.cos(math.pi * self.trainer.global_step / max_steps) + 1) / 2
+
+    def train_dataloader(self):
+        loader = create_train_loader_ssl(
+            this_device=self.trainer.local_rank,
+            beton_file_path="/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_train.beton",
+            batch_size=256,
+            num_workers=8,
+            image_size=32,
+            num_gpus=1,
+            in_memory=True,
+            subset_size=-1,
+        )
+
+        def tqdm_rank_zero_only(iterator, *args, **kwargs):
+            if self.trainer.is_global_zero:
+                return tqdm(iterator, *args, **kwargs)
+            else:
+                return iterator
+
+        for _ in tqdm_rank_zero_only(loader, desc="Prefetching train data"):
+            pass
+
+        return loader
+
+    def val_dataloader(self):
+        loader = create_val_loader_ssl(
+            this_device=self.trainer.local_rank,
+            beton_file_path="/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_test.beton",
+            batch_size=256,
+            num_workers=8,
+            image_size=32,
+            num_gpus=1,
+            in_memory=True,
+            subset_size=-1,
+        )
+
+        return loader
 
     @torch.no_grad()
     def momentum_update(self, online_encoder, momentum_encoder, m):

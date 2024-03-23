@@ -3,7 +3,6 @@ import pytorch_lightning as pl
 
 
 from medical_image_segmentation.train.model.byol_pytorch import BYOL
-import data_utils.modules as data_modules
 
 from argparse import ArgumentParser
 from datetime import datetime
