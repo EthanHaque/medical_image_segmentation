@@ -23,6 +23,7 @@ def get_dataset(dataset_name, num_workers):
     dataset_map = {
         "cifar10": get_cifar10_datasets,
         "cifar100": get_cifar100_datasets,
+        "imagenet": get_imagenet_datasets,
     }
     return dataset_map[dataset_name](num_workers)
 
@@ -36,6 +37,12 @@ def get_cifar10_datasets(num_workers=1):
 def get_cifar100_datasets(num_workers=1):
     trainset = torchvision.datasets.CIFAR10(root="/tmp/cifar100", train=True, download=True)
     testset = torchvision.datasets.CIFAR10(root="/tmp/cifar100", train=False, download=True)
+
+    return trainset, testset
+
+def get_imagenet_datasets(num_workers=1):
+    trainset = torchvision.datasets.ImageNet("/scratch/gpfs/DATASETS/imagenet/ilsvrc_2012_classification_localization/", train=True, download=False)
+    testset = torchvision.datasets.ImageNet("/scratch/gpfs/DATASETS/imagenet/ilsvrc_2012_classification_localization/", train=False, download=False)
 
     return trainset, testset
 
@@ -54,8 +61,8 @@ def main():
     args = parse_args()
 
     train_dataset, test_dataset = get_dataset(args.dataset_name, args.num_workers)
-    train_output_path = os.path.join(args.output_dir, f"{args.dataset_name}_train.beton")
-    test_output_path = os.path.join(args.output_dir, f"{args.dataset_name}_test.beton")
+    train_output_path = os.path.join(args.output_dir, f"{args.dataset_name}_{args.max_resolution}_train.beton")
+    test_output_path = os.path.join(args.output_dir, f"{args.dataset_name}_{args.max_resolution}_test.beton")
 
     os.makedirs(args.output_dir, exist_ok=True)
 
