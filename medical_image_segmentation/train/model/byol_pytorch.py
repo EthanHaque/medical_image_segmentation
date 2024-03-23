@@ -147,7 +147,11 @@ class BYOL(pl.LightningModule):
         return 2 - 2 * (preds * targets).sum(dim=-1).mean()
 
     def training_step(self, batch, batch_idx):
-        views, labels = batch
+        # original_images = batch[0]
+        labels = batch[1]
+        view_1 = batch[2]
+        view_2 = batch[3]
+        views = [view_1, view_2]
 
         # forward online encoder
         input_online = torch.cat(views, dim=0)
@@ -230,7 +234,8 @@ class BYOL(pl.LightningModule):
             pm.data.mul_(m).add_(po.data, alpha=1. - m)
 
     def validation_step(self, batch, batch_idx):
-        images, labels = batch
+        images = batch[0]
+        labels = batch[1]
 
         # predict using online encoder
         preds = self(images)
