@@ -14,7 +14,7 @@ import ffcv
 
 from tqdm import tqdm
 
-from medical_image_segmentation.train.callback.knn import KNNOnlineEvaluator
+from medical_image_segmentation.train.callback.linear_eval import SSLLinearEval
 from medical_image_segmentation.train.data_loaders.ffcv_loader import create_train_loader_ssl, create_val_loader_ssl
 
 def parse_args() -> argparse.Namespace:
@@ -145,7 +145,7 @@ def setup_train_objects():
     logger = pl.loggers.CSVLogger("logs")
     callbacks = [
         pl.callbacks.LearningRateMonitor(logging_interval="epoch"),
-        KNNOnlineEvaluator(k=1, num_classes=1000),
+        SSLLinearEval(256, drop_p=0.2, num_classes=1000),
         pl.callbacks.LearningRateMonitor(logging_interval="epoch", log_momentum=True, log_weight_decay=True)
     ]
 
