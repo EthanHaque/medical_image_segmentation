@@ -41,7 +41,7 @@ def main(args):
     data_module = CIFAR100DataModule("/tmp/cifar100",
                                      args.batch_size,
                                      args.num_workers,
-                                     download=True)
+                                     download=False)
 
     trainer = pl.Trainer(devices=args.num_gpus,
                          accelerator="gpu",
