@@ -89,6 +89,8 @@ class SSLLinearEval(Callback):  # pragma: no cover
     ):
         with torch.no_grad(), set_training(pl_module, False):
             x, y = self.to_device(batch, pl_module.device)
+            print(batch.shape)
+            print(pl_module.learner.online_encoder(x))
             representations = pl_module.learner.online_encoder(x).flatten(start_dim=1)
 
         # forward pass
