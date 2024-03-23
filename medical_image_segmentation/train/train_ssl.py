@@ -43,7 +43,9 @@ def main(args):
                          max_epochs=args.max_epochs,
                          accumulate_grad_batches=1,
                          sync_batchnorm=True,
-                         logger=logger)
+                         logger=logger,
+                         log_every_n_steps=1,
+                         check_val_every_n_epoch=1)
     trainer.fit(model)
 
 
