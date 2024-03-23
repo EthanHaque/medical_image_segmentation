@@ -20,18 +20,24 @@ def parse_args():
 
 def get_dataset(dataset_name, num_workers):
     """Dispatches the dataset name to the correct train and test dataset pairs"""
-    dataset_map = {"cifar10": get_cifair10_datasets}
+    dataset_map = {
+        "cifar10": get_cifar10_datasets,
+        "cifar100": get_cifar100_datasets,
+    }
     return dataset_map[dataset_name](num_workers)
 
 
-def get_cifair10_datasets(num_workers=1):
-    trainset = torchvision.datasets.CIFAR10(root="/tmp/cifar", train=True, download=True)
-    testset = torchvision.datasets.CIFAR10(root="/tmp/cifar", train=False, download=True)
+def get_cifar10_datasets(num_workers=1):
+    trainset = torchvision.datasets.CIFAR10(root="/tmp/cifar10", train=True, download=True)
+    testset = torchvision.datasets.CIFAR10(root="/tmp/cifar10", train=False, download=True)
     
     return trainset, testset
 
 def get_cifar100_datasets(num_workers=1):
-    pass
+    trainset = torchvision.datasets.CIFAR10(root="/tmp/cifar100", train=True, download=True)
+    testset = torchvision.datasets.CIFAR10(root="/tmp/cifar100", train=False, download=True)
+
+    return trainset, testset
 
 
 def create_writer(output_path, max_resolution):
