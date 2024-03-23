@@ -245,7 +245,6 @@ class BYOL(pl.LightningModule):
 
         # gather results and log
         logs = {'val/acc@1': acc1, 'val/acc@5': acc5}
-        print(logs)
         self.log_dict(logs, on_step=False, on_epoch=True, sync_dist=True)
 
     @torch.no_grad()
