@@ -21,7 +21,6 @@ class SSLLinearEval(Callback):  # pragma: no cover
         z_dim: int,
         drop_p: float = 0.2,
         num_classes: Optional[int] = None,
-        dataset: Optional[str] = None,
     ) -> None:
         """
         Args:
@@ -36,15 +35,12 @@ class SSLLinearEval(Callback):  # pragma: no cover
         self.optimizer: Optional[Optimizer] = None
         self.online_evaluator: Optional[nn.Sequential] = None
         self.num_classes: Optional[int] = num_classes
-        self.dataset: Optional[str] = dataset
 
         self._recovered_callback_state: Optional[Dict[str, Any]] = None
 
     def setup(self, trainer: Trainer, pl_module: LightningModule, stage: Optional[str] = None) -> None:
         if self.num_classes is None:
             self.num_classes = trainer.datamodule.num_classes
-        if self.dataset is None:
-            self.dataset = trainer.datamodule.name
 
     def on_fit_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         # must move to device after setup, as during setup, pl_module is still on cpu
