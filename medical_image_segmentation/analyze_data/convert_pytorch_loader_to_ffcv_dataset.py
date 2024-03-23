@@ -41,8 +41,8 @@ def get_cifar100_datasets(num_workers=1):
     return trainset, testset
 
 def get_imagenet_datasets(num_workers=1):
-    trainset = torchvision.datasets.ImageNet("/scratch/gpfs/DATASETS/imagenet/ilsvrc_2012_classification_localization/", train=True, download=False)
-    testset = torchvision.datasets.ImageNet("/scratch/gpfs/DATASETS/imagenet/ilsvrc_2012_classification_localization/", train=False, download=False)
+    trainset = torchvision.datasets.ImageNet("/scratch/gpfs/DATASETS/imagenet/ilsvrc_2012_classification_localization/", split=True, download=False)
+    testset = torchvision.datasets.ImageNet("/scratch/gpfs/DATASETS/imagenet/ilsvrc_2012_classification_localization/", split=False, download=False)
 
     return trainset, testset
 
