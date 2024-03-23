@@ -6,14 +6,14 @@ from medical_image_segmentation.train.model.byol_pytorch import BYOL
 
 from argparse import ArgumentParser
 from datetime import datetime
-
+import os
 
 parser = ArgumentParser()
 parser.add_argument('--dataset', default='CIFAR100', type=str, help='dataset')
 parser.add_argument('--download', default=False, action='store_true', help='wether to download the dataset')
 parser.add_argument('--data_dir', default='datasets', type=str, help='data directory')
 parser.add_argument('--batch_size', default=256, type=int, help='batch size')
-parser.add_argument('--num_workers', default=5, type=int, help='number of workers')
+parser.add_argument('--num_workers', default=int(os.environ.get("SLURM_CPUS_PER_TASK", "16")), type=int, help='number of workers')
 parser.add_argument('--arch', default='resnet18', type=str, help='backbone architecture')
 parser.add_argument('--base_lr', default=1.0, type=float, help='base learning rate')
 parser.add_argument('--min_lr', default=1e-3, type=float, help='min learning rate')
@@ -29,6 +29,8 @@ parser.add_argument('--comment', default=datetime.now().strftime('%b%d_%H-%M-%S'
 parser.add_argument('--project', default='essential-byol', type=str, help='wandb project')
 parser.add_argument('--entity', default=None, type=str, help='wandb entity')
 parser.add_argument('--offline', default=False, action='store_true', help='disable wandb')
+parser.add_argument('--num_gpus', default=int(os.environ.get("SLURM_GPUS_ON_NODE", "4")), type=int, help='Number of GPUs to use for training')
+parser.add_argument("--max_epochs", default=100, type=int, help='Number of training epochs')
 
 
 def main(args):
@@ -36,7 +38,12 @@ def main(args):
 
     model = BYOL(**args.__dict__, num_classes=100)
 
-    trainer = pl.Trainer.from_argparse_args(args, logger=logger)
+    trainer = pl.Trainer(devices=args.num_gpus,
+                         accelerator="gpu",
+                         max_epochs=args.max_epochs,
+                         accumulate_grad_batches=1,
+                         sync_batchnorm=True,
+                         logger=logger)
     trainer.fit(model)
 
 
