@@ -34,7 +34,7 @@ parser.add_argument("--max_epochs", default=100, type=int, help='Number of train
 
 
 def main(args):
-    logger = pl.loggers.CSVLogger(".")
+    logger = pl.loggers.CSVLogger("logs")
 
     model = BYOL(**args.__dict__, num_classes=100)
 
