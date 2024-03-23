@@ -6,6 +6,5 @@ python medical_image_segmentation/train/train_ssl.py \
     --dataset CIFAR100 \
     --batch_size 256 \
     --max_epochs 1000 \
-    --arch resnet18 \
-    --download"
+    --arch resnet18"
 
