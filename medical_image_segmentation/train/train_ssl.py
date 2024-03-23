@@ -3,14 +3,11 @@ import os
 import torch
 import torchvision
 
-import numpy as np
 
 from byol_pytorch import BYOL
 import pytorch_lightning as pl
 
 
-from ffcv.loader import Loader, OrderOption
-import ffcv
 
 from tqdm import tqdm
 
