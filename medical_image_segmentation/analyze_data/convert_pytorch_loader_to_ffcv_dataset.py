@@ -30,6 +30,9 @@ def get_cifair10_datasets(num_workers=1):
     
     return trainset, testset
 
+def get_cifar100_datasets(num_workers=1):
+    pass
+
 
 def create_writer(output_path, max_resolution):
     writer = DatasetWriter(output_path, {
