@@ -92,8 +92,7 @@ class SSLLinearEval(Callback):  # pragma: no cover
             labels = batch[1]
             x = images.to(pl_module.device)
             y = labels.to(pl_module.device)
-            print(pl_module.forward(x, return_embedding=True))
-            representations = pl_module.forward(x, return_embedding=True).flatten(start_dim=1)
+            representations = pl_module.forward(x, return_embedding=True)[0].flatten(start_dim=1)
 
         # forward pass
         mlp_logits = self.online_evaluator(representations)  # type: ignore[operator]
