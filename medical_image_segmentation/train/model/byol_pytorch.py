@@ -7,7 +7,6 @@ from medical_image_segmentation.train.scheduler.cosine_annealing import LinearWa
 from medical_image_segmentation.train.data_loaders.ffcv_loader import create_train_loader_ssl, create_val_loader_ssl
 from tqdm import tqdm
 
-from byol.nets import Encoder, MLP
 
 import math
 

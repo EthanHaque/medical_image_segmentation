@@ -32,17 +32,12 @@ parser.add_argument('--offline', default=False, action='store_true', help='disab
 
 
 def main(args):
-
-    dm_class = getattr(data_modules, args.dataset + 'DataModule')
-    dm = dm_class(**args.__dict__)
-
-    # run_name = '-'.join(['byol', args.arch, args.dataset, args.comment])
     logger = pl.loggers.CSVLogger(".")
 
-    model = BYOL(**args.__dict__, num_classes=dm.num_classes)
+    model = BYOL(**args.__dict__, num_classes=100)
 
     trainer = pl.Trainer.from_argparse_args(args, logger=logger)
-    trainer.fit(model, dm)
+    trainer.fit(model)
 
 
 if __name__ == '__main__':
