@@ -38,10 +38,10 @@ def main(args):
 
     model = BYOL(**args.__dict__, num_classes=100)
     from medical_image_segmentation.train.data_loaders.lightning_module import CIFAR100DataModule
-    data_module = CIFAR100DataModule("/scratch/gpfs/DATASETS/cifar/cifar-100-python",
+    data_module = CIFAR100DataModule("/tmp/cifar100",
                                      args.batch_size,
                                      args.num_workers,
-                                     download=False)
+                                     download=True)
 
     trainer = pl.Trainer(devices=args.num_gpus,
                          accelerator="gpu",
