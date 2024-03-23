@@ -37,6 +37,11 @@ def main(args):
     logger = pl.loggers.CSVLogger("logs")
 
     model = BYOL(**args.__dict__, num_classes=100)
+    from medical_image_segmentation.train.data_loaders.lightning_module import CIFAR100DataModule
+    data_module = CIFAR100DataModule("/scratch/gpfs/DATASETS/cifar/cifar-100-python",
+                                     args.batch_size,
+                                     args.num_workers,
+                                     download=False)
 
     trainer = pl.Trainer(devices=args.num_gpus,
                          accelerator="gpu",
@@ -46,7 +51,7 @@ def main(args):
                          logger=logger,
                          log_every_n_steps=1,
                          check_val_every_n_epoch=1)
-    trainer.fit(model)
+    trainer.fit(model, data_module)
 
 
 if __name__ == '__main__':
