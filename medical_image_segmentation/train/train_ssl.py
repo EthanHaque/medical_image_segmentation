@@ -38,7 +38,7 @@ def main(args):
 
     model = BYOL(**args.__dict__, num_classes=100)
     from medical_image_segmentation.train.data_loaders.lightning_module import CIFAR100DataModule
-    data_module = CIFAR100DataModule("/tmp/cifar100",
+    data_module = CIFAR100DataModule("/tmp/cifar100/cifar-100-python",
                                      args.batch_size,
                                      args.num_workers,
                                      download=False)
