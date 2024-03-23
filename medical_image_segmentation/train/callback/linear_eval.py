@@ -124,7 +124,6 @@ class SSLLinearEval(Callback):  # pragma: no cover
         outputs: Sequence,
         batch: Sequence,
         batch_idx: int,
-        dataloader_idx: int,
     ) -> None:
         val_acc, mlp_loss = self.shared_step(pl_module, batch)
         pl_module.log("online_val_acc", val_acc, on_step=False, on_epoch=True, sync_dist=True)
