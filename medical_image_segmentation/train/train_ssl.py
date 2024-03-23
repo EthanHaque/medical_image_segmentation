@@ -22,7 +22,7 @@ from medical_image_segmentation.train.scheduler.cosine_annealing import LinearWa
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Self-Supervised Learning with BYOL and PyTorch")
     parser.add_argument("--epochs", type=int, default=300, help="Number of training epochs")
-    parser.add_argument("--lr", type=float, default=1.0, help="Learning rate")
+    parser.add_argument("--lr", type=float, default=3.0, help="Learning rate")
     parser.add_argument("--min_lr", type=float, default=1e-3, help="Minimum learning rate")
     parser.add_argument("--batch_size", type=int, default=2048, help="Batch size")
     parser.add_argument("--image_size", type=int, default=256, help="Image size")
