@@ -99,7 +99,7 @@ class SelfSupervisedLearner(pl.LightningModule):
         subset_size = args.train_subset_size if args.train_subset_size else -1
         loader = create_train_loader_ssl(
             this_device=self.trainer.local_rank,
-            beton_file_path="/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_train.beton",
+            beton_file_path="/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_112_train.beton",
             batch_size=args.batch_size,
             num_workers=args.num_workers,
             image_size=args.image_size,
@@ -123,7 +123,7 @@ class SelfSupervisedLearner(pl.LightningModule):
         subset_size = args.val_subset_size if args.val_subset_size else -1
         loader = create_val_loader_ssl(
             this_device=self.trainer.local_rank,
-            beton_file_path="/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_val.beton",
+            beton_file_path="/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_112_test.beton",
             batch_size=args.batch_size,
             num_workers=args.num_workers,
             image_size=args.image_size,
