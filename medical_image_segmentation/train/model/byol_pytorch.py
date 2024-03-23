@@ -1,257 +1,217 @@
-# Adapted from https://github.com/lucidrains/byol-pytorch
-import copy
-import random
-from functools import wraps
-
 import torch
-from torch import nn
 import torch.nn.functional as F
-import torch.distributed as dist
+import torch.nn as nn
+import pytorch_lightning as pl
+from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
+from pl_bolts.optimizers.lars_scheduling import LARSWrapper
 
-# helper functions
+from byol.nets import Encoder, MLP
 
-def default(val, def_val):
-    return def_val if val is None else val
+import math
 
-def flatten(t):
-    return t.reshape(t.shape[0], -1)
+from torchvision import models
 
-def singleton(cache_key):
-    def inner_fn(fn):
-        @wraps(fn)
-        def wrapper(self, *args, **kwargs):
-            instance = getattr(self, cache_key)
-            if instance is not None:
-                return instance
 
-            instance = fn(self, *args, **kwargs)
-            setattr(self, cache_key, instance)
-            return instance
-        return wrapper
-    return inner_fn
-
-def get_module_device(module):
-    return next(module.parameters()).device
-
-def set_requires_grad(model, val):
-    for p in model.parameters():
-        p.requires_grad = val
-
-def MaybeSyncBatchnorm(is_distributed = None):
-    is_distributed = default(is_distributed, dist.is_initialized() and dist.get_world_size() > 1)
-    return nn.SyncBatchNorm if is_distributed else nn.BatchNorm1d
-
-# loss fn
-
-def loss_fn(x, y):
-    x = F.normalize(x, dim=-1, p=2)
-    y = F.normalize(y, dim=-1, p=2)
-    return 2 - 2 * (x * y).sum(dim=-1)
-
-# augmentation utils
-
-class RandomApply(nn.Module):
-    def __init__(self, fn, p):
+class MLP(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim):
         super().__init__()
-        self.fn = fn
-        self.p = p
+
+        self.l1 = nn.Linear(input_dim, hidden_dim)
+        self.bn1 = nn.BatchNorm1d(hidden_dim)
+        self.relu1 = nn.ReLU(inplace=True)
+        self.l2 = nn.Linear(hidden_dim, output_dim)
+
     def forward(self, x):
-        if random.random() > self.p:
-            return x
-        return self.fn(x)
+        x = self.l1(x)
+        x = self.bn1(x)
+        x = self.relu1(x)
+        x = self.l2(x)
+        return x
 
-# exponential moving average
 
-class EMA():
-    def __init__(self, beta):
+class Encoder(nn.Module):
+    def __init__(self, arch, hidden_dim, proj_dim, low_res):
         super().__init__()
-        self.beta = beta
 
-    def update_average(self, old, new):
-        if old is None:
-            return new
-        return old * self.beta + (1 - self.beta) * new
+        # backbone
+        self.encoder = models.__dict__[arch]()
+        self.feat_dim = self.encoder.fc.weight.shape[1]
+        self.encoder.fc = nn.Identity()
 
-def update_moving_average(ema_updater, ma_model, current_model):
-    for current_params, ma_params in zip(current_model.parameters(), ma_model.parameters()):
-        old_weight, up_weight = ma_params.data, current_params.data
-        ma_params.data = ema_updater.update_average(old_weight, up_weight)
+        # modify the encoder for lower resolution
+        if low_res:
+            self.encoder.conv1 = nn.Conv2d(
+                3, 64, kernel_size=3, stride=1, padding=1, bias=False)
+            self.encoder.maxpool = nn.Identity()
+            self._reinit_all_layers()
 
-# MLP class for projector and predictor
+        # build heads
+        self.projection = MLP(self.feat_dim, hidden_dim, proj_dim)
 
-def MLP(dim, projection_size, hidden_size=4096, sync_batchnorm=None):
-    return nn.Sequential(
-        nn.Linear(dim, hidden_size),
-        MaybeSyncBatchnorm(sync_batchnorm)(hidden_size),
-        nn.ReLU(inplace=True),
-        nn.Linear(hidden_size, projection_size)
-    )
+    @torch.no_grad()
+    def _reinit_all_layers(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(
+                    m.weight, mode="fan_out", nonlinearity="relu")
+            elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
 
-def SimSiamMLP(dim, projection_size, hidden_size=4096, sync_batchnorm=None):
-    return nn.Sequential(
-        nn.Linear(dim, hidden_size, bias=False),
-        MaybeSyncBatchnorm(sync_batchnorm)(hidden_size),
-        nn.ReLU(inplace=True),
-        nn.Linear(hidden_size, hidden_size, bias=False),
-        MaybeSyncBatchnorm(sync_batchnorm)(hidden_size),
-        nn.ReLU(inplace=True),
-        nn.Linear(hidden_size, projection_size, bias=False),
-        MaybeSyncBatchnorm(sync_batchnorm)(projection_size, affine=False)
-    )
+    def forward(self, x):
+        feats = self.encoder(x)
+        z = self.projection(feats)
+        return z, feats
 
-# a wrapper class for the base neural network
-# will manage the interception of the hidden layer output
-# and pipe it into the projecter and predictor nets
 
-class NetWrapper(nn.Module):
-    def __init__(self, net, projection_size, projection_hidden_size, layer = -2, use_simsiam_mlp = False, sync_batchnorm = None):
+class BYOL(pl.LightningModule):
+
+    def __init__(self, **kwargs):
         super().__init__()
-        self.net = net
-        self.layer = layer
+        self.save_hyperparameters()
+        self.current_momentum = self.hparams.base_momentum
 
-        self.projector = None
-        self.projection_size = projection_size
-        self.projection_hidden_size = projection_hidden_size
+        # online encoder
+        self.online_encoder = Encoder(
+            arch=self.hparams.arch,
+            hidden_dim=self.hparams.hidden_dim,
+            proj_dim=self.hparams.proj_dim,
+            low_res='CIFAR' in self.hparams.dataset)
 
-        self.use_simsiam_mlp = use_simsiam_mlp
-        self.sync_batchnorm = sync_batchnorm
+        # momentum encoder
+        self.momentum_encoder = Encoder(
+            arch=self.hparams.arch,
+            hidden_dim=self.hparams.hidden_dim,
+            proj_dim=self.hparams.proj_dim,
+            low_res='CIFAR' in self.hparams.dataset)
+        self.initialize_momentum_encoder()
 
-        self.hidden = {}
-        self.hook_registered = False
+        # predictor
+        self.predictor = MLP(
+            input_dim=self.hparams.proj_dim,
+            hidden_dim=self.hparams.hidden_dim,
+            output_dim=self.hparams.proj_dim)
 
-    def _find_layer(self):
-        if type(self.layer) == str:
-            modules = dict([*self.net.named_modules()])
-            return modules.get(self.layer, None)
-        elif type(self.layer) == int:
-            children = [*self.net.children()]
-            return children[self.layer]
-        return None
+        # linear layer for eval
+        self.linear = torch.nn.Linear(
+            self.online_encoder.feat_dim, self.hparams.num_classes)
 
-    def _hook(self, _, input, output):
-        device = input[0].device
-        self.hidden[device] = flatten(output)
+    @torch.no_grad()
+    def initialize_momentum_encoder(self):
+        params_online = self.online_encoder.parameters()
+        params_momentum = self.momentum_encoder.parameters()
+        for po, pm in zip(params_online, params_momentum):
+            pm.data.copy_(po.data)
+            pm.requires_grad = False
 
-    def _register_hook(self):
-        layer = self._find_layer()
-        assert layer is not None, f'hidden layer ({self.layer}) not found'
-        handle = layer.register_forward_hook(self._hook)
-        self.hook_registered = True
+    def collect_params(self, models, exclude_bias_and_bn=True):
+        param_list = []
+        for model in models:
+            for name, param in model.named_parameters():
+                if exclude_bias_and_bn and any(
+                        s in name for s in ['bn', 'downsample.1', 'bias']):
+                    param_dict = {
+                        'params': param,
+                        'weight_decay': 0.,
+                        'lars_exclude': True}
+                    # NOTE: with the current pytorch lightning bolts
+                    # implementation it is not possible to exclude 
+                    # parameters from the LARS adaptation
+                else:
+                    param_dict = {'params': param}
+                param_list.append(param_dict)
+        return param_list
 
-    @singleton('projector')
-    def _get_projector(self, hidden):
-        _, dim = hidden.shape
-        create_mlp_fn = MLP if not self.use_simsiam_mlp else SimSiamMLP
-        projector = create_mlp_fn(dim, self.projection_size, self.projection_hidden_size, sync_batchnorm = self.sync_batchnorm)
-        return projector.to(hidden)
+    def configure_optimizers(self):
+        params = self.collect_params([
+            self.online_encoder, self.predictor, self.linear])
+        optimizer = LARSWrapper(torch.optim.SGD(
+            params,
+            lr=self.hparams.base_lr,
+            momentum=self.hparams.momentum_opt,
+            weight_decay=self.hparams.weight_decay))
+        scheduler = LinearWarmupCosineAnnealingLR(
+            optimizer,
+            warmup_epochs=self.hparams.warmup_epochs,
+            max_epochs=self.hparams.max_epochs,
+            warmup_start_lr=self.hparams.min_lr,
+            eta_min=self.hparams.min_lr)
+        return [optimizer], [scheduler]
 
-    def get_representation(self, x):
-        if self.layer == -1:
-            return self.net(x)
+    def forward(self, x):
+        return self.linear(self.online_encoder.encoder(x))
 
-        if not self.hook_registered:
-            self._register_hook()
+    def cosine_similarity_loss(self, preds, targets):
+        preds = F.normalize(preds, dim=-1, p=2)
+        targets = F.normalize(targets, dim=-1, p=2)
+        return 2 - 2 * (preds * targets).sum(dim=-1).mean()
 
-        self.hidden.clear()
-        _ = self.net(x)
-        hidden = self.hidden[x.device]
-        self.hidden.clear()
+    def training_step(self, batch, batch_idx):
+        views, labels = batch
 
-        assert hidden is not None, f'hidden layer {self.layer} never emitted an output'
-        return hidden
+        # forward online encoder
+        input_online = torch.cat(views, dim=0)
+        z, feats = self.online_encoder(input_online)
+        preds = self.predictor(z)
 
-    def forward(self, x, return_projection = True):
-        representation = self.get_representation(x)
-
-        if not return_projection:
-            return representation
-
-        projector = self._get_projector(representation)
-        projection = projector(representation)
-        return projection, representation
-
-# main class
-
-class BYOL(nn.Module):
-    def __init__(
-        self,
-        net,
-        image_size,
-        hidden_layer = -2,
-        projection_size = 256,
-        projection_hidden_size = 4096,
-        # augment_fn = None,
-        # augment_fn2 = None,
-        moving_average_decay = 0.99,
-        use_momentum = True,
-        sync_batchnorm = None
-    ):
-        super().__init__()
-        self.net = net
-
-        self.online_encoder = NetWrapper(
-            net,
-            projection_size,
-            projection_hidden_size,
-            layer = hidden_layer,
-            use_simsiam_mlp = not use_momentum,
-            sync_batchnorm = sync_batchnorm
-        )
-
-        self.use_momentum = use_momentum
-        self.target_encoder = None
-        self.target_ema_updater = EMA(moving_average_decay)
-
-        self.online_predictor = MLP(projection_size, projection_size, projection_hidden_size)
-
-        # get device of network and make wrapper same device
-        device = get_module_device(net)
-        self.to(device)
-
-        # send a mock image tensor to instantiate singleton parameters
-        self.forward(torch.randn(2, 3, image_size, image_size, device=device))
-
-    @singleton('target_encoder')
-    def _get_target_encoder(self):
-        target_encoder = copy.deepcopy(self.online_encoder)
-        set_requires_grad(target_encoder, False)
-        return target_encoder
-
-    def reset_moving_average(self):
-        del self.target_encoder
-        self.target_encoder = None
-
-    def update_moving_average(self):
-        assert self.use_momentum, 'you do not need to update the moving average, since you have turned off momentum for the target encoder'
-        assert self.target_encoder is not None, 'target encoder has not been created yet'
-        update_moving_average(self.target_ema_updater, self.target_encoder, self.online_encoder)
-
-    def forward(
-        self,
-        x,
-        return_embedding = False,
-        return_projection = True
-    ):
-        assert not (self.training and x.shape[0] == 1), 'you must have greater than 1 sample when training, due to the batchnorm in the projection layer'
-
-        if return_embedding:
-            return self.online_encoder(x, return_projection = return_projection)
-
-        online_projections, _ = self.online_encoder(x)
-        online_predictions = self.online_predictor(online_projections)
-
-        online_pred_one, online_pred_two = online_predictions.chunk(2, dim = 0)
-
+        # forward momentum encoder
         with torch.no_grad():
-            target_encoder = self._get_target_encoder() if self.use_momentum else self.online_encoder
+            input_momentum = torch.cat(views[::-1], dim=0)
+            targets, _ = self.momentum_encoder(input_momentum)
 
-            target_projections, _ = target_encoder(x)
-            target_projections = target_projections.detach()
+        # compute BYOL loss
+        loss = self.cosine_similarity_loss(preds, targets)
 
-            target_proj_one, target_proj_two = target_projections.chunk(2, dim = 0)
+        # train linear layer
+        preds_linear = self.linear(feats.detach())
+        loss_linear = F.cross_entropy(preds_linear, labels.repeat(2))
 
-        loss_one = loss_fn(online_pred_one, target_proj_two.detach())
-        loss_two = loss_fn(online_pred_two, target_proj_one.detach())
+        # gather results and log stats
+        logs = {
+            'loss': loss,
+            'loss_linear': loss_linear,
+            'lr': self.trainer.optimizers[0].param_groups[0]['lr'],
+            'momentum': self.current_momentum}
+        self.log_dict(logs, on_step=False, on_epoch=True, sync_dist=True)
+        return loss + loss_linear * self.hparams.linear_loss_weight
 
-        loss = loss_one + loss_two
-        return loss.mean()
+    def on_train_batch_end(self, outputs, batch, batch_idx, dataloader_idx):
+        # update momentum encoder
+        self.momentum_update(
+            self.online_encoder, self.momentum_encoder, self.current_momentum)
+        # update momentum value
+        max_steps = len(self.trainer.train_dataloader) * self.trainer.max_epochs
+        self.current_momentum = self.hparams.final_momentum - \
+                                (self.hparams.final_momentum - self.hparams.base_momentum) * \
+                                (math.cos(math.pi * self.trainer.global_step / max_steps) + 1) / 2
+
+    @torch.no_grad()
+    def momentum_update(self, online_encoder, momentum_encoder, m):
+        online_params = online_encoder.parameters()
+        momentum_params = momentum_encoder.parameters()
+        for po, pm in zip(online_params, momentum_params):
+            pm.data.mul_(m).add_(po.data, alpha=1. - m)
+
+    def validation_step(self, batch, batch_idx):
+        images, labels = batch
+
+        # predict using online encoder
+        preds = self(images)
+
+        # calculate accuracy @k
+        acc1, acc5 = self.accuracy(preds, labels)
+
+        # gather results and log
+        logs = {'val/acc@1': acc1, 'val/acc@5': acc5}
+        self.log_dict(logs, on_step=False, on_epoch=True, sync_dist=True)
+
+    @torch.no_grad()
+    def accuracy(self, preds, targets, k=(1, 5)):
+        preds = preds.topk(max(k), 1, True, True)[1].t()
+        correct = preds.eq(targets.view(1, -1).expand_as(preds))
+
+        res = []
+        for k_i in k:
+            correct_k = correct[:k_i].reshape(-1).float().sum(0, keepdim=True)
+            res.append(correct_k.mul_(100.0 / targets.size(0)))
+        return res
