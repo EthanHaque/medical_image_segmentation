@@ -142,7 +142,8 @@ def setup_train_objects():
 
     logger = pl.loggers.CSVLogger("logs")
     callbacks = [
-        pl.callbacks.LearningRateMonitor(logging_interval="epoch", log_momentum=True, log_weight_decay=True),
+        # pl.callbacks.LearningRateMonitor(logging_interval="epoch", log_momentum=True, log_weight_decay=True),
+        pl.callbacks.LearningRateMonitor(logging_interval="epoch", log_momentum=True),
         SSLLinearEval(256, drop_p=0.2, num_classes=1000),
     ]
 
