@@ -37,13 +37,12 @@ def main(args):
     dm_class = getattr(data_modules, args.dataset + 'DataModule')
     dm = dm_class(**args.__dict__)
 
-    run_name = '-'.join(['byol', args.arch, args.dataset, args.comment])
-
+    # run_name = '-'.join(['byol', args.arch, args.dataset, args.comment])
+    logger = pl.loggers.CSVLogger(".")
 
     model = BYOL(**args.__dict__, num_classes=dm.num_classes)
 
-    trainer = pl.Trainer.from_argparse_args(args,
-        logger=wandb_logger)
+    trainer = pl.Trainer.from_argparse_args(args, logger=logger)
     trainer.fit(model, dm)
 
 
