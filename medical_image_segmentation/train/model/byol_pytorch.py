@@ -2,8 +2,8 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 import pytorch_lightning as pl
-from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
-from pl_bolts.optimizers.lars_scheduling import LARSWrapper
+from medical_image_segmentation.train.optimizer.lars import LARS
+from medical_image_segmentation.train.scheduler.cosine_annealing import LinearWarmupCosineAnnealingLR
 
 from byol.nets import Encoder, MLP
 
@@ -125,11 +125,10 @@ class BYOL(pl.LightningModule):
     def configure_optimizers(self):
         params = self.collect_params([
             self.online_encoder, self.predictor, self.linear])
-        optimizer = LARSWrapper(torch.optim.SGD(
-            params,
+        optimizer = LARS(params,
             lr=self.hparams.base_lr,
             momentum=self.hparams.momentum_opt,
-            weight_decay=self.hparams.weight_decay))
+            weight_decay=self.hparams.weight_decay)
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
             warmup_epochs=self.hparams.warmup_epochs,
