@@ -1,10 +1,8 @@
 # Adapted from https://github.com/Lightning-Universe/lightning-bolts/blob/748715e50f52c83eb166ce91ebd814cc9ee4f043/src/pl_bolts/callbacks/knn_online.py
 
-from typing import Optional, Tuple, Union
 
 import torch
 from pytorch_lightning import Callback, LightningModule, Trainer
-from pytorch_lightning.accelerators import Accelerator
 from torch import Tensor
 from torch.nn import functional as F  # noqa: N812
 from tqdm import tqdm

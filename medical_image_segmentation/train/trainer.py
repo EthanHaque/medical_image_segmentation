@@ -5,13 +5,12 @@ import torch.distributed as dist
 from torch.nn import Module
 from torch.nn import SyncBatchNorm
 
-from torch.optim import Optimizer, Adam
+from torch.optim import Adam
 from torch.utils.data import Dataset, DataLoader
 
 from byol_pytorch.byol_pytorch import BYOL
 
 from beartype import beartype
-from beartype.typing import Optional
 
 from accelerate import Accelerator
 

@@ -6,8 +6,6 @@ from pytorch_lightning import LightningDataModule
 import os
 
 
-import torch
-from torchvision import transforms as transform_lib
 import cv2
 from PIL import Image, ImageOps
 import numpy as np
