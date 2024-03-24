@@ -29,7 +29,8 @@ class BYOLRGBDataTransforms:
                 transform_lib.RandomGrayscale(p=0.2),
                 transform_lib.RandomApply([transform_lib.GaussianBlur(kernel_size=23)], p=blur_prob),
                 transform_lib.RandomSolarize(128, p=solarize_prob),
-                transform_lib.ToTensor(),
+                transform_lib.ToImage(),
+                transform_lib.ToDtype(torch.float32, scale=True),
                 self.normalize,
             ]
         )
