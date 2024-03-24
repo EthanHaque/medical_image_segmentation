@@ -100,7 +100,8 @@ class ImageNetDataModule(LightningDataModule):
             [
                 transform_lib.Resize(256),
                 transform_lib.CenterCrop(224),
-                transform_lib.ToTensor(),
+                transform_lib.ToImage(),
+                transform_lib.ToDtype(torch.float32, scale=True),
                 transform_lib.Normalize(mean=self.mean, std=self.std),
             ]
         )
@@ -175,7 +176,8 @@ class CIFARDataModule(LightningDataModule):
     def default_transform(self):
         transform = transform_lib.Compose(
             [
-                transform_lib.ToTensor(),
+                transform_lib.ToImage(),
+                transform_lib.ToDtype(torch.float32, scale=True),
                 transform_lib.Normalize(mean=self.mean, std=self.std),
             ]
         )
