@@ -11,7 +11,7 @@ from PIL import Image, ImageOps
 import numpy as np
 
 
-class BYOLDataTransform:
+class BYOLRGBDataTransforms:
     def __init__(
         self, crop_size, mean, std, blur_prob=(1.0, 0.1), solarize_prob=(0.0, 0.2)
     ):
@@ -90,7 +90,7 @@ class ImageNetDataModule(LightningDataModule):
 
     def setup(self, stage=None):  # called on every GPU
         # build tranforms
-        train_transform = BYOLDataTransform(crop_size=224, mean=self.mean, std=self.std)
+        train_transform = BYOLRGBDataTransforms(crop_size=224, mean=self.mean, std=self.std)
         val_transform = self.default_transform()
 
         # build datasets
@@ -163,7 +163,7 @@ class CIFARDataModule(LightningDataModule):
 
     def setup(self, stage=None):  # called on every GPU
         # build tranforms
-        train_transform = BYOLDataTransform(
+        train_transform = BYOLRGBDataTransforms(
             crop_size=32,
             mean=self.mean,
             std=self.std,
