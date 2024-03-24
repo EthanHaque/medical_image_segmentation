@@ -3,7 +3,6 @@ apptainer exec --nv docker/ffcv-ssl_latest.sif \
 bash -c "source activate; \
 conda activate ffcv-ssl; \
 python medical_image_segmentation/train/train_ssl.py \
-    --dataset CIFAR100 \
     --batch_size 128 \
     --max_epochs 1000 \
     --arch resnet18"
