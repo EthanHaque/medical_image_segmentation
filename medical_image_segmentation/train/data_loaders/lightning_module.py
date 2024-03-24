@@ -6,11 +6,6 @@ from pytorch_lightning import LightningDataModule
 import os
 
 
-import cv2
-from PIL import Image, ImageOps
-import numpy as np
-
-
 class BYOLRGBDataTransforms:
     def __init__(
         self, crop_size, mean, std, blur_prob=(1.0, 0.1), solarize_prob=(0.0, 0.2)
