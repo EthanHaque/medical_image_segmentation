@@ -68,26 +68,22 @@ def parse_args():
         description="Process DICOM images and write them as a ffcv dataset."
     )
     parser.add_argument(
-        "--original_to_new_map_path", type=str, help="Map from original image paths to new image paths. Used to find the correct DICOM images to use."
+        "--original_to_new_map_path",
+        type=str,
+        help="Map from original image paths to new image paths. Used to find the correct DICOM images to use.",
     )
     parser.add_argument(
         "--output_file_path", type=str, help="Path to write .beton file to."
     )
-    parser.add_argument(
-        "--width", type=int, help="Width to resize the images to."
-    )
-    parser.add_argument(
-        "--height", type=int, help="Height to resize the images to."
-    )
+    parser.add_argument("--width", type=int, help="Width to resize the images to.")
+    parser.add_argument("--height", type=int, help="Height to resize the images to.")
     parser.add_argument(
         "--num_processes",
         type=int,
         default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
         help="Number of processes to use for parallel processing.",
     )
-    parser.add_argument(
-        "--test", action="store_true", help="Makes a small subset."
-    )
+    parser.add_argument("--test", action="store_true", help="Makes a small subset.")
 
     return parser.parse_args()
 
@@ -101,9 +97,11 @@ def main():
 
     resize_dimensions = (args.height, args.width)
 
-    writer = DatasetWriter(args.output_file_path, {
-        "image": NDArrayField(shape=resize_dimensions, dtype=np.dtype("float32"))
-    }, num_workers=args.num_processes)
+    writer = DatasetWriter(
+        args.output_file_path,
+        {"image": NDArrayField(shape=resize_dimensions, dtype=np.dtype("float32"))},
+        num_workers=args.num_processes,
+    )
 
     dataset = DICOMImageDataset(image_paths, resize_dimensions)
 

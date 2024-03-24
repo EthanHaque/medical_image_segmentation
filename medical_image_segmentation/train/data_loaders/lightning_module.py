@@ -6,7 +6,6 @@ from pytorch_lightning import LightningDataModule
 import os
 
 
-
 import torch
 from torchvision import transforms as transform_lib
 import cv2
@@ -14,33 +13,40 @@ from PIL import Image, ImageOps
 import numpy as np
 
 
-class BYOLDataTransform():
-
-    def __init__(self, crop_size, mean, std, blur_prob=(1.0, 0.1), solarize_prob=(0.0, 0.2)):
-        assert len(blur_prob) == 2 and len(solarize_prob) == 2, 'atm only 2 views are supported'
+class BYOLDataTransform:
+    def __init__(
+        self, crop_size, mean, std, blur_prob=(1.0, 0.1), solarize_prob=(0.0, 0.2)
+    ):
+        assert (
+            len(blur_prob) == 2 and len(solarize_prob) == 2
+        ), "atm only 2 views are supported"
         self.crop_size = crop_size
         self.normalize = transform_lib.Normalize(mean=mean, std=std)
         self.color_jitter = transform_lib.ColorJitter(0.4, 0.4, 0.2, 0.1)
-        self.transforms = [self.build_transform(bp, sp) for bp, sp in zip(blur_prob, solarize_prob)]
+        self.transforms = [
+            self.build_transform(bp, sp) for bp, sp in zip(blur_prob, solarize_prob)
+        ]
 
     def build_transform(self, blur_prob, solarize_prob):
-        transforms = transform_lib.Compose([
-            transform_lib.RandomResizedCrop(self.crop_size),
-            transform_lib.RandomHorizontalFlip(),
-            transform_lib.RandomApply([self.color_jitter], p=0.8),
-            transform_lib.RandomGrayscale(p=0.2),
-            transform_lib.RandomApply([GaussianBlur(kernel_size=23)], p=blur_prob),
-            transform_lib.RandomApply([Solarize()], p=solarize_prob),
-            transform_lib.ToTensor(),
-            self.normalize
-        ])
+        transforms = transform_lib.Compose(
+            [
+                transform_lib.RandomResizedCrop(self.crop_size),
+                transform_lib.RandomHorizontalFlip(),
+                transform_lib.RandomApply([self.color_jitter], p=0.8),
+                transform_lib.RandomGrayscale(p=0.2),
+                transform_lib.RandomApply([GaussianBlur(kernel_size=23)], p=blur_prob),
+                transform_lib.RandomApply([Solarize()], p=solarize_prob),
+                transform_lib.ToTensor(),
+                self.normalize,
+            ]
+        )
         return transforms
 
     def __call__(self, x):
         return [t(x) for t in self.transforms]
 
 
-class GaussianBlur():
+class GaussianBlur:
     def __init__(self, kernel_size, sigma_min=0.1, sigma_max=2.0):
         self.sigma_min = sigma_min
         self.sigma_max = sigma_max
@@ -48,11 +54,13 @@ class GaussianBlur():
 
     def __call__(self, img):
         sigma = np.random.uniform(self.sigma_min, self.sigma_max)
-        img = cv2.GaussianBlur(np.array(img), (self.kernel_size, self.kernel_size), sigma)
+        img = cv2.GaussianBlur(
+            np.array(img), (self.kernel_size, self.kernel_size), sigma
+        )
         return Image.fromarray(img.astype(np.uint8))
 
 
-class Solarize():
+class Solarize:
     def __init__(self, threshold=128):
         self.threshold = threshold
 
@@ -60,9 +68,7 @@ class Solarize():
         return ImageOps.solarize(sample, self.threshold)
 
 
-
 class ImageNetDataModule(LightningDataModule):
-
     def __init__(self, data_dir, batch_size, num_workers, **kwargs):
         super().__init__()
         self.data_dir = data_dir
@@ -86,15 +92,12 @@ class ImageNetDataModule(LightningDataModule):
 
     def setup(self, stage=None):  # called on every GPU
         # build tranforms
-        train_transform = BYOLDataTransform(
-            crop_size=224,
-            mean=self.mean,
-            std=self.std)
+        train_transform = BYOLDataTransform(crop_size=224, mean=self.mean, std=self.std)
         val_transform = self.default_transform()
 
         # build datasets
-        train_data_dir = os.path.join(self.data_dir, 'train')
-        val_data_dir = os.path.join(self.data_dir, 'val')
+        train_data_dir = os.path.join(self.data_dir, "train")
+        val_data_dir = os.path.join(self.data_dir, "val")
         self.train = datasets.ImageFolder(train_data_dir, transform=train_transform)
         self.val = datasets.ImageFolder(val_data_dir, transform=val_transform)
 
@@ -105,7 +108,8 @@ class ImageNetDataModule(LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             pin_memory=True,
-            drop_last=True)
+            drop_last=True,
+        )
         return loader
 
     def val_dataloader(self):
@@ -115,20 +119,23 @@ class ImageNetDataModule(LightningDataModule):
             shuffle=False,
             num_workers=self.num_workers,
             pin_memory=True,
-            drop_last=False)
+            drop_last=False,
+        )
         return loader
 
     def default_transform(self):
-        transform = transform_lib.Compose([
-            transform_lib.Resize(256),
-            transform_lib.CenterCrop(224),
-            transform_lib.ToTensor(),
-            transform_lib.Normalize(mean=self.mean, std=self.std)])
+        transform = transform_lib.Compose(
+            [
+                transform_lib.Resize(256),
+                transform_lib.CenterCrop(224),
+                transform_lib.ToTensor(),
+                transform_lib.Normalize(mean=self.mean, std=self.std),
+            ]
+        )
         return transform
 
 
 class CIFARDataModule(LightningDataModule):
-
     def __init__(self, data_dir, batch_size, num_workers, download, **kwargs):
         super().__init__()
         self.data_dir = data_dir
@@ -162,8 +169,9 @@ class CIFARDataModule(LightningDataModule):
             crop_size=32,
             mean=self.mean,
             std=self.std,
-            blur_prob=[.0, .0],
-            solarize_prob=[.0, .2])
+            blur_prob=[0.0, 0.0],
+            solarize_prob=[0.0, 0.2],
+        )
         val_transform = self.default_transform()
 
         # build datasets
@@ -177,7 +185,8 @@ class CIFARDataModule(LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             pin_memory=True,
-            drop_last=True)
+            drop_last=True,
+        )
         return loader
 
     def val_dataloader(self):
@@ -187,19 +196,21 @@ class CIFARDataModule(LightningDataModule):
             shuffle=False,
             num_workers=self.num_workers,
             pin_memory=True,
-            drop_last=False)
+            drop_last=False,
+        )
         return loader
 
     def default_transform(self):
-        transform = transform_lib.Compose([
-            transform_lib.ToTensor(),
-            transform_lib.Normalize(mean=self.mean, std=self.std)
-        ])
+        transform = transform_lib.Compose(
+            [
+                transform_lib.ToTensor(),
+                transform_lib.Normalize(mean=self.mean, std=self.std),
+            ]
+        )
         return transform
 
 
 class CIFAR10DataModule(CIFARDataModule):
-
     def __init__(self, data_dir, batch_size, num_workers, download, **kwargs):
         super().__init__(data_dir, batch_size, num_workers, download)
 
@@ -221,7 +232,6 @@ class CIFAR10DataModule(CIFARDataModule):
 
 
 class CIFAR100DataModule(CIFARDataModule):
-
     def __init__(self, data_dir, batch_size, num_workers, download, **kwargs):
         super().__init__(data_dir, batch_size, num_workers, download)
 

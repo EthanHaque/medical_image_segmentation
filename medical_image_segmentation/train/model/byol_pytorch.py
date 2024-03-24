@@ -3,8 +3,13 @@ import torch.nn.functional as F
 import torch.nn as nn
 import pytorch_lightning as pl
 from medical_image_segmentation.train.optimizer.lars import LARS
-from medical_image_segmentation.train.scheduler.cosine_annealing import LinearWarmupCosineAnnealingLR
-from medical_image_segmentation.train.data_loaders.ffcv_loader import create_train_loader_ssl, create_val_loader_ssl
+from medical_image_segmentation.train.scheduler.cosine_annealing import (
+    LinearWarmupCosineAnnealingLR,
+)
+from medical_image_segmentation.train.data_loaders.ffcv_loader import (
+    create_train_loader_ssl,
+    create_val_loader_ssl,
+)
 from tqdm import tqdm
 
 
@@ -42,7 +47,8 @@ class Encoder(nn.Module):
         # modify the encoder for lower resolution
         if low_res:
             self.encoder.conv1 = nn.Conv2d(
-                3, 64, kernel_size=3, stride=1, padding=1, bias=False)
+                3, 64, kernel_size=3, stride=1, padding=1, bias=False
+            )
             self.encoder.maxpool = nn.Identity()
             self._reinit_all_layers()
 
@@ -53,8 +59,7 @@ class Encoder(nn.Module):
     def _reinit_all_layers(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(
-                    m.weight, mode="fan_out", nonlinearity="relu")
+                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
             elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
@@ -66,7 +71,6 @@ class Encoder(nn.Module):
 
 
 class BYOL(pl.LightningModule):
-
     def __init__(self, **kwargs):
         super().__init__()
         self.save_hyperparameters()
@@ -77,25 +81,29 @@ class BYOL(pl.LightningModule):
             arch=self.hparams.arch,
             hidden_dim=self.hparams.hidden_dim,
             proj_dim=self.hparams.proj_dim,
-            low_res='CIFAR' in self.hparams.dataset)
+            low_res="CIFAR" in self.hparams.dataset,
+        )
 
         # momentum encoder
         self.momentum_encoder = Encoder(
             arch=self.hparams.arch,
             hidden_dim=self.hparams.hidden_dim,
             proj_dim=self.hparams.proj_dim,
-            low_res='CIFAR' in self.hparams.dataset)
+            low_res="CIFAR" in self.hparams.dataset,
+        )
         self.initialize_momentum_encoder()
 
         # predictor
         self.predictor = MLP(
             input_dim=self.hparams.proj_dim,
             hidden_dim=self.hparams.hidden_dim,
-            output_dim=self.hparams.proj_dim)
+            output_dim=self.hparams.proj_dim,
+        )
 
         # linear layer for eval
         self.linear = torch.nn.Linear(
-            self.online_encoder.feat_dim, self.hparams.num_classes)
+            self.online_encoder.feat_dim, self.hparams.num_classes
+        )
 
     @torch.no_grad()
     def initialize_momentum_encoder(self):
@@ -110,32 +118,36 @@ class BYOL(pl.LightningModule):
         for model in models:
             for name, param in model.named_parameters():
                 if exclude_bias_and_bn and any(
-                        s in name for s in ['bn', 'downsample.1', 'bias']):
+                    s in name for s in ["bn", "downsample.1", "bias"]
+                ):
                     param_dict = {
-                        'params': param,
-                        'weight_decay': 0.,
-                        'lars_exclude': True}
+                        "params": param,
+                        "weight_decay": 0.0,
+                        "lars_exclude": True,
+                    }
                     # NOTE: with the current pytorch lightning bolts
-                    # implementation it is not possible to exclude 
+                    # implementation it is not possible to exclude
                     # parameters from the LARS adaptation
                 else:
-                    param_dict = {'params': param}
+                    param_dict = {"params": param}
                 param_list.append(param_dict)
         return param_list
 
     def configure_optimizers(self):
-        params = self.collect_params([
-            self.online_encoder, self.predictor, self.linear])
-        optimizer = LARS(params,
+        params = self.collect_params([self.online_encoder, self.predictor, self.linear])
+        optimizer = LARS(
+            params,
             lr=self.hparams.base_lr,
             momentum=self.hparams.momentum_opt,
-            weight_decay=self.hparams.weight_decay)
+            weight_decay=self.hparams.weight_decay,
+        )
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
             warmup_epochs=self.hparams.warmup_epochs,
             max_epochs=self.hparams.max_epochs,
             warmup_start_lr=self.hparams.min_lr,
-            eta_min=self.hparams.min_lr)
+            eta_min=self.hparams.min_lr,
+        )
         return [optimizer], [scheduler]
 
     def forward(self, x):
@@ -173,22 +185,34 @@ class BYOL(pl.LightningModule):
 
         # gather results and log stats
         logs = {
-            'loss': loss,
-            'loss_linear': loss_linear,
-            'lr': self.trainer.optimizers[0].param_groups[0]['lr'],
-            'momentum': self.current_momentum}
-        self.log_dict(logs, on_step=False, on_epoch=True, sync_dist=True, prog_bar=True, logger=True)
+            "loss": loss,
+            "loss_linear": loss_linear,
+            "lr": self.trainer.optimizers[0].param_groups[0]["lr"],
+            "momentum": self.current_momentum,
+        }
+        self.log_dict(
+            logs,
+            on_step=False,
+            on_epoch=True,
+            sync_dist=True,
+            prog_bar=True,
+            logger=True,
+        )
         return loss + loss_linear * self.hparams.linear_loss_weight
 
     def on_train_batch_end(self, outputs, batch, batch_idx):
         # update momentum encoder
         self.momentum_update(
-            self.online_encoder, self.momentum_encoder, self.current_momentum)
+            self.online_encoder, self.momentum_encoder, self.current_momentum
+        )
         # update momentum value
         max_steps = len(self.trainer.train_dataloader) * self.trainer.max_epochs
-        self.current_momentum = self.hparams.final_momentum - \
-                                (self.hparams.final_momentum - self.hparams.base_momentum) * \
-                                (math.cos(math.pi * self.trainer.global_step / max_steps) + 1) / 2
+        self.current_momentum = (
+            self.hparams.final_momentum
+            - (self.hparams.final_momentum - self.hparams.base_momentum)
+            * (math.cos(math.pi * self.trainer.global_step / max_steps) + 1)
+            / 2
+        )
 
     # def train_dataloader(self):
     #     loader = create_train_loader_ssl(
@@ -232,7 +256,7 @@ class BYOL(pl.LightningModule):
         online_params = online_encoder.parameters()
         momentum_params = momentum_encoder.parameters()
         for po, pm in zip(online_params, momentum_params):
-            pm.data.mul_(m).add_(po.data, alpha=1. - m)
+            pm.data.mul_(m).add_(po.data, alpha=1.0 - m)
 
     def validation_step(self, batch, batch_idx):
         images = batch[0]
@@ -245,8 +269,15 @@ class BYOL(pl.LightningModule):
         acc1, acc5 = self.accuracy(preds, labels)
 
         # gather results and log
-        logs = {'val/acc@1': acc1, 'val/acc@5': acc5}
-        self.log_dict(logs, on_step=False, on_epoch=True, sync_dist=True, prog_bar=True, logger=True)
+        logs = {"val/acc@1": acc1, "val/acc@5": acc5}
+        self.log_dict(
+            logs,
+            on_step=False,
+            on_epoch=True,
+            sync_dist=True,
+            prog_bar=True,
+            logger=True,
+        )
 
     @torch.no_grad()
     def accuracy(self, preds, targets, k=(1, 5)):
