@@ -1,6 +1,6 @@
 import torch
 from torchvision import datasets
-from torchvision import transforms as transform_lib
+from torchvision.transforms import v2 as transform_lib
 from pytorch_lightning import LightningDataModule
 
 import os
