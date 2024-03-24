@@ -75,16 +75,15 @@ parser.add_argument(
 def main(args):
     logger = pl.loggers.CSVLogger("logs")
 
-    model = BYOL(**args.__dict__, num_classes=100)
+    model = BYOL(**args.__dict__)
     from medical_image_segmentation.train.data_loaders.lightning_module import (
-        CIFAR100DataModule,
+        ImageNetDataModule,
     )
 
-    data_module = CIFAR100DataModule(
-        "/scratch/gpfs/DATASETS/cifar",
+    data_module = ImageNetDataModule(
+        "/scratch/gpfs/DATASETS/imagenet/ilsvrc_2012_classification_localization/",
         args.batch_size,
         args.num_workers,
-        download=False,
     )
 
     trainer = pl.Trainer(
