@@ -64,7 +64,7 @@ class ImageNetDataModule(LightningDataModule):
 
     def setup(self, stage=None):  # called on every GPU
         # build tranforms
-        train_transform = BYOLRGBDataTransforms(crop_size=224, mean=self.mean, std=self.std)
+        train_transform = BYOLRGBDataTransforms(crop_size=56, mean=self.mean, std=self.std)
         val_transform = self.default_transform()
 
         # build datasets
@@ -98,8 +98,8 @@ class ImageNetDataModule(LightningDataModule):
     def default_transform(self):
         transform = transform_lib.Compose(
             [
-                transform_lib.Resize(256),
-                transform_lib.CenterCrop(224),
+                transform_lib.Resize(112),
+                transform_lib.CenterCrop(56),
                 transform_lib.ToImage(),
                 transform_lib.ToDtype(torch.float32, scale=True),
                 transform_lib.Normalize(mean=self.mean, std=self.std),
