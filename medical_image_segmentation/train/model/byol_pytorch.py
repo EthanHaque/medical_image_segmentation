@@ -158,10 +158,9 @@ class BYOL(pl.LightningModule):
         return 2 - 2 * (preds * targets).sum(dim=-1).mean()
 
     def training_step(self, batch, batch_idx):
-        # original_images = batch[0]
+        view_1 = batch[0]
         labels = batch[1]
-        view_1 = batch[2]
-        view_2 = batch[3]
+        view_2 = batch[2]
         views = [view_1, view_2]
         # views, labels = batch
 
