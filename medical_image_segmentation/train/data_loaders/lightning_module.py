@@ -77,15 +77,15 @@ class CIFAR100FFCVDataModule(LightningDataModule):
                 transform_lib.Normalize(mean=self.mean, std=self.std)
         ]
   
+        image_pipeline = [ SimpleRGBImageDecoder()] + train_transforms
         image_pipeline_1 = [ SimpleRGBImageDecoder()] + train_transforms
-        image_pipeline_2 = [ SimpleRGBImageDecoder()] + train_transforms
         label_pipeline = [ IntDecoder() ]
         pipelines = {
+            "image": image_pipeline,
             "image_1": image_pipeline_1,
-            "image_2": image_pipeline_2,
             "label": label_pipeline,
         }
-        custom_field_mapper = {"image_1": "image_2"}
+        custom_field_mapper = {"image_1": "image"}
         loader = ffcv.loader.Loader(
             self.data_path,
             batch_size=self.batch_size,
