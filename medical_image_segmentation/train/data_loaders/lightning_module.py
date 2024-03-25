@@ -71,7 +71,7 @@ class CIFAR100FFCVDataModule(LightningDataModule):
             blur_prob=[0.0, 0.0],
             solarize_prob=[0.0, 0.2],
         )
-        image_pipeline = [ SimpleRGBImageDecoder(), train_transform(), ]
+        image_pipeline = [ SimpleRGBImageDecoder(), train_transform, ]
         label_pipeline = [ IntDecoder() ]
         loader = ffcv.loader.Loader(
             self.data_path,
