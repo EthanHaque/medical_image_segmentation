@@ -1,6 +1,6 @@
 import pytorch_lightning as pl
 
-
+from medical_image_segmentation.train.data_loaders.lightning_module import CIFAR100DataModule
 from medical_image_segmentation.train.model.byol_pytorch import BYOL
 
 from argparse import ArgumentParser
@@ -80,8 +80,8 @@ def main(args):
         ImageNetDataModule,
     )
 
-    data_module = ImageNetDataModule(
-        "/scratch/gpfs/DATASETS/imagenet/ilsvrc_2012_classification_localization/",
+    data_module = CIFAR100DataModule(
+        "/scratch/gpfs/DATASETS/cifar",
         args.batch_size,
         args.num_workers,
     )
