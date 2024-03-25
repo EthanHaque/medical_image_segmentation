@@ -2,16 +2,17 @@ import torch
 from torchvision import datasets
 from torchvision.transforms import v2 as transform_lib
 from pytorch_lightning import LightningDataModule
+import ffcv
 
 import os
 
 
 class BYOLRGBDataTransforms:
     def __init__(
-        self, crop_size, mean, std, blur_prob=(1.0, 0.1), solarize_prob=(0.0, 0.2)
+            self, crop_size, mean, std, blur_prob=(1.0, 0.1), solarize_prob=(0.0, 0.2)
     ):
         assert (
-            len(blur_prob) == 2 and len(solarize_prob) == 2
+                len(blur_prob) == 2 and len(solarize_prob) == 2
         ), "atm only 2 views are supported"
         self.crop_size = crop_size
         self.normalize = transform_lib.Normalize(mean=mean, std=std)
@@ -38,6 +39,72 @@ class BYOLRGBDataTransforms:
 
     def __call__(self, x):
         return [t(x) for t in self.transforms]
+
+
+class CIFAR100FFCVDataModule(LightningDataModule):
+    def __init__(self, data_path, batch_size, num_workers, **kwargs):
+        super().__init__()
+        self.data_path = data_path
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+
+    @property
+    def num_classes(self):
+        return 100
+
+    @property
+    def mean(self):
+        return (0.507, 0.487, 0.441)
+
+    @property
+    def std(self):
+        return (0.268, 0.257, 0.276)
+
+    def train_dataloader(self):
+        train_transform = BYOLRGBDataTransforms(
+            crop_size=32,
+            mean=self.mean,
+            std=self.std,
+            blur_prob=[0.0, 0.0],
+            solarize_prob=[0.0, 0.2],
+        )
+        image_pipeline = [ ffcv.fields.decoders.SimpleRGBImageDecoder(), train_transform(), ]
+        label_pipeline = [ ffcv.fields.decoders.IntDecoder() ]
+        loader = ffcv.loader.Loader(
+            self.data_path,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            order=ffcv.loader.OrderOption.RANDOM,
+            os_cache=True,
+            drop_last=True,
+            pipelines={"image": image_pipeline, "label": label_pipeline}
+        )
+        return loader
+
+    def val_dataloader(self):
+        val_transform = self.default_transform()
+        image_pipeline = [ffcv.fields.decoders.SimpleRGBImageDecoder(), val_transform(), ]
+        label_pipeline = [ffcv.fields.decoders.IntDecoder()]
+        loader = ffcv.loader.Loader(
+            self.data_path,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            order=ffcv.loader.OrderOption.SEQUENTIAL,
+            os_cache=True,
+            drop_last=True,
+            pipelines={"image": image_pipeline, "label": label_pipeline}
+        )
+        return loader
+
+    def default_transform(self):
+        transform = transform_lib.Compose(
+            [
+                transform_lib.ToImage(),
+                transform_lib.ToDtype(torch.float32, scale=True),
+                transform_lib.Normalize(mean=self.mean, std=self.std),
+            ]
+        )
+        return transform
 
 
 class ImageNetDataModule(LightningDataModule):
