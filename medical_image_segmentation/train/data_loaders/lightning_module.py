@@ -126,7 +126,7 @@ class CIFAR100FFCVDataModule(LightningDataModule):
             num_workers=self.num_workers,
             order=ffcv.loader.OrderOption.SEQUENTIAL,
             os_cache=True,
-            drop_last=True,
+            drop_last=False,
             pipelines={"image": image_pipeline, "label": label_pipeline}
         )
         return loader
