@@ -113,12 +113,12 @@ class CIFAR100FFCVDataModule(LightningDataModule):
 
     def val_dataloader(self):
         val_transform = [
-                transform_lib.ToImage(),
+                # transform_lib.ToImage(),
                 transform_lib.ToDtype(torch.float32, scale=True),
                 transform_lib.Normalize(mean=self.mean, std=self.std),
             ]
-        image_pipeline = [ffcv.fields.decoders.SimpleRGBImageDecoder() ] + val_transform
-        label_pipeline = [ffcv.fields.decoders.IntDecoder()] + val_transform
+        image_pipeline = [ SimpleRGBImageDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()] + val_transform
+        label_pipeline = [ IntDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.Squeeze(), ]
         loader = ffcv.loader.Loader(
             self.data_path,
             batch_size=self.batch_size,
