@@ -112,24 +112,24 @@ class CIFAR100FFCVDataModule(LightningDataModule):
         )
         return loader
 
-    def val_dataloader(self):
-        val_transform = [
-                # transform_lib.ToImage(),
-                transform_lib.ToDtype(torch.float32, scale=True),
-                transform_lib.Normalize(mean=self.mean, std=self.std),
-            ]
-        image_pipeline = [ SimpleRGBImageDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()] + val_transform
-        label_pipeline = [ IntDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.Squeeze(), ]
-        loader = ffcv.loader.Loader(
-            self.data_path,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            order=ffcv.loader.OrderOption.SEQUENTIAL,
-            os_cache=True,
-            drop_last=False,
-            pipelines={"image": image_pipeline, "label": label_pipeline}
-        )
-        return loader
+    # def val_dataloader(self):
+    #     val_transform = [
+    #             # transform_lib.ToImage(),
+    #             transform_lib.ToDtype(torch.float32, scale=True),
+    #             transform_lib.Normalize(mean=self.mean, std=self.std),
+    #         ]
+    #     image_pipeline = [ SimpleRGBImageDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()] + val_transform
+    #     label_pipeline = [ IntDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.Squeeze(), ]
+    #     loader = ffcv.loader.Loader(
+    #         self.data_path,
+    #         batch_size=self.batch_size,
+    #         num_workers=self.num_workers,
+    #         order=ffcv.loader.OrderOption.SEQUENTIAL,
+    #         os_cache=True,
+    #         drop_last=False,
+    #         pipelines={"image": image_pipeline, "label": label_pipeline}
+    #     )
+    #     return loader
 
     def default_transform(self):
         transform = transform_lib.Compose(
