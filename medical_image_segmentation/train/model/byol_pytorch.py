@@ -215,14 +215,14 @@ class BYOL(pl.LightningModule):
     def train_dataloader(self):
         module = CIFAR100FFCVDataModule("/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_train.beton",
                                         batch_size=256,
-                                        num_workers=8)
+                                        num_workers=4)
 
         return module.train_dataloader()
 
     def val_dataloader(self):
         module = CIFAR100FFCVDataModule("/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_test.beton",
                                         batch_size=256,
-                                        num_workers=8)
+                                        num_workers=4)
 
         return module.train_dataloader()
 
