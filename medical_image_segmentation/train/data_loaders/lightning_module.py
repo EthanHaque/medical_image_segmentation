@@ -67,7 +67,7 @@ class CIFAR100FFCVDataModule(LightningDataModule):
     def train_dataloader(self):
         train_transforms = [
                 # transform_lib.RandomResizedCrop(32),
-                # transform_lib.RandomHorizontalFlip(),
+                transform_lib.RandomHorizontalFlip(),
                 # # transform_lib.RandomApply([transform_lib.ColorJitter(0.4, 0.4, 0.2, 0.1)], p=0.8),
                 # transform_lib.RandomGrayscale(p=0.2),
                 # # transform_lib.RandomApply([transform_lib.GaussianBlur(kernel_size=23)], p=1.0),
