@@ -75,7 +75,7 @@ parser.add_argument(
 def main(args):
     logger = pl.loggers.CSVLogger("logs")
 
-    model = BYOL(**args.__dict__, num_classes=1000)
+    model = BYOL(**args.__dict__, num_classes=100)
     from medical_image_segmentation.train.data_loaders.lightning_module import (
         ImageNetDataModule,
     )
