@@ -108,9 +108,6 @@ class CIFAR100FFCVDataModule(LightningDataModule):
             pipelines=pipelines,
             custom_field_mapper=custom_field_mapper
         )
-        from tqdm import tqdm
-        for batch in tqdm(loader):
-            pass
         return loader
 
     def val_dataloader(self):
