@@ -14,6 +14,7 @@ class BYOLRGBDataTransforms(torch.nn.Module):
     def __init__(
             self, crop_size, mean, std, blur_prob=(1.0, 0.1), solarize_prob=(0.0, 0.2)
     ):
+        super().__init__()
         assert (
                 len(blur_prob) == 2 and len(solarize_prob) == 2
         ), "atm only 2 views are supported"
