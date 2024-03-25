@@ -5,6 +5,7 @@ import pytorch_lightning as pl
 from tqdm import tqdm
 
 from medical_image_segmentation.train.data_loaders.ffcv_loader import create_train_loader_ssl, create_val_loader_ssl
+from medical_image_segmentation.train.data_loaders.lightning_module import CIFAR100FFCVDataModule
 from medical_image_segmentation.train.optimizer.lars import LARS
 from medical_image_segmentation.train.scheduler.cosine_annealing import (
     LinearWarmupCosineAnnealingLR,
@@ -213,41 +214,18 @@ class BYOL(pl.LightningModule):
         )
 
     def train_dataloader(self):
-        loader = create_train_loader_ssl(
-            this_device=self.trainer.local_rank,
-            beton_file_path="/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_train.beton",
-            batch_size=256,
-            num_workers=1,
-            image_size=32,
-            num_gpus=1,
-            in_memory=True,
-            subset_size=-1,
-        )
+        module = CIFAR100FFCVDataModule("/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_train.beton",
+                                        batch_size=256,
+                                        num_workers=1)
 
-        def tqdm_rank_zero_only(iterator, *args, **kwargs):
-            if self.trainer.is_global_zero:
-                return tqdm(iterator, *args, **kwargs)
-            else:
-                return iterator
-
-        for _ in tqdm_rank_zero_only(loader, desc="Prefetching train data"):
-            pass
-
-        return loader
+        return module.train_dataloader()
 
     def val_dataloader(self):
-        loader = create_val_loader_ssl(
-            this_device=self.trainer.local_rank,
-            beton_file_path="/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_test.beton",
-            batch_size=256,
-            num_workers=1,
-            image_size=32,
-            num_gpus=1,
-            in_memory=True,
-            subset_size=-1,
-        )
+        module = CIFAR100FFCVDataModule("/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_test.beton",
+                                        batch_size=256,
+                                        num_workers=1)
 
-        return loader
+        return module.train_dataloader()
 
     @torch.no_grad()
     def momentum_update(self, online_encoder, momentum_encoder, m):
