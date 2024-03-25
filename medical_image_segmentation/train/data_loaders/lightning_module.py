@@ -66,33 +66,31 @@ class CIFAR100FFCVDataModule(LightningDataModule):
 
     def train_dataloader(self):
         train_transforms_1 = [
-            transform_lib.RandomResizedCrop(32),
-            transform_lib.RandomHorizontalFlip(),
-            transform_lib.RandomApply([transform_lib.ColorJitter(0.4, 0.4, 0.2, 0.1)], p=0.8),
-            transform_lib.RandomGrayscale(p=0.2),
-            transform_lib.RandomApply([transform_lib.GaussianBlur(kernel_size=23)], p=1.0),
-            transform_lib.RandomSolarize(128, p=0.0),
-            # transform_lib.ToImage(),
+            # transform_lib.RandomResizedCrop(32),
+            # transform_lib.RandomHorizontalFlip(),
+            # transform_lib.RandomApply([transform_lib.ColorJitter(0.4, 0.4, 0.2, 0.1)], p=0.8),
+            # transform_lib.RandomGrayscale(p=0.2),
+            # transform_lib.RandomApply([transform_lib.GaussianBlur(kernel_size=23)], p=1.0),
+            # transform_lib.RandomSolarize(128, p=0.0),
             transform_lib.ToDtype(torch.float32, scale=True),
-            transform_lib.Normalize(mean=self.mean, std=self.std)
+            # transform_lib.Normalize(mean=self.mean, std=self.std)
         ]
 
 
         train_transforms_2 = [
-            transform_lib.RandomResizedCrop(32),
-            transform_lib.RandomHorizontalFlip(),
-            transform_lib.RandomApply([transform_lib.ColorJitter(0.4, 0.4, 0.2, 0.1)], p=0.8),
-            transform_lib.RandomGrayscale(p=0.2),
-            transform_lib.RandomApply([transform_lib.GaussianBlur(kernel_size=23)], p=0.1),
-            # ffcv.transforms.RandomSolarization(0.5, 128),
-            # transform_lib.RandomSolarize(128, p=0.2),
-            # transform_lib.ToImage(),
+            # transform_lib.randomresizedcrop(32),
+            # transform_lib.randomhorizontalflip(),
+            # transform_lib.randomapply([transform_lib.colorjitter(0.4, 0.4, 0.2, 0.1)], p=0.8),
+            # transform_lib.randomgrayscale(p=0.2),
+            # transform_lib.randomapply([transform_lib.gaussianblur(kernel_size=23)], p=0.1),
+            # # ffcv.transforms.randomsolarization(0.5, 128),
+            # # transform_lib.randomsolarize(128, p=0.2),
             transform_lib.ToDtype(torch.float32, scale=True),
-            transform_lib.Normalize(mean=self.mean, std=self.std)
+            # transform_lib.Normalize(mean=self.mean, std=self.std)
         ]
 
-        image_pipeline = [ SimpleRGBImageDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()] #+ train_transforms_1
-        image_pipeline_1 = [ SimpleRGBImageDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()] #+ train_transforms_2
+        image_pipeline = [ SimpleRGBImageDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()] + train_transforms_1
+        image_pipeline_1 = [ SimpleRGBImageDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()] + train_transforms_2
         label_pipeline = [ IntDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.Squeeze(), ]
         pipelines = {
             "image": image_pipeline,
