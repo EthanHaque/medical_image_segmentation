@@ -91,8 +91,8 @@ class CIFAR100FFCVDataModule(LightningDataModule):
             transform_lib.Normalize(mean=self.mean, std=self.std)
         ]
 
-        image_pipeline = [ SimpleRGBImageDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()] + train_transforms_1
-        image_pipeline_1 = [ SimpleRGBImageDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()] + train_transforms_2
+        image_pipeline = [ SimpleRGBImageDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()] #+ train_transforms_1
+        image_pipeline_1 = [ SimpleRGBImageDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()] #+ train_transforms_2
         label_pipeline = [ IntDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.Squeeze(), ]
         pipelines = {
             "image": image_pipeline,
