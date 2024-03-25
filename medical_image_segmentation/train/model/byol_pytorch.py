@@ -212,42 +212,42 @@ class BYOL(pl.LightningModule):
             / 2
         )
 
-    def train_dataloader(self):
-        loader = create_train_loader_ssl(
-            this_device=self.trainer.local_rank,
-            beton_file_path="/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_train.beton",
-            batch_size=256,
-            num_workers=1,
-            image_size=32,
-            num_gpus=1,
-            in_memory=True,
-            subset_size=-1,
-        )
-
-        def tqdm_rank_zero_only(iterator, *args, **kwargs):
-            if self.trainer.is_global_zero:
-                return tqdm(iterator, *args, **kwargs)
-            else:
-                return iterator
-
-        for _ in tqdm_rank_zero_only(loader, desc="Prefetching train data"):
-            pass
-
-        return loader
-
-    def val_dataloader(self):
-        loader = create_val_loader_ssl(
-            this_device=self.trainer.local_rank,
-            beton_file_path="/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_test.beton",
-            batch_size=256,
-            num_workers=1,
-            image_size=32,
-            num_gpus=1,
-            in_memory=True,
-            subset_size=-1,
-        )
-
-        return loader
+    # def train_dataloader(self):
+    #     loader = create_train_loader_ssl(
+    #         this_device=self.trainer.local_rank,
+    #         beton_file_path="/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_train.beton",
+    #         batch_size=256,
+    #         num_workers=1,
+    #         image_size=32,
+    #         num_gpus=1,
+    #         in_memory=True,
+    #         subset_size=-1,
+    #     )
+    #
+    #     def tqdm_rank_zero_only(iterator, *args, **kwargs):
+    #         if self.trainer.is_global_zero:
+    #             return tqdm(iterator, *args, **kwargs)
+    #         else:
+    #             return iterator
+    #
+    #     for _ in tqdm_rank_zero_only(loader, desc="Prefetching train data"):
+    #         pass
+    #
+    #     return loader
+    #
+    # def val_dataloader(self):
+    #     loader = create_val_loader_ssl(
+    #         this_device=self.trainer.local_rank,
+    #         beton_file_path="/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_test.beton",
+    #         batch_size=256,
+    #         num_workers=1,
+    #         image_size=32,
+    #         num_gpus=1,
+    #         in_memory=True,
+    #         subset_size=-1,
+    #     )
+    #
+    #     return loader
 
     @torch.no_grad()
     def momentum_update(self, online_encoder, momentum_encoder, m):
