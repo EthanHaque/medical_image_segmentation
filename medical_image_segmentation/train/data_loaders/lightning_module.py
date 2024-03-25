@@ -81,10 +81,10 @@ class CIFAR100FFCVDataModule(LightningDataModule):
             transform_lib.RandomResizedCrop(32),
             transform_lib.RandomHorizontalFlip(),
             transform_lib.RandomApply([transform_lib.ColorJitter(0.4, 0.4, 0.2, 0.1)], p=0.8),
-            # transform_lib.randomgrayscale(p=0.2),
-            # transform_lib.randomapply([transform_lib.gaussianblur(kernel_size=23)], p=0.1),
+            # transform_lib.RandomGrayscale(p=0.2),
+            # transform_lib.RandomApply([transform_lib.GaussianBlur(kernel_size=23)], p=0.1),
             # # ffcv.transforms.randomsolarization(0.5, 128),
-            # # transform_lib.randomsolarize(128, p=0.2),
+            # # transform_lib.RandomSolarize(128, p=0.2),
             transform_lib.ToDtype(torch.float32, scale=True),
             # transform_lib.Normalize(mean=self.mean, std=self.std)
         ]
