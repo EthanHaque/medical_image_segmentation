@@ -65,15 +65,27 @@ class CIFAR100FFCVDataModule(LightningDataModule):
         return (0.268, 0.257, 0.276)
 
     def train_dataloader(self):
-        train_transform = BYOLRGBDataTransforms(
-            crop_size=32,
-            mean=self.mean,
-            std=self.std,
-            blur_prob=[0.0, 0.0],
-            solarize_prob=[0.0, 0.2],
-        )
-        image_pipeline = [ SimpleRGBImageDecoder(), train_transform, ]
+        train_transforms = [
+                transform_lib.RandomResizedCrop(32),
+                transform_lib.RandomHorizontalFlip(),
+                transform_lib.RandomApply([transform_lib.ColorJitter(0.4, 0.4, 0.2, 0.1)], p=0.8),
+                transform_lib.RandomGrayscale(p=0.2),
+                transform_lib.RandomApply([transform_lib.GaussianBlur(kernel_size=23)], p=1.0),
+                transform_lib.RandomSolarize(128, p=0.0),
+                transform_lib.ToImage(),
+                transform_lib.ToDtype(torch.float32, scale=True),
+                transform_lib.Normalize(mean=self.mean, std=self.std)
+        ]
+  
+        image_pipeline_1 = [ SimpleRGBImageDecoder()] + train_transforms
+        image_pipeline_2 = [ SimpleRGBImageDecoder()] + train_transforms
         label_pipeline = [ IntDecoder() ]
+        pipelines = {
+            "image_1": image_pipeline_1,
+            "image_2": image_pipeline_2,
+            "label": label_pipeline,
+        }
+        custom_field_mapper = {"image_1": "image_2"}
         loader = ffcv.loader.Loader(
             self.data_path,
             batch_size=self.batch_size,
@@ -81,14 +93,19 @@ class CIFAR100FFCVDataModule(LightningDataModule):
             order=ffcv.loader.OrderOption.RANDOM,
             os_cache=True,
             drop_last=True,
-            pipelines={"image": image_pipeline, "label": label_pipeline}
+            pipelines=pipelines,
+            custom_field_mapper=custom_field_mapper
         )
         return loader
 
     def val_dataloader(self):
-        val_transform = self.default_transform()
-        image_pipeline = [ffcv.fields.decoders.SimpleRGBImageDecoder(), val_transform(), ]
-        label_pipeline = [ffcv.fields.decoders.IntDecoder()]
+        val_transform = [
+                transform_lib.ToImage(),
+                transform_lib.ToDtype(torch.float32, scale=True),
+                transform_lib.Normalize(mean=self.mean, std=self.std),
+            ]
+        image_pipeline = [ffcv.fields.decoders.SimpleRGBImageDecoder() ] + val_transform
+        label_pipeline = [ffcv.fields.decoders.IntDecoder()] + val_transform
         loader = ffcv.loader.Loader(
             self.data_path,
             batch_size=self.batch_size,
