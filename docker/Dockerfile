@@ -20,13 +20,14 @@ RUN conda install -y -n ffcv-ssl \
         compilers \
         libjpeg-turbo \
         opencv \
-        submitit \
         numba \
         torchmetrics \
         numpy \
         -c conda-forge
 
-RUN conda run -n ffcv-ssl pip install pydicom rich pillow python-gdcm pylibjpeg[all]
 
 RUN git clone https://github.com/facebookresearch/FFCV-SSL.git
 RUN conda run -n ffcv-ssl pip install -e FFCV-SSL
+#RUN conda run -n ffcv-ssl pip install ffcv
+
+RUN conda run -n ffcv-ssl pip install matplotlib pytorch-lightning pydicom rich pillow python-gdcm pylibjpeg[all]
