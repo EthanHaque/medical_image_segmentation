@@ -4,6 +4,9 @@ from torchvision.transforms import v2 as transform_lib
 from pytorch_lightning import LightningDataModule
 import ffcv
 
+
+from ffcv.fields.decoders import IntDecoder, SimpleRGBImageDecoder
+
 import os
 
 
@@ -68,8 +71,8 @@ class CIFAR100FFCVDataModule(LightningDataModule):
             blur_prob=[0.0, 0.0],
             solarize_prob=[0.0, 0.2],
         )
-        image_pipeline = [ ffcv.fields.decoders.SimpleRGBImageDecoder(), train_transform(), ]
-        label_pipeline = [ ffcv.fields.decoders.IntDecoder() ]
+        image_pipeline = [ SimpleRGBImageDecoder(), train_transform(), ]
+        label_pipeline = [ IntDecoder() ]
         loader = ffcv.loader.Loader(
             self.data_path,
             batch_size=self.batch_size,
