@@ -95,6 +95,8 @@ def main(args):
         logger=logger,
         log_every_n_steps=1,
         check_val_every_n_epoch=1,
+        # This is bad, but for some reason pytorch lightning hangs on dataloader sanity checking.
+        num_sanity_val_steps=0,
     )
     # trainer.fit(model, data_module)
     trainer.fit(model)
