@@ -10,7 +10,7 @@ from ffcv.fields.decoders import IntDecoder, SimpleRGBImageDecoder
 import os
 
 
-class BYOLRGBDataTransforms:
+class BYOLRGBDataTransforms(torch.nn.Module):
     def __init__(
             self, crop_size, mean, std, blur_prob=(1.0, 0.1), solarize_prob=(0.0, 0.2)
     ):
