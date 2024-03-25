@@ -57,10 +57,10 @@ def get_cifar10_datasets(num_workers=1):
 
 
 def get_cifar100_datasets(num_workers=1):
-    trainset = torchvision.datasets.CIFAR10(
+    trainset = torchvision.datasets.CIFAR100(
         root="/tmp/cifar100", train=True, download=True
     )
-    testset = torchvision.datasets.CIFAR10(
+    testset = torchvision.datasets.CIFAR100(
         root="/tmp/cifar100", train=False, download=True
     )
 

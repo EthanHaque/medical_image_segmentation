@@ -96,8 +96,8 @@ def main(args):
         log_every_n_steps=1,
         check_val_every_n_epoch=1,
     )
-    trainer.fit(model, data_module)
-
+    # trainer.fit(model, data_module)
+    trainer.fit(model)
 
 if __name__ == "__main__":
     args = parser.parse_args()
