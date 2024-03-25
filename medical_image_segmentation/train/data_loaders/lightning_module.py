@@ -78,6 +78,7 @@ class CIFAR100FFCVDataModule(LightningDataModule):
         ]
   
         image_pipeline = [ SimpleRGBImageDecoder()] + train_transforms
+        print(image_pipeline)
         image_pipeline_1 = [ SimpleRGBImageDecoder()] + train_transforms
         label_pipeline = [ IntDecoder() ]
         pipelines = {
