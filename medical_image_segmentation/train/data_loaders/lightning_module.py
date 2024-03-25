@@ -73,8 +73,8 @@ class CIFAR100FFCVDataModule(LightningDataModule):
                 # # transform_lib.RandomApply([transform_lib.GaussianBlur(kernel_size=23)], p=1.0),
                 # transform_lib.RandomSolarize(128, p=0.0),
                 # transform_lib.ToImage(),
-                # transform_lib.ToDtype(torch.float32, scale=True),
-                # transform_lib.Normalize(mean=self.mean, std=self.std)
+                transform_lib.ToDtype(torch.float32, scale=True),
+                transform_lib.Normalize(mean=self.mean, std=self.std)
         ]
   
         image_pipeline = [ SimpleRGBImageDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()] + train_transforms
