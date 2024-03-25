@@ -84,6 +84,7 @@ def main(args):
         "/scratch/gpfs/DATASETS/cifar",
         args.batch_size,
         args.num_workers,
+        download=False
     )
 
     trainer = pl.Trainer(
