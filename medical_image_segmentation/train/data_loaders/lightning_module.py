@@ -65,7 +65,7 @@ class CIFAR100FFCVDataModule(LightningDataModule):
         return (0.268, 0.257, 0.276)
 
     def train_dataloader(self):
-        train_transforms = [
+        train_transforms_1 = [
                 transform_lib.RandomResizedCrop(32),
                 transform_lib.RandomHorizontalFlip(),
                 transform_lib.RandomApply([transform_lib.ColorJitter(0.4, 0.4, 0.2, 0.1)], p=0.8),
@@ -76,9 +76,22 @@ class CIFAR100FFCVDataModule(LightningDataModule):
                 transform_lib.ToDtype(torch.float32, scale=True),
                 transform_lib.Normalize(mean=self.mean, std=self.std)
         ]
-  
-        image_pipeline = [ SimpleRGBImageDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()] + train_transforms
-        image_pipeline_1 = [ SimpleRGBImageDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()] + train_transforms
+
+
+        train_transforms_2 = [
+            transform_lib.RandomResizedCrop(32),
+            transform_lib.RandomHorizontalFlip(),
+            transform_lib.RandomApply([transform_lib.ColorJitter(0.4, 0.4, 0.2, 0.1)], p=0.8),
+            transform_lib.RandomGrayscale(p=0.2),
+            transform_lib.RandomApply([transform_lib.GaussianBlur(kernel_size=23)], p=0.1),
+            transform_lib.RandomSolarize(128, p=0.2),
+            # transform_lib.ToImage(),
+            transform_lib.ToDtype(torch.float32, scale=True),
+            transform_lib.Normalize(mean=self.mean, std=self.std)
+        ]
+
+        image_pipeline = [ SimpleRGBImageDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()] + train_transforms_1
+        image_pipeline_1 = [ SimpleRGBImageDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()] + train_transforms_2
         label_pipeline = [ IntDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.Squeeze(), ]
         pipelines = {
             "image": image_pipeline,
