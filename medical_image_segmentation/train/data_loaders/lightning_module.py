@@ -72,7 +72,7 @@ class CIFAR100FFCVDataModule(LightningDataModule):
             transform_lib.RandomGrayscale(p=0.2),
             transform_lib.RandomApply([transform_lib.GaussianBlur(kernel_size=23)], p=1.0),
             transform_lib.RandomSolarize(128, p=0.0),
-            transform_lib.ToImage(),
+            # transform_lib.ToImage(),
             transform_lib.ToDtype(torch.float32, scale=True),
             transform_lib.Normalize(mean=self.mean, std=self.std)
         ]
@@ -86,7 +86,7 @@ class CIFAR100FFCVDataModule(LightningDataModule):
             transform_lib.RandomApply([transform_lib.GaussianBlur(kernel_size=23)], p=0.1),
             # ffcv.transforms.RandomSolarization(0.5, 128),
             # transform_lib.RandomSolarize(128, p=0.2),
-            transform_lib.ToImage(),
+            # transform_lib.ToImage(),
             transform_lib.ToDtype(torch.float32, scale=True),
             transform_lib.Normalize(mean=self.mean, std=self.std)
         ]
@@ -114,7 +114,7 @@ class CIFAR100FFCVDataModule(LightningDataModule):
 
     def val_dataloader(self):
         val_transform = [
-                transform_lib.ToImage(),
+                # transform_lib.ToImage(),
                 transform_lib.ToDtype(torch.float32, scale=True),
                 transform_lib.Normalize(mean=self.mean, std=self.std),
             ]
