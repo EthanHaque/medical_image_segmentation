@@ -215,7 +215,7 @@ class BYOL(pl.LightningModule):
     def train_dataloader(self):
         loader = create_train_loader_ssl(
             this_device=self.trainer.local_rank,
-            beton_file_path="/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_train.beton",
+            beton_file_path="/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_train.beton",
             batch_size=256,
             num_workers=1,
             image_size=32,
@@ -238,7 +238,7 @@ class BYOL(pl.LightningModule):
     def val_dataloader(self):
         loader = create_val_loader_ssl(
             this_device=self.trainer.local_rank,
-            beton_file_path="/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_test.beton",
+            beton_file_path="/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_test.beton",
             batch_size=256,
             num_workers=1,
             image_size=32,
