@@ -158,11 +158,11 @@ class BYOL(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         # original_images = batch[0]
-        # labels = batch[1]
-        # view_1 = batch[2]
-        # view_2 = batch[3]
-        # views = [view_1, view_2]
-        views, labels = batch
+        labels = batch[1]
+        view_1 = batch[2]
+        view_2 = batch[3]
+        views = [view_1, view_2]
+        # views, labels = batch
 
         # forward online encoder
         input_online = torch.cat(views, dim=0)
