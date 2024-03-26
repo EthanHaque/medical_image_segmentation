@@ -12,7 +12,7 @@ while true; do
     python medical_image_segmentation/analyze_data/plot_metrics_in_terminal.py \
         --metrics val/acc@1 val/acc@5 \
         --files $(printf "logs/lightning_logs/version_%s/metrics.csv " "${versions[@]}") \
-        --ymin 0 \
-        --ymax 0
+        --ymin "0" \
+        --ymax "0"
     sleep 30
 done
