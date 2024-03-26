@@ -213,18 +213,47 @@ class BYOL(pl.LightningModule):
         )
 
     def train_dataloader(self):
-        module = CIFAR100FFCVDataModule("/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_train.beton",
-                                        batch_size=256,
-                                        num_workers=1)
+        import ffcv
+        import numpy as np
+        from ffcv.fields.decoders import RandomResizedCropRGBImageDecoder, IntDecoder
+        image_pipeline = [
+            RandomResizedCropRGBImageDecoder((32, 32), scale=(0.08, 1.0), ratio=(0.75, 1.33333)),
+            ffcv.transforms.RandomHorizontalFlip(flip_prob=0.5),
+            ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
+            ffcv.transforms.RandomGrayscale(0.2),
+            # ffcv.transforms.GaussianBlur(0.1, kernel_size=23),
+            ffcv.transforms.RandomSolarization(0.0, 128),
+            ffcv.transforms.ToTensor(),
+            ffcv.transforms.ToDevice(self.device, non_blocking=True),
+            ffcv.transforms.ToTorchImage(),
+            ffcv.transforms.Convert(np.float32),
+        ]
 
-        return module.train_dataloader()
+        label_pipeline = [IntDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.Squeeze(),]
+        pipelines = {
+            "image": image_pipeline,
+            "image_1": image_pipeline,
+            "label": label_pipeline,
+        }
+        custom_field_mapper = {"image_1": "image"}
+        loader = ffcv.loader.Loader(
+            self.data_path,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            order=ffcv.loader.OrderOption.RANDOM,
+            os_cache=True,
+            drop_last=True,
+            pipelines=pipelines,
+            custom_field_mapper=custom_field_mapper
+        )
+        return loader
 
-    def val_dataloader(self):
-        module = CIFAR100FFCVDataModule("/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_test.beton",
-                                        batch_size=256,
-                                        num_workers=1)
-
-        return module.train_dataloader()
+    # def val_dataloader(self):
+    #     module = CIFAR100FFCVDataModule("/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_test.beton",
+    #                                     batch_size=256,
+    #                                     num_workers=1)
+    #
+    #     return module.train_dataloader()
 
     @torch.no_grad()
     def momentum_update(self, online_encoder, momentum_encoder, m):
