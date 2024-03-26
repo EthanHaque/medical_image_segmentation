@@ -3,9 +3,12 @@ import torch.nn.functional as F
 import torch.nn as nn
 import pytorch_lightning as pl
 from tqdm import tqdm
-
+import ffcv
+from ffcv.fields.decoders import SimpleRGBImageDecoder, RandomResizedCropRGBImageDecoder, IntDecoder
+import torchvision
+import numpy as np
 from medical_image_segmentation.train.data_loaders.ffcv_loader import create_train_loader_ssl, create_val_loader_ssl
-from medical_image_segmentation.train.data_loaders.lightning_module import CIFAR100FFCVDataModule
+from medical_image_segmentation.train.data_loaders.lightning_module import CIFAR100FFCVDataModule, CIFAR10DataModule
 from medical_image_segmentation.train.optimizer.lars import LARS
 from medical_image_segmentation.train.scheduler.cosine_annealing import (
     LinearWarmupCosineAnnealingLR,
@@ -158,30 +161,10 @@ class BYOL(pl.LightningModule):
         return 2 - 2 * (preds * targets).sum(dim=-1).mean()
 
     def training_step(self, batch, batch_idx):
-       # import torchvision
-       # import matplotlib.pyplot as plt
-       # import numpy as np
         view_1 = batch[0]
         labels = batch[1]
         view_2 = batch[2]
         views = [view_1, view_2]
-       # views, labels = batch
-
-       # grid_1 = torchvision.utils.make_grid(view_1, nrow=16)
-       # grid_1 = torch.permute(grid_1, (1,2,0))
-       # grid_1 = grid_1.cpu().numpy()
-       # grid_1 = (grid_1 - grid_1.min()) / (grid_1.max() - grid_1.min())
-
-       # grid_2 = torchvision.utils.make_grid(view_2, nrow=16)
-       # grid_2 = torch.permute(grid_2, (1,2,0))
-       # grid_2 = grid_2.cpu().numpy()
-       # grid_2 = (grid_2 - grid_2.min()) / (grid_2.max() - grid_2.min())
-
-       # grid = np.concatenate([grid_1, grid_2], axis=1)
-
-       # plt.imsave("test.png", grid)
-
-       # raise ValueError("STOP!")
 
         # forward online encoder
         input_online = torch.cat(views, dim=0)
@@ -232,89 +215,28 @@ class BYOL(pl.LightningModule):
         )
 
     def train_dataloader(self):
-        import ffcv
-        from ffcv.fields.decoders import RandomResizedCropRGBImageDecoder, IntDecoder
-        import torchvision
-        import numpy as np
-        CIFAR_MEAN = np.array((0.507, 0.487, 0.441)) * 255
-        CIFAR_STD = np.array((0.268, 0.257, 0.276)) * 255
-        image_pipeline_1 = [
-            RandomResizedCropRGBImageDecoder((32, 32), scale=(0.08, 1.0), ratio=(0.75, 1.33333)),
-            ffcv.transforms.RandomHorizontalFlip(flip_prob=0.5),
-            ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
-            ffcv.transforms.RandomGrayscale(0.2),
-            # ffcv.transforms.GaussianBlur(1.0, kernel_size=23),
-            ffcv.transforms.RandomSolarization(0.2, 128),
-            ffcv.transforms.ToTensor(),
-            ffcv.transforms.ToDevice(self.device, non_blocking=True),
-            ffcv.transforms.ToTorchImage(),
-            ffcv.transforms.Convert(torch.float32),
-            torchvision.transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
-        ]
-        image_pipeline_2 = [
-            RandomResizedCropRGBImageDecoder((32, 32), scale=(0.08, 1.0), ratio=(0.75, 1.33333)),
-            ffcv.transforms.RandomHorizontalFlip(flip_prob=0.5),
-            ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
-            ffcv.transforms.RandomGrayscale(0.2),
-            # ffcv.transforms.GaussianBlur(0.1, kernel_size=23),
-            ffcv.transforms.RandomSolarization(0.0, 128),
-            ffcv.transforms.ToTensor(),
-            ffcv.transforms.ToDevice(self.device, non_blocking=True),
-            ffcv.transforms.ToTorchImage(),
-            ffcv.transforms.Convert(torch.float32),
-            torchvision.transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
-        ]
-
-        label_pipeline = [IntDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.Squeeze(),]
-        pipelines = {
-            "image": image_pipeline_1,
-            "image_1": image_pipeline_2,
-            "label": label_pipeline,
-        }
-        custom_field_mapper = {"image_1": "image"}
-        loader = ffcv.loader.Loader(
+        device = self.trainer.local_rank
+        distributed = len(self.trainer.device_ids) > 1
+        module = CIFAR100FFCVDataModule(
             "/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_train.beton",
-            batch_size=256,
-            num_workers=8,
-            order=ffcv.loader.OrderOption.RANDOM,
-            os_cache=True,
-            drop_last=True,
-            pipelines=pipelines,
-            custom_field_mapper=custom_field_mapper
+            batch_size=self.hparams.batch_size,
+            num_workers=self.hparams.num_workers,
+            device=device,
+            use_distributed=distributed,
         )
-        return loader
+        return module.train_dataloader()
 
     def val_dataloader(self):
-        import ffcv
-        from ffcv.fields.decoders import SimpleRGBImageDecoder, IntDecoder
-        import torchvision
-        import numpy as np
-        CIFAR_MEAN = np.array((0.507, 0.487, 0.441)) * 255
-        CIFAR_STD = np.array((0.268, 0.257, 0.276)) * 255
-        image_pipeline = [
-            SimpleRGBImageDecoder(),
-            ffcv.transforms.ToTensor(),
-            ffcv.transforms.ToDevice(self.device, non_blocking=True),
-            ffcv.transforms.ToTorchImage(),
-            ffcv.transforms.Convert(torch.float32),
-            torchvision.transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
-        ]
-
-        label_pipeline = [IntDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.Squeeze(),]
-        pipelines = {
-            "image": image_pipeline,
-            "label": label_pipeline,
-        }
-        loader = ffcv.loader.Loader(
+        device = self.trainer.local_rank
+        distributed = len(self.trainer.device_ids) > 1
+        module = CIFAR100FFCVDataModule(
             "/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_test.beton",
-            batch_size=256,
-            num_workers=8,
-            order=ffcv.loader.OrderOption.RANDOM,
-            os_cache=True,
-            drop_last=False,
-            pipelines=pipelines,
+            batch_size=self.hparams.batch_size,
+            num_workers=self.hparams.num_workers,
+            device=device,
+            use_distributed=distributed,
         )
-        return loader
+        return module.val_dataloader()
 
     @torch.no_grad()
     def momentum_update(self, online_encoder, momentum_encoder, m):

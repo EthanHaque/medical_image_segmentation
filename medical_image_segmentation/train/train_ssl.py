@@ -76,15 +76,6 @@ def main(args):
     logger = pl.loggers.CSVLogger("logs")
 
     model = BYOL(**args.__dict__, num_classes=100)
-    from medical_image_segmentation.train.data_loaders.lightning_module import (
-        ImageNetDataModule,
-    )
-
-    data_module = ImageNetDataModule(
-        "/scratch/gpfs/DATASETS/imagenet/ilsvrc_2012_classification_localization/",
-        args.batch_size,
-        args.num_workers,
-    )
 
     trainer = pl.Trainer(
         devices=args.num_gpus,
@@ -96,7 +87,6 @@ def main(args):
         log_every_n_steps=1,
         check_val_every_n_epoch=1,
     )
-    # trainer.fit(model, data_module)
     trainer.fit(model)
 
 if __name__ == "__main__":
