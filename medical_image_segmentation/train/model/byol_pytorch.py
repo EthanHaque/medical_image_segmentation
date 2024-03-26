@@ -284,12 +284,37 @@ class BYOL(pl.LightningModule):
         )
         return loader
 
-    # def val_dataloader(self):
-    #     module = CIFAR100FFCVDataModule("/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_test.beton",
-    #                                     batch_size=256,
-    #                                     num_workers=1)
-    #
-    #     return module.train_dataloader()
+    def val_dataloader(self):
+        import ffcv
+        from ffcv.fields.decoders import SimpleRGBImageDecoder, IntDecoder
+        import torchvision
+        import numpy as np
+        CIFAR_MEAN = np.array((0.507, 0.487, 0.441)) * 255
+        CIFAR_STD = np.array((0.268, 0.257, 0.276)) * 255
+        image_pipeline = [
+            SimpleRGBImageDecoder(),
+            ffcv.transforms.ToTensor(),
+            ffcv.transforms.ToDevice(self.device, non_blocking=True),
+            ffcv.transforms.ToTorchImage(),
+            ffcv.transforms.Convert(torch.float32),
+            torchvision.transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
+        ]
+
+        label_pipeline = [IntDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.Squeeze(),]
+        pipelines = {
+            "image": image_pipeline,
+            "label": label_pipeline,
+        }
+        loader = ffcv.loader.Loader(
+            "/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_test.beton",
+            batch_size=256,
+            num_workers=8,
+            order=ffcv.loader.OrderOption.RANDOM,
+            os_cache=True,
+            drop_last=False,
+            pipelines=pipelines,
+        )
+        return loader
 
     @torch.no_grad()
     def momentum_update(self, online_encoder, momentum_encoder, m):
