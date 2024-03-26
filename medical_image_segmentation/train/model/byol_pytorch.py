@@ -3,8 +3,12 @@ import torch.nn.functional as F
 import torch.nn as nn
 import pytorch_lightning as pl
 from tqdm import tqdm
-
+import ffcv
+from ffcv.fields.decoders import SimpleRGBImageDecoder, RandomResizedCropRGBImageDecoder, IntDecoder
+import torchvision
+import numpy as np
 from medical_image_segmentation.train.data_loaders.ffcv_loader import create_train_loader_ssl, create_val_loader_ssl
+from medical_image_segmentation.train.data_loaders.lightning_module import CIFAR100FFCVDataModule, CIFAR10DataModule
 from medical_image_segmentation.train.optimizer.lars import LARS
 from medical_image_segmentation.train.scheduler.cosine_annealing import (
     LinearWarmupCosineAnnealingLR,
@@ -157,12 +161,10 @@ class BYOL(pl.LightningModule):
         return 2 - 2 * (preds * targets).sum(dim=-1).mean()
 
     def training_step(self, batch, batch_idx):
-        # original_images = batch[0]
-        # labels = batch[1]
-        # view_1 = batch[2]
-        # view_2 = batch[3]
-        # views = [view_1, view_2]
-        views, labels = batch
+        view_1 = batch[0]
+        labels = batch[1]
+        view_2 = batch[2]
+        views = [view_1, view_2]
 
         # forward online encoder
         input_online = torch.cat(views, dim=0)
@@ -212,42 +214,29 @@ class BYOL(pl.LightningModule):
             / 2
         )
 
-    # def train_dataloader(self):
-    #     loader = create_train_loader_ssl(
-    #         this_device=self.trainer.local_rank,
-    #         beton_file_path="/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_train.beton",
-    #         batch_size=256,
-    #         num_workers=1,
-    #         image_size=32,
-    #         num_gpus=1,
-    #         in_memory=True,
-    #         subset_size=-1,
-    #     )
-    #
-    #     def tqdm_rank_zero_only(iterator, *args, **kwargs):
-    #         if self.trainer.is_global_zero:
-    #             return tqdm(iterator, *args, **kwargs)
-    #         else:
-    #             return iterator
-    #
-    #     for _ in tqdm_rank_zero_only(loader, desc="Prefetching train data"):
-    #         pass
-    #
-    #     return loader
-    #
-    # def val_dataloader(self):
-    #     loader = create_val_loader_ssl(
-    #         this_device=self.trainer.local_rank,
-    #         beton_file_path="/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_test.beton",
-    #         batch_size=256,
-    #         num_workers=1,
-    #         image_size=32,
-    #         num_gpus=1,
-    #         in_memory=True,
-    #         subset_size=-1,
-    #     )
-    #
-    #     return loader
+    def train_dataloader(self):
+        device = self.trainer.local_rank
+        distributed = len(self.trainer.device_ids) > 1
+        module = CIFAR100FFCVDataModule(
+            "/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_train.beton",
+            batch_size=self.hparams.batch_size,
+            num_workers=self.hparams.num_workers,
+            device=device,
+            use_distributed=distributed,
+        )
+        return module.train_dataloader()
+
+    def val_dataloader(self):
+        device = self.trainer.local_rank
+        distributed = len(self.trainer.device_ids) > 1
+        module = CIFAR100FFCVDataModule(
+            "/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_test.beton",
+            batch_size=self.hparams.batch_size,
+            num_workers=self.hparams.num_workers,
+            device=device,
+            use_distributed=distributed,
+        )
+        return module.val_dataloader()
 
     @torch.no_grad()
     def momentum_update(self, online_encoder, momentum_encoder, m):
