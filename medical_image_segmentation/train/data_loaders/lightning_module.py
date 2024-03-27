@@ -242,7 +242,7 @@ class ImageNetFFCVDataModule(RGBFFCVDataModule):
         mean = np.array(self.mean) * 255
         std = np.array(self.std) * 255
         transform = [
-            CenterCropRGBImageDecoder(self.image_size),
+            CenterCropRGBImageDecoder(self.image_size, ratio=1.0),
             ffcv.transforms.ToTensor(),
             ffcv.transforms.ToDevice(self.device, non_blocking=True),
             ffcv.transforms.ToTorchImage(),
