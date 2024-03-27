@@ -8,7 +8,7 @@ from datetime import datetime
 import os
 
 parser = ArgumentParser()
-parser.add_argument("--dataset", default="CIFAR100", type=str, help="dataset")
+parser.add_argument("--dataset", default="CIFAR10_FFCV", type=str, help="dataset")
 parser.add_argument(
     "--download",
     default=False,

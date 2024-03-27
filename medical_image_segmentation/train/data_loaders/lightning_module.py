@@ -175,8 +175,8 @@ class RGBFFCVDataModule(LightningDataModule):
 
 @register_datamodule("CIFAR100_FFCV")
 class CIFAR100FFCVDataModule(RGBFFCVDataModule):
-    def __init__(self, data_path, batch_size, num_workers, device, use_distributed, **kwargs):
-        super().__init__(data_path, batch_size, (32, 32), num_workers, device, use_distributed)
+    def __init__(self, batch_size, num_workers, device, use_distributed, **kwargs):
+        super().__init__("/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_train.beton", batch_size, (32, 32), num_workers, device, use_distributed)
 
     @property
     def num_classes(self):
@@ -193,8 +193,8 @@ class CIFAR100FFCVDataModule(RGBFFCVDataModule):
 
 @register_datamodule("CIFAR10_FFCV")
 class CIFAR10FFCVDataModule(RGBFFCVDataModule):
-    def __init__(self, data_path, batch_size, num_workers, device, use_distributed, **kwargs):
-        super().__init__(data_path, batch_size, (32, 32), num_workers, device, use_distributed)
+    def __init__(self, batch_size, num_workers, device, use_distributed, **kwargs):
+        super().__init__( "/scratch/gpfs/eh0560/data/cifar10_ffcv/cifar10_32_test.beton", batch_size, (32, 32), num_workers, device, use_distributed)
 
     @property
     def num_classes(self):
