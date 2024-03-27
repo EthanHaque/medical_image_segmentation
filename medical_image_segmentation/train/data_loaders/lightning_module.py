@@ -63,8 +63,9 @@ class BYOLRGBFFCVDataTransforms:
         if isinstance(crop_size, int):
             crop_size = (crop_size, crop_size)
         self.crop_size = crop_size
+        self.mean = mean
+        self.std = std
         self.device = device
-        self.normalize = torchvision.transforms.Normalize(np.array(mean) * 255, np.array(std) * 255)
         self.transforms = [
             self._build_transforms(sp) for sp in solarize_prob
         ]
@@ -81,7 +82,7 @@ class BYOLRGBFFCVDataTransforms:
             ffcv.transforms.ToDevice(self.device, non_blocking=True),
             ffcv.transforms.ToTorchImage(),
             ffcv.transforms.Convert(torch.float32),
-            self.normalize
+            torchvision.transforms.Normalize(np.array(self.mean) * 255, np.array(self.std) * 255)
         ]
 
         return transforms
