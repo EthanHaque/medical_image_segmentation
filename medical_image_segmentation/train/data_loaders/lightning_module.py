@@ -91,9 +91,10 @@ class BYOLRGBFFCVDataTransforms:
 
 class RGBFFCVDataModule(LightningDataModule):
 
-    def __init__(self, data_path, batch_size, image_size, num_workers, device, use_distributed, **kwargs):
+    def __init__(self, train_path, test_path, batch_size, image_size, num_workers, device, use_distributed, **kwargs):
         super().__init__()
-        self.data_path = data_path
+        self.train_path = train_path
+        self.test_path = test_path
         self.batch_size = batch_size
         self.image_size = image_size
         self.num_workers = num_workers
@@ -126,7 +127,7 @@ class RGBFFCVDataModule(LightningDataModule):
 
         order = ffcv.loader.OrderOption.QUASI_RANDOM if self.use_distributed else ffcv.loader.OrderOption.RANDOM
         loader = ffcv.loader.Loader(
-            self.data_path,
+            self.train_path,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             order=order,
@@ -149,7 +150,7 @@ class RGBFFCVDataModule(LightningDataModule):
 
         order = ffcv.loader.OrderOption.SEQUENTIAL
         loader = ffcv.loader.Loader(
-            self.data_path,
+            self.test_path,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             order=order,
@@ -179,7 +180,7 @@ class CIFAR100FFCVDataModule(RGBFFCVDataModule):
     MEAN = (0.507, 0.487, 0.441)
     STD = (0.268, 0.257, 0.276)
     def __init__(self, batch_size, num_workers, device, use_distributed, **kwargs):
-        super().__init__("/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_train.beton", batch_size, (32, 32), num_workers, device, use_distributed)
+        super().__init__("/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_train.beton", "/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_test.beton", batch_size, (32, 32), num_workers, device, use_distributed)
 
     @property
     def num_classes(self):
@@ -200,7 +201,7 @@ class CIFAR10FFCVDataModule(RGBFFCVDataModule):
     MEAN = (0.491, 0.482, 0.447)
     STD = (0.247, 0.243, 0.261)
     def __init__(self, batch_size, num_workers, device, use_distributed, **kwargs):
-        super().__init__( "/scratch/gpfs/eh0560/data/cifar10_ffcv/cifar10_32_test.beton", batch_size, (32, 32), num_workers, device, use_distributed)
+        super().__init__( "/scratch/gpfs/eh0560/data/cifar10_ffcv/cifar10_32_train.beton", "/scratch/gpfs/eh0560/data/cifar10_ffcv/cifar10_32_test.beton", batch_size, (32, 32), num_workers, device, use_distributed)
 
     @property
     def num_classes(self):
