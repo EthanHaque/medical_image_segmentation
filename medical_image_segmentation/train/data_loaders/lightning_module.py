@@ -215,6 +215,28 @@ class CIFAR10FFCVDataModule(RGBFFCVDataModule):
     def std(self):
         return self.STD
 
+
+@register_datamodule("IMAGENET_FFCV")
+class ImageNetFFCVDataModule(RGBFFCVDataModule):
+    NUM_CLASSES = 1000
+    MEAN = (0.485, 0.456, 0.406)
+    STD = (0.229, 0.224, 0.225)
+
+    def __init__(self, batch_size, num_workers, device, use_distributed, **kwargs):
+        super().__init__( "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_112_train.beton", "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_112_test.beton", batch_size, (112, 112), num_workers, device, use_distributed)
+
+    @property
+    def num_classes(self):
+        return self.NUM_CLASSES
+
+    @property
+    def mean(self):
+        return self.MEAN
+
+    @property
+    def std(self):
+        return self.STD
+
 @register_datamodule("IMAGENET")
 class ImageNetDataModule(LightningDataModule):
     NUM_CLASSES = 1000
