@@ -78,11 +78,11 @@ class BYOLRGBFFCVDataTransforms:
             ffcv.transforms.RandomGrayscale(0.2),
             # ffcv.transforms.GaussianBlur(1.0, kernel_size=23),
             ffcv.transforms.RandomSolarization(solarize_prob, 128),
+            ffcv.transforms.NormalizeImage(np.array(self.mean) * 255, np.array(self.std) * 255, np.float32),
             ffcv.transforms.ToTensor(),
             ffcv.transforms.ToDevice(self.device, non_blocking=True),
             ffcv.transforms.ToTorchImage(),
             ffcv.transforms.Convert(torch.float32),
-            torchvision.transforms.Normalize(np.array(self.mean) * 255, np.array(self.std) * 255)
         ]
 
         return transforms
