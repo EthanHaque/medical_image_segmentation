@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 import pytorch_lightning as pl
+from torchvision.datasets import CIFAR10
 from tqdm import tqdm
 import ffcv
 from ffcv.fields.decoders import SimpleRGBImageDecoder, RandomResizedCropRGBImageDecoder, IntDecoder
@@ -217,8 +218,8 @@ class BYOL(pl.LightningModule):
     def train_dataloader(self):
         device = self.trainer.local_rank
         distributed = len(self.trainer.device_ids) > 1
-        module = CIFAR100FFCVDataModule(
-            "/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_train.beton",
+        module = CIFAR10DataModule(
+            "/scratch/gpfs/eh0560/data/cifar10_ffcv/cifar10_32_train.beton",
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             device=device,
@@ -229,8 +230,8 @@ class BYOL(pl.LightningModule):
     def val_dataloader(self):
         device = self.trainer.local_rank
         distributed = len(self.trainer.device_ids) > 1
-        module = CIFAR100FFCVDataModule(
-            "/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_test.beton",
+        module = CIFAR10DataModule(
+            "/scratch/gpfs/eh0560/data/cifar10_ffcv/cifar10_32_test.beton",
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             device=device,
