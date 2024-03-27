@@ -2,13 +2,6 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 import pytorch_lightning as pl
-from torchvision.datasets import CIFAR10
-from tqdm import tqdm
-import ffcv
-from ffcv.fields.decoders import SimpleRGBImageDecoder, RandomResizedCropRGBImageDecoder, IntDecoder
-import torchvision
-import numpy as np
-from medical_image_segmentation.train.data_loaders.ffcv_loader import create_train_loader_ssl, create_val_loader_ssl
 from medical_image_segmentation.train.data_loaders.lightning_module import CIFAR100FFCVDataModule, CIFAR10DataModule
 from medical_image_segmentation.train.optimizer.lars import LARS
 from medical_image_segmentation.train.scheduler.cosine_annealing import (
