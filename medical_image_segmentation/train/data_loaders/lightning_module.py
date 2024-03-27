@@ -223,7 +223,7 @@ class ImageNetFFCVDataModule(RGBFFCVDataModule):
     STD = (0.229, 0.224, 0.225)
 
     def __init__(self, batch_size, num_workers, device, use_distributed, **kwargs):
-        self.image_size = (56, 56)
+        self.image_size = (112, 112)
         super().__init__( "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_112_train.beton", "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_112_test.beton", batch_size, self.image_size, num_workers, device, use_distributed)
 
     @property
