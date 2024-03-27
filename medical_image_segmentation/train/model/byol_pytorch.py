@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 import pytorch_lightning as pl
-from medical_image_segmentation.train.data_loaders.lightning_module import CIFAR100FFCVDataModule, CIFAR10DataModule
+from medical_image_segmentation.train.data_loaders.lightning_module import CIFAR100FFCVDataModule, CIFAR10FFCVDataModule
 from medical_image_segmentation.train.optimizer.lars import LARS
 from medical_image_segmentation.train.scheduler.cosine_annealing import (
     LinearWarmupCosineAnnealingLR,
@@ -212,7 +212,7 @@ class BYOL(pl.LightningModule):
         # Must put loaders in this method to ensure DDP process groups are constructed before creating data loaders
         device = self.trainer.local_rank
         distributed = len(self.trainer.device_ids) > 1
-        module = CIFAR10DataModule(
+        module = CIFAR10FFCVDataModule(
             "/scratch/gpfs/eh0560/data/cifar10_ffcv/cifar10_32_train.beton",
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
@@ -225,7 +225,7 @@ class BYOL(pl.LightningModule):
         # Must put loaders in this method to ensure DDP process groups are constructed before creating data loaders
         device = self.trainer.local_rank
         distributed = len(self.trainer.device_ids) > 1
-        module = CIFAR10DataModule(
+        module = CIFAR10FFCVDataModule(
             "/scratch/gpfs/eh0560/data/cifar10_ffcv/cifar10_32_test.beton",
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
