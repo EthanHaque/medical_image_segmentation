@@ -97,7 +97,7 @@ class CIFAR100FFCVDataModule(LightningDataModule):
         return (0.268, 0.257, 0.276)
 
     def train_dataloader(self):
-        image_pipeline_1, image_pipeline_2 = BYOLRGBFFCVDataTransforms().get_transforms()
+        image_pipeline_1, image_pipeline_2 = BYOLRGBFFCVDataTransforms(device=device, crop_size=32, mean=self.mean, std=self.std).get_transforms()
         label_pipeline = [IntDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.Squeeze(),]
 
         pipelines = {
