@@ -175,41 +175,50 @@ class RGBFFCVDataModule(LightningDataModule):
 
 @register_datamodule("CIFAR100_FFCV")
 class CIFAR100FFCVDataModule(RGBFFCVDataModule):
+    NUM_CLASSES = 100
+    MEAN = (0.507, 0.487, 0.441)
+    STD = (0.268, 0.257, 0.276)
     def __init__(self, batch_size, num_workers, device, use_distributed, **kwargs):
         super().__init__("/scratch/gpfs/eh0560/data/cifar100_ffcv/cifar100_32_train.beton", batch_size, (32, 32), num_workers, device, use_distributed)
 
     @property
     def num_classes(self):
-        return 100
+        return self.NUM_CLASSES
 
     @property
     def mean(self):
-        return (0.507, 0.487, 0.441)
+        return self.MEAN
 
     @property
     def std(self):
-        return (0.268, 0.257, 0.276)
+        return self.STD
 
 
 @register_datamodule("CIFAR10_FFCV")
 class CIFAR10FFCVDataModule(RGBFFCVDataModule):
+    NUM_CLASSES = 10
+    MEAN = (0.491, 0.482, 0.447)
+    STD = (0.247, 0.243, 0.261)
     def __init__(self, batch_size, num_workers, device, use_distributed, **kwargs):
         super().__init__( "/scratch/gpfs/eh0560/data/cifar10_ffcv/cifar10_32_test.beton", batch_size, (32, 32), num_workers, device, use_distributed)
 
     @property
     def num_classes(self):
-        return 10
+        return self.NUM_CLASSES
 
     @property
     def mean(self):
-        return (0.491, 0.482, 0.447)
+        return self.MEAN
 
     @property
     def std(self):
-        return (0.247, 0.243, 0.261)
+        return self.STD
 
 @register_datamodule("IMAGENET")
 class ImageNetDataModule(LightningDataModule):
+    NUM_CLASSES = 1000
+    MEAN = (0.485, 0.456, 0.406)
+    STD = (0.229, 0.224, 0.225)
     def __init__(self, data_dir, batch_size, num_workers, **kwargs):
         super().__init__()
         self.data_dir = data_dir
@@ -218,15 +227,15 @@ class ImageNetDataModule(LightningDataModule):
 
     @property
     def num_classes(self):
-        return 1000
+        return self.NUM_CLASSES
 
     @property
     def mean(self):
-        return (0.485, 0.456, 0.406)
+        return self.MEAN
 
     @property
     def std(self):
-        return (0.229, 0.224, 0.225)
+        return self.STD
 
     def prepare_data(self):
         pass
@@ -330,7 +339,6 @@ class CIFARDataModule(LightningDataModule):
             drop_last=True,
         )
         return loader
-
     def val_dataloader(self):
         loader = torch.utils.data.DataLoader(
             dataset=self.val,
@@ -355,6 +363,9 @@ class CIFARDataModule(LightningDataModule):
 
 @register_datamodule("CIFAR10")
 class CIFAR10DataModule(CIFARDataModule):
+    NUM_CLASSES = 10
+    MEAN = (0.491, 0.482, 0.447)
+    STD = (0.247, 0.243, 0.261)
     def __init__(self, data_dir, batch_size, num_workers, download, **kwargs):
         super().__init__(data_dir, batch_size, num_workers, download)
 
@@ -364,19 +375,23 @@ class CIFAR10DataModule(CIFARDataModule):
 
     @property
     def num_classes(self):
-        return 10
+        return self.NUM_CLASSES
 
     @property
     def mean(self):
-        return (0.491, 0.482, 0.447)
+        return self.MEAN
 
     @property
     def std(self):
-        return (0.247, 0.243, 0.261)
+        return self.STD
 
 
 @register_datamodule("CIFAR100")
 class CIFAR100DataModule(CIFARDataModule):
+    NUM_CLASSES = 100
+    MEAN = (0.507, 0.487, 0.441)
+    STD = (0.268, 0.257, 0.276)
+
     def __init__(self, data_dir, batch_size, num_workers, download, **kwargs):
         super().__init__(data_dir, batch_size, num_workers, download)
 
@@ -386,12 +401,12 @@ class CIFAR100DataModule(CIFARDataModule):
 
     @property
     def num_classes(self):
-        return 100
+        return self.NUM_CLASSES
 
     @property
     def mean(self):
-        return (0.507, 0.487, 0.441)
+        return self.MEAN
 
     @property
     def std(self):
-        return (0.268, 0.257, 0.276)
+        return self.STD
