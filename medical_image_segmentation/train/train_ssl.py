@@ -75,7 +75,7 @@ parser.add_argument(
 def main(args):
     logger = pl.loggers.CSVLogger("logs")
 
-    model = BYOL(**args.__dict__, num_classes=100)
+    model = BYOL(**args.__dict__)
     trainer = pl.Trainer(
         devices=args.num_gpus,
         accelerator="gpu",

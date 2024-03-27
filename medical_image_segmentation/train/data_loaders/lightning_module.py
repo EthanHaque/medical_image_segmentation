@@ -10,6 +10,19 @@ import numpy as np
 
 import os
 
+DATAMODULE_REGISTRY = {}
+
+def register_datamodule(name):
+    def decorator(cls):
+        DATAMODULE_REGISTRY[name] = cls
+        return cls
+    return decorator
+
+def get_datamodule(name):
+    if name in DATAMODULE_REGISTRY:
+        return DATAMODULE_REGISTRY[name]
+    else:
+        raise ValueError(f"No datamodule registered with name {name}")
 
 class BYOLRGBDataTransforms:
     def __init__(
@@ -160,6 +173,7 @@ class RGBFFCVDataModule(LightningDataModule):
         return transform
 
 
+@register_datamodule("CIFAR100_FFCV")
 class CIFAR100FFCVDataModule(RGBFFCVDataModule):
     def __init__(self, data_path, batch_size, num_workers, device, use_distributed, **kwargs):
         super().__init__(data_path, batch_size, (32, 32), num_workers, device, use_distributed)
@@ -176,6 +190,8 @@ class CIFAR100FFCVDataModule(RGBFFCVDataModule):
     def std(self):
         return (0.268, 0.257, 0.276)
 
+
+@register_datamodule("CIFAR10_FFCV")
 class CIFAR10FFCVDataModule(RGBFFCVDataModule):
     def __init__(self, data_path, batch_size, num_workers, device, use_distributed, **kwargs):
         super().__init__(data_path, batch_size, (32, 32), num_workers, device, use_distributed)
@@ -192,6 +208,7 @@ class CIFAR10FFCVDataModule(RGBFFCVDataModule):
     def std(self):
         return (0.247, 0.243, 0.261)
 
+@register_datamodule("IMAGENET")
 class ImageNetDataModule(LightningDataModule):
     def __init__(self, data_dir, batch_size, num_workers, **kwargs):
         super().__init__()
@@ -336,6 +353,7 @@ class CIFARDataModule(LightningDataModule):
         return transform
 
 
+@register_datamodule("CIFAR10")
 class CIFAR10DataModule(CIFARDataModule):
     def __init__(self, data_dir, batch_size, num_workers, download, **kwargs):
         super().__init__(data_dir, batch_size, num_workers, download)
@@ -357,6 +375,7 @@ class CIFAR10DataModule(CIFARDataModule):
         return (0.247, 0.243, 0.261)
 
 
+@register_datamodule("CIFAR100")
 class CIFAR100DataModule(CIFARDataModule):
     def __init__(self, data_dir, batch_size, num_workers, download, **kwargs):
         super().__init__(data_dir, batch_size, num_workers, download)

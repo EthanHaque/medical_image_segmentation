@@ -2,7 +2,8 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 import pytorch_lightning as pl
-from medical_image_segmentation.train.data_loaders.lightning_module import CIFAR100FFCVDataModule, CIFAR10FFCVDataModule
+from medical_image_segmentation.train.data_loaders.lightning_module import CIFAR100FFCVDataModule, \
+    CIFAR10FFCVDataModule, get_datamodule
 from medical_image_segmentation.train.optimizer.lars import LARS
 from medical_image_segmentation.train.scheduler.cosine_annealing import (
     LinearWarmupCosineAnnealingLR,
@@ -97,8 +98,9 @@ class BYOL(pl.LightningModule):
         )
 
         # linear layer for eval
+        num_classes = get_datamodule(self.hparams.dataset).num_classes
         self.linear = torch.nn.Linear(
-            self.online_encoder.feat_dim, self.hparams.num_classes
+            self.online_encoder.feat_dim, num_classes
         )
 
     @torch.no_grad()
