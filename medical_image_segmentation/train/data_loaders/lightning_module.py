@@ -76,30 +76,32 @@ class BYOLRGBFFCVDataTransforms:
     def get_transforms(self):
         return self.transforms
 
+class RGBFFCVDataModule(LightningDataModule):
 
-class CIFAR100FFCVDataModule(LightningDataModule):
-    def __init__(self, data_path, batch_size, num_workers, device, use_distributed, **kwargs):
+    def __init__(self, data_path, batch_size, image_size, num_workers, device, use_distributed, **kwargs):
         super().__init__()
         self.data_path = data_path
         self.batch_size = batch_size
+        self.image_size = image_size
         self.num_workers = num_workers
         self.device = device
         self.use_distributed = use_distributed
 
     @property
     def num_classes(self):
-        return 100
+        raise NotImplementedError()
 
     @property
     def mean(self):
-        return (0.507, 0.487, 0.441)
+        raise NotImplementedError()
 
     @property
     def std(self):
-        return (0.268, 0.257, 0.276)
+        raise NotImplementedError()
+
 
     def train_dataloader(self):
-        image_pipeline_1, image_pipeline_2 = BYOLRGBFFCVDataTransforms(device=self.device, crop_size=32, mean=self.mean, std=self.std).get_transforms()
+        image_pipeline_1, image_pipeline_2 = BYOLRGBFFCVDataTransforms(device=self.device, crop_size=self.image_size, mean=self.mean, std=self.std).get_transforms()
         label_pipeline = [IntDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.Squeeze(),]
 
         pipelines = {
@@ -121,6 +123,7 @@ class CIFAR100FFCVDataModule(LightningDataModule):
             custom_field_mapper=custom_field_mapper
         )
         return loader
+
 
     def val_dataloader(self):
         image_pipeline = self.default_transform()
@@ -155,6 +158,39 @@ class CIFAR100FFCVDataModule(LightningDataModule):
             torchvision.transforms.Normalize(mean, std),
         ]
         return transform
+
+
+class CIFAR100FFCVDataModule(RGBFFCVDataModule):
+    def __init__(self, data_path, batch_size, num_workers, device, use_distributed, **kwargs):
+        super().__init__(data_path, batch_size, (32, 32), num_workers, device, use_distributed)
+
+    @property
+    def num_classes(self):
+        return 100
+
+    @property
+    def mean(self):
+        return (0.507, 0.487, 0.441)
+
+    @property
+    def std(self):
+        return (0.268, 0.257, 0.276)
+
+class CIFAR10FFCVDataModule(RGBFFCVDataModule):
+    def __init__(self, data_path, batch_size, num_workers, device, use_distributed, **kwargs):
+        super().__init__(data_path, batch_size, (32, 32), num_workers, device, use_distributed)
+
+    @property
+    def num_classes(self):
+        return 10
+
+    @property
+    def mean(self):
+        return (0.491, 0.482, 0.447)
+
+    @property
+    def std(self):
+        return (0.247, 0.243, 0.261)
 
 class ImageNetDataModule(LightningDataModule):
     def __init__(self, data_dir, batch_size, num_workers, **kwargs):
