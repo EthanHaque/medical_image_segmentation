@@ -4,7 +4,7 @@ from torchvision import datasets
 from torchvision.transforms import v2 as transform_lib
 from pytorch_lightning import LightningDataModule
 import ffcv
-from ffcv.fields.decoders import SimpleRGBImageDecoder, RandomResizedCropRGBImageDecoder, IntDecoder
+from ffcv.fields.decoders import SimpleRGBImageDecoder, RandomResizedCropRGBImageDecoder, IntDecoder, CenterCropRGBImageDecoder
 import numpy as np
 
 
@@ -223,7 +223,8 @@ class ImageNetFFCVDataModule(RGBFFCVDataModule):
     STD = (0.229, 0.224, 0.225)
 
     def __init__(self, batch_size, num_workers, device, use_distributed, **kwargs):
-        super().__init__( "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_112_train.beton", "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_112_test.beton", batch_size, (112, 112), num_workers, device, use_distributed)
+        self.image_size = (112, 112)
+        super().__init__( "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_112_train.beton", "/scratch/gpfs/eh0560/data/imagenet_ffcv/imagenet_112_test.beton", batch_size, self.image_size, num_workers, device, use_distributed)
 
     @property
     def num_classes(self):
@@ -237,6 +238,18 @@ class ImageNetFFCVDataModule(RGBFFCVDataModule):
     def std(self):
         return self.STD
 
+    def default_transform(self):
+        mean = np.array(self.mean) * 255
+        std = np.array(self.std) * 255
+        transform = [
+            CenterCropRGBImageDecoder(self.image_size),
+            ffcv.transforms.ToTensor(),
+            ffcv.transforms.ToDevice(self.device, non_blocking=True),
+            ffcv.transforms.ToTorchImage(),
+            ffcv.transforms.Convert(torch.float32),
+            torchvision.transforms.Normalize(mean, std),
+        ]
+        return transform
 @register_datamodule("IMAGENET")
 class ImageNetDataModule(LightningDataModule):
     NUM_CLASSES = 1000
