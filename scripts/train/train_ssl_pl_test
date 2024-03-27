@@ -4,7 +4,7 @@ bash -c "source activate; \
 conda activate ffcv-ssl; \
 python medical_image_segmentation/train/train_ssl.py \
     --dataset IMAGENET_FFCV \
-    --batch_size 1024 \
+    --batch_size 512 \
     --max_epochs 1000 \
     --arch resnet18"
 
