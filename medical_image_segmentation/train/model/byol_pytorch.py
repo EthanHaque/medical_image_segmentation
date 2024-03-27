@@ -98,7 +98,7 @@ class BYOL(pl.LightningModule):
         )
 
         # linear layer for eval
-        num_classes = get_datamodule(self.hparams.dataset).num_classes
+        num_classes = get_datamodule(self.hparams.dataset).NUM_CLASSES
         self.linear = torch.nn.Linear(
             self.online_encoder.feat_dim, num_classes
         )
