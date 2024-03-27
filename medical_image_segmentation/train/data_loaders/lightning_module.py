@@ -47,6 +47,8 @@ class BYOLRGBDataTransforms:
 
 class BYOLRGBFFCVDataTransforms:
     def __init__(self, device, crop_size, mean, std, solarize_prob=(0.0, 0.2)):
+        if isinstance(crop_size, int):
+            crop_size = (crop_size, crop_size)
         self.crop_size = crop_size
         self.device = device
         self.normalize = torchvision.transforms.Normalize(np.array(mean) * 255, np.array(std) * 255)
@@ -97,7 +99,7 @@ class CIFAR100FFCVDataModule(LightningDataModule):
         return (0.268, 0.257, 0.276)
 
     def train_dataloader(self):
-        image_pipeline_1, image_pipeline_2 = BYOLRGBFFCVDataTransforms(device=self.device, crop_size=(32,32), mean=self.mean, std=self.std).get_transforms()
+        image_pipeline_1, image_pipeline_2 = BYOLRGBFFCVDataTransforms(device=self.device, crop_size=32, mean=self.mean, std=self.std).get_transforms()
         label_pipeline = [IntDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.Squeeze(),]
 
         pipelines = {
