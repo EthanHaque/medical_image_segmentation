@@ -32,15 +32,24 @@ def write_subset_wrapper(
 
     Parameters
     ----------
-    dirs : List[str] A list of directory paths to look for DICOM images.
-    map_output_path : str The path to a file to write the map from original paths to new image paths to.
-    image_output_directory : str Path to a directory where images will write to. Possibly may contain folders.
-    dimensions_map_json_path : str Path to a json file that maps images found in dirs to the dimensions of the images.
-    hashes_map_json_path : str Path to a json file that maps images from in dirs to the hash of their pixel data.
-    write_to_null : bool [default: False] If true, writes images to the null file.
-    num_subfolders : int  [default: 0] The number of subfolders to write images into. If 0, writes all images directly into "image_output_directory".
-    num_processes : int [default: 1]: The number of processes to split the tasks among.
-    size : int [default = 1000000] The total number of images to write. I.e. The size of the subset.
+    dirs : List[str]
+        A list of directory paths to look for DICOM images.
+    map_output_path : str
+        The path to a file to write the map from original paths to new image paths to.
+    image_output_directory : str
+        Path to a directory where images will write to. Possibly may contain folders.
+    dimensions_map_json_path : str
+        Path to a json file that maps images found in dirs to the dimensions of the images.
+    hashes_map_json_path : str
+        Path to a json file that maps images from in dirs to the hash of their pixel data.
+    write_to_null : bool, optional
+        If true, writes images to the null file.
+    num_subfolders : int, optional
+        The number of subfolders to write images into. If 0, writes all images directly into "image_output_directory".
+    num_processes : int, optional
+        The number of processes to split the tasks among.
+    size : int, optional
+        The total number of images to write. I.e. The size of the subset.
     """
     if not os.path.isfile(dimensions_map_json_path):
         raise FileNotFoundError(dimensions_map_json_path)
