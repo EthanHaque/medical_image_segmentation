@@ -5,6 +5,7 @@ import pytorch_lightning as pl
 import torch
 
 from medical_image_segmentation.train.model.byol_pytorch import BYOL
+from pytorch_lightning.callbacks import RichProgressBar, RichModelSummary
 
 from argparse import ArgumentParser
 from datetime import datetime
@@ -64,7 +65,12 @@ def parse_args() -> argparse.Namespace:
 def main(args):
     """Entry point for training with PyTorch Lightning."""
     torch.set_float32_matmul_precision(args.torch_matmul_precision)
+
     logger = pl.loggers.CSVLogger("logs")
+    callbacks = [
+        RichModelSummary(),
+        RichProgressBar(),
+    ]
 
     model = BYOL(**args.__dict__)
     trainer = pl.Trainer(
@@ -76,6 +82,7 @@ def main(args):
         logger=logger,
         log_every_n_steps=1,
         check_val_every_n_epoch=1,
+        callbacks=callbacks
     )
     trainer.fit(model)
 
