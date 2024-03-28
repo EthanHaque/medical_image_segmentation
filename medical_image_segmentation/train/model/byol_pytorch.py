@@ -3,8 +3,6 @@ import torch.nn.functional as F
 import torch.nn as nn
 import pytorch_lightning as pl
 from medical_image_segmentation.train.data_loaders.lightning_module import (
-    CIFAR100FFCVDataModule,
-    CIFAR10FFCVDataModule,
     get_datamodule,
 )
 from medical_image_segmentation.train.optimizer.lars import LARS

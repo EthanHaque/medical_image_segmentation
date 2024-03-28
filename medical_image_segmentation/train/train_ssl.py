@@ -1,6 +1,5 @@
 import pytorch_lightning as pl
 
-from medical_image_segmentation.train.data_loaders.lightning_module import CIFAR100DataModule
 from medical_image_segmentation.train.model.byol_pytorch import BYOL
 
 from argparse import ArgumentParser
