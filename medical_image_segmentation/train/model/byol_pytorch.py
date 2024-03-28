@@ -18,7 +18,6 @@ from medical_image_segmentation.train.scheduler.cosine_annealing import (
     LinearWarmupCosineAnnealingLR,
 )
 
-
 import math
 
 from torchvision import models
@@ -26,6 +25,7 @@ from torchvision import models
 
 class MLP(nn.Module):
     """Multi-layer perceptron."""
+
     def __init__(self, input_dim, hidden_dim, output_dim):
         super().__init__()
 
@@ -45,6 +45,7 @@ class MLP(nn.Module):
 
 class Encoder(nn.Module):
     """Encodes images into latent space."""
+
     def __init__(self, arch, hidden_dim, proj_dim, low_res):
         super().__init__()
 
@@ -210,20 +211,12 @@ class BYOL(pl.LightningModule):
         loss_linear = F.cross_entropy(preds_linear, labels.repeat(2))
 
         # gather results and log stats
-        logs = {
-            "loss": loss,
-            "loss_linear": loss_linear,
-            "lr": self.trainer.optimizers[0].param_groups[0]["lr"],
-            "momentum": self.current_momentum,
-        }
-        self.log_dict(
-            logs,
-            on_step=False,
-            on_epoch=True,
-            sync_dist=True,
-            prog_bar=True,
-            logger=True,
-        )
+        loss_log = {"loss": loss, "loss_linear": loss_linear, }
+        hparam_log = {"lr": self.trainer.optimizers[0].param_groups[0]["lr"], "momentum": self.current_momentum, }
+
+        self.log_dict(loss_log, on_step=False, on_epoch=True, sync_dist=True, prog_bar=True, logger=True, )
+        self.log_dict(hparam_log, on_step=False, on_epoch=True, sync_dist=True, prog_bar=False, logger=True, )
+
         return loss + loss_linear * self.hparams.linear_loss_weight
 
     def on_train_batch_end(self, outputs, batch, batch_idx):
@@ -232,10 +225,10 @@ class BYOL(pl.LightningModule):
         # update momentum value
         max_steps = len(self.trainer.train_dataloader) * self.trainer.max_epochs
         self.current_momentum = (
-            self.hparams.final_momentum
-            - (self.hparams.final_momentum - self.hparams.base_momentum)
-            * (math.cos(math.pi * self.trainer.global_step / max_steps) + 1)
-            / 2
+                self.hparams.final_momentum
+                - (self.hparams.final_momentum - self.hparams.base_momentum)
+                * (math.cos(math.pi * self.trainer.global_step / max_steps) + 1)
+                / 2
         )
 
     def train_dataloader(self):
