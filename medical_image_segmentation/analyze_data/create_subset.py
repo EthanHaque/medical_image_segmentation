@@ -103,15 +103,24 @@ def write_subset(
 
     Parameters
     ----------
-    image_paths : List[str] A list of paths to DICOM images.
-    image_output_directory : str Path to a directory where images will write to. Possibly may contain folders.
-    dimensions_map : dict Maps DICOM image paths to their dimensions .
-    hashes_map : dict Maps DICOM image paths to their hashes.
-    write_to_null : bool [default: False] If true, writes images to the null file.
-    num_subfolders : int  [default: 0] The number of subfolders to write images into. If 0, writes all images directly into "image_output_directory".
-    num_processes : int [default: 1]: The number of processes to split the tasks among.
-    size : int [default: 1000000] The total number of images to write. I.e. The size of the subset.
-    max_retries : int [default:  10] If some of the images fail to write, retries on new images a max of "max_retries" times.
+    image_paths : List[str]
+        A list of paths to DICOM images.
+    image_output_directory : str
+        Path to a directory where images will write to. Possibly may contain folders.
+    dimensions_map : dict
+        Maps DICOM image paths to their dimensions.
+    hashes_map : dict
+        Maps DICOM image paths to their hashes.
+    write_to_null : bool, optional
+        If true, writes images to the null file.
+    num_subfolders : int, optional
+        The number of subfolders to write images into. If 0, writes all images directly into "image_output_directory".
+    num_processes : int, optional
+        The number of processes to split the tasks among.
+    size : int, optional
+        The total number of images to write. I.e. The size of the subset.
+    max_retries : int
+        some of the images fail to write, retries on new images a max of "max_retries" times.
     """
     possible_image_paths = pick_possible_images(image_paths, dimensions_map, hashes_map, min_size=256, max_size=768)
     dataset_map = map_paths_to_dataset(possible_image_paths)
