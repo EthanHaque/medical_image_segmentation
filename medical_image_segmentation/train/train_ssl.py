@@ -2,6 +2,7 @@
 import argparse
 
 import pytorch_lightning as pl
+import torch
 
 from medical_image_segmentation.train.model.byol_pytorch import BYOL
 
@@ -55,12 +56,14 @@ def parse_args() -> argparse.Namespace:
         help="Number of GPUs to use for training",
     )
     parser.add_argument("--max_epochs", default=100, type=int, help="Number of training epochs")
+    parser.add_argument("--torch_matmul_precision", default="high", type=str, help="torch matmul precision")
 
     return parser.parse_args()
 
 
 def main(args):
     """Entry point for training with PyTorch Lightning."""
+    torch.set_float32_matmul_precision(args.torch_matmul_precision)
     logger = pl.loggers.CSVLogger("logs")
 
     model = BYOL(**args.__dict__)
