@@ -323,8 +323,10 @@ def get_raster_image_dimensions(image_paths: List[str], num_processes: int = 1) 
 
     Parameters
     ----------
-    image_paths : List[str] A list of image file paths.
-    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
+    image_paths : List[str]
+        A list of image file paths.
+    num_processes : int, optional
+        The number of processes to split the tasks among.
 
     Returns
     -------
