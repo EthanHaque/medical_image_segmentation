@@ -1,6 +1,7 @@
 # Adapted from https://github.com/Lightning-Universe/lightning-bolts/blob/748715e50f52c83eb166ce91ebd814cc9ee4f043/src/pl_bolts/optimizers/lars.py#L13
 """
-References:
+References
+----------
     - https://arxiv.org/pdf/1708.03888.pdf
     - https://github.com/pytorch/pytorch/blob/1.6/torch/optim/sgd.py
 """

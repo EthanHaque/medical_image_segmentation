@@ -42,10 +42,10 @@ class KNNOnlineEvaluator(Callback):
             feature_bank: (N, D) the bank of N known vectors with dim=D
             target_bank: (N, ) the bank of N known vectors' labels
 
-        Returns:
+        Returns
+        -------
             (B, ) the predicted labels of B query vectors
         """
-
         dim_b = query_feature.shape[0]
 
         # compute cos similarity between each feature vector and feature bank ---> [B, N]
