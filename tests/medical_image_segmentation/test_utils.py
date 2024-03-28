@@ -1,3 +1,4 @@
+"""Tests for medical_image_segmentation.analyze_data.utils."""
 import time
 import unittest
 
@@ -5,7 +6,7 @@ from medical_image_segmentation.analyze_data.utils import process_files
 
 
 def dummy_processing_function(file_path: str, *args, **kwargs) -> dict:
-    """A dummy processing function for testing."""
+    """Pretends to do some work and then returns the file_path as a dictionary and maps to an empty dict."""
     millisecond = 0.001
     time.sleep(millisecond * 10)
     return {file_path: {}}
