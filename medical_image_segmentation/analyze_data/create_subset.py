@@ -248,17 +248,21 @@ def pick_possible_images(
     min_size: int = 256,
     max_size: int = 768,
 ) -> List[str]:
-    """
-    Determines which file paths from the images could potentially be used to create a subset of data. Excludes
+    """Determines which file paths from the images could potentially be used to create a subset of data. Excludes
     duplicate images and images whose dimensions are too big or small.
-
+    
     Parameters
     ----------
-    image_paths : List[str] A list of file paths to DICOM images.
-    dimensions_map : dict[str, List[int]] Maps file paths to their width and height.
-    hashes_map : dict[str, str] Maps file paths to a unique hash.
-    min_size : int, optional [default: 256] The smallest side length an image is allowed to have inclusive.
-    max_size : int, optional [default: 768] The largest side length an image is allowed to have inclusive.
+    image_paths : List[str]
+        A list of file paths to DICOM images.
+    dimensions_map : dict[str, List[int]]
+        Maps file paths to their width and height.
+    hashes_map : dict[str, str]
+        Maps file paths to a unique hash.
+    min_size : int, optional
+        The smallest side length an image is allowed to have inclusive.
+    max_size : int, optional
+        The largest side length an image is allowed to have inclusive.
 
     Returns
     -------
