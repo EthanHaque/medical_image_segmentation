@@ -177,11 +177,14 @@ def _write_subset_helper(output_dir, image_path: str, write_to_null: bool = Fals
 
     Parameters
     ----------
-    output_dir : str The root directory to write the images into.
-    image_path: str The path to the DICOM image to write. The name of the writen file will
-    be the hash of the DICOM image.
-    write_to_null: bool [default: False] If true, writes the DICOM images to the null file.
-    num_subfolders: int [default: 0] The number of folders to split the images into.
+    output_dir : str
+        The root directory to write the images into.
+    image_path: str
+        The path to the DICOM image to write. The name of the writen file will be the hash of the DICOM image.
+    write_to_null: bool, optional
+        If true, writes the DICOM images to the null file.
+    num_subfolders: int, optional
+        The number of folders to split the images into.
 
     Returns
     -------
