@@ -13,6 +13,7 @@ def dummy_processing_function(file_path: str, *args, **kwargs) -> dict:
 
 class TestProcessFiles(unittest.TestCase):
     """Tests for process_files."""
+
     def test_single_process(self):
         """Test processing with a single process."""
         image_paths = ["image1.jpg", "image2.jpg", "image3.jpg"]
