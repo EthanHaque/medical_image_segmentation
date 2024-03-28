@@ -2,8 +2,11 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 import pytorch_lightning as pl
-from medical_image_segmentation.train.data_loaders.lightning_module import CIFAR100FFCVDataModule, \
-    CIFAR10FFCVDataModule, get_datamodule
+from medical_image_segmentation.train.data_loaders.lightning_module import (
+    CIFAR100FFCVDataModule,
+    CIFAR10FFCVDataModule,
+    get_datamodule,
+)
 from medical_image_segmentation.train.optimizer.lars import LARS
 from medical_image_segmentation.train.scheduler.cosine_annealing import (
     LinearWarmupCosineAnnealingLR,
@@ -43,9 +46,7 @@ class Encoder(nn.Module):
 
         # modify the encoder for lower resolution
         if low_res:
-            self.encoder.conv1 = nn.Conv2d(
-                3, 64, kernel_size=3, stride=1, padding=1, bias=False
-            )
+            self.encoder.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
             self.encoder.maxpool = nn.Identity()
             self._reinit_all_layers()
 
@@ -99,9 +100,7 @@ class BYOL(pl.LightningModule):
 
         # linear layer for eval
         num_classes = get_datamodule(self.hparams.dataset).NUM_CLASSES
-        self.linear = torch.nn.Linear(
-            self.online_encoder.feat_dim, num_classes
-        )
+        self.linear = torch.nn.Linear(self.online_encoder.feat_dim, num_classes)
 
     @torch.no_grad()
     def initialize_momentum_encoder(self):
@@ -115,9 +114,7 @@ class BYOL(pl.LightningModule):
         param_list = []
         for model in models:
             for name, param in model.named_parameters():
-                if exclude_bias_and_bn and any(
-                    s in name for s in ["bn", "downsample.1", "bias"]
-                ):
+                if exclude_bias_and_bn and any(s in name for s in ["bn", "downsample.1", "bias"]):
                     param_dict = {
                         "params": param,
                         "weight_decay": 0.0,
@@ -198,9 +195,7 @@ class BYOL(pl.LightningModule):
 
     def on_train_batch_end(self, outputs, batch, batch_idx):
         # update momentum encoder
-        self.momentum_update(
-            self.online_encoder, self.momentum_encoder, self.current_momentum
-        )
+        self.momentum_update(self.online_encoder, self.momentum_encoder, self.current_momentum)
         # update momentum value
         max_steps = len(self.trainer.train_dataloader) * self.trainer.max_epochs
         self.current_momentum = (

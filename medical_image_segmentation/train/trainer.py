@@ -72,13 +72,9 @@ class BYOLTrainer(Module):
 
         self.net = net
 
-        self.byol = BYOL(
-            net, image_size=image_size, hidden_layer=hidden_layer, **byol_kwargs
-        )
+        self.byol = BYOL(net, image_size=image_size, hidden_layer=hidden_layer, **byol_kwargs)
 
-        self.optimizer = optimizer_klass(
-            self.byol.parameters(), lr=learning_rate, **optimizer_kwargs
-        )
+        self.optimizer = optimizer_klass(self.byol.parameters(), lr=learning_rate, **optimizer_kwargs)
 
         self.dataloader = DataLoader(dataset, shuffle=True, batch_size=batch_size)
 
@@ -127,9 +123,7 @@ class BYOLTrainer(Module):
 
             if not (step % self.checkpoint_every) and self.accelerator.is_main_process:
                 checkpoint_num = step // self.checkpoint_every
-                checkpoint_path = (
-                    self.checkpoint_folder / f"checkpoint.{checkpoint_num}.pt"
-                )
+                checkpoint_path = self.checkpoint_folder / f"checkpoint.{checkpoint_num}.pt"
                 torch.save(self.net.state_dict(), str(checkpoint_path))
 
             self.wait()

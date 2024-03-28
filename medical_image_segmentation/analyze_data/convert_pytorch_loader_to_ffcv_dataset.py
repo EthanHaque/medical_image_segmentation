@@ -7,12 +7,8 @@ import torchvision
 
 def parse_args():
     """Create args for command line interface."""
-    parser = argparse.ArgumentParser(
-        description="Process DICOM images and write them as a ffcv dataset."
-    )
-    parser.add_argument(
-        "--dataset_name", type=str, help="Name of the dataset to use.", required=True
-    )
+    parser = argparse.ArgumentParser(description="Process DICOM images and write them as a ffcv dataset.")
+    parser.add_argument("--dataset_name", type=str, help="Name of the dataset to use.", required=True)
     parser.add_argument(
         "--output_dir",
         type=str,
@@ -46,23 +42,15 @@ def get_dataset(dataset_name, num_workers):
 
 
 def get_cifar10_datasets(num_workers=1):
-    trainset = torchvision.datasets.CIFAR10(
-        root="/tmp/cifar10", train=True, download=True
-    )
-    testset = torchvision.datasets.CIFAR10(
-        root="/tmp/cifar10", train=False, download=True
-    )
+    trainset = torchvision.datasets.CIFAR10(root="/tmp/cifar10", train=True, download=True)
+    testset = torchvision.datasets.CIFAR10(root="/tmp/cifar10", train=False, download=True)
 
     return trainset, testset
 
 
 def get_cifar100_datasets(num_workers=1):
-    trainset = torchvision.datasets.CIFAR100(
-        root="/tmp/cifar100", train=True, download=True
-    )
-    testset = torchvision.datasets.CIFAR100(
-        root="/tmp/cifar100", train=False, download=True
-    )
+    trainset = torchvision.datasets.CIFAR100(root="/tmp/cifar100", train=True, download=True)
+    testset = torchvision.datasets.CIFAR100(root="/tmp/cifar100", train=False, download=True)
 
     return trainset, testset
 
@@ -92,12 +80,8 @@ def main():
     args = parse_args()
 
     train_dataset, test_dataset = get_dataset(args.dataset_name, args.num_workers)
-    train_output_path = os.path.join(
-        args.output_dir, f"{args.dataset_name}_{args.max_resolution}_train.beton"
-    )
-    test_output_path = os.path.join(
-        args.output_dir, f"{args.dataset_name}_{args.max_resolution}_test.beton"
-    )
+    train_output_path = os.path.join(args.output_dir, f"{args.dataset_name}_{args.max_resolution}_train.beton")
+    test_output_path = os.path.join(args.output_dir, f"{args.dataset_name}_{args.max_resolution}_test.beton")
 
     os.makedirs(args.output_dir, exist_ok=True)
 

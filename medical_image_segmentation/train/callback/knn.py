@@ -19,18 +19,13 @@ class KNNOnlineEvaluator(Callback):
 
         # your datamodule must have 2 attributes
         dm = DataModule()
-        dm.num_classes = ... # the num of classes in the datamodule
-        dm.name = ... # name of the datamodule (e.g. ImageNet, STL10, CIFAR10)
+        dm.num_classes = ...  # the num of classes in the datamodule
+        dm.name = ...  # name of the datamodule (e.g. ImageNet, STL10, CIFAR10)
 
-        online_eval = KNNOnlineEvaluator(
-            k=100,
-            temperature=0.1
-        )
+        online_eval = KNNOnlineEvaluator(k=100, temperature=0.1)
     """
 
-    def __init__(
-        self, k: int = 200, temperature: float = 0.07, num_classes: int = 1000
-    ) -> None:
+    def __init__(self, k: int = 200, temperature: float = 0.07, num_classes: int = 1000) -> None:
         """
         Args:
             k: k for k nearest neighbor
@@ -40,9 +35,7 @@ class KNNOnlineEvaluator(Callback):
         self.k = k
         self.temperature = temperature
 
-    def predict(
-        self, query_feature: Tensor, feature_bank: Tensor, target_bank: Tensor
-    ) -> Tensor:
+    def predict(self, query_feature: Tensor, feature_bank: Tensor, target_bank: Tensor) -> Tensor:
         """
         Args:
             query_feature: (B, D) a batch of B query vectors with dim=D
@@ -60,23 +53,16 @@ class KNNOnlineEvaluator(Callback):
         # [B, K]
         sim_weight, sim_indices = sim_matrix.topk(k=self.k, dim=-1)
         # [B, K]
-        sim_labels = torch.gather(
-            target_bank.expand(dim_b, -1), dim=-1, index=sim_indices
-        )
+        sim_labels = torch.gather(target_bank.expand(dim_b, -1), dim=-1, index=sim_indices)
         sim_weight = (sim_weight / self.temperature).exp()
 
         # counts for each class
-        one_hot_label = torch.zeros(
-            dim_b * self.k, self.num_classes, device=sim_labels.device
-        )
+        one_hot_label = torch.zeros(dim_b * self.k, self.num_classes, device=sim_labels.device)
         # [B*K, C]
-        one_hot_label = one_hot_label.scatter(
-            dim=-1, index=sim_labels.view(-1, 1), value=1.0
-        )
+        one_hot_label = one_hot_label.scatter(dim=-1, index=sim_labels.view(-1, 1), value=1.0)
         # weighted score ---> [B, C]
         pred_scores = torch.sum(
-            one_hot_label.view(dim_b, -1, self.num_classes)
-            * sim_weight.unsqueeze(dim=-1),
+            one_hot_label.view(dim_b, -1, self.num_classes) * sim_weight.unsqueeze(dim=-1),
             dim=1,
         )
 
@@ -84,9 +70,7 @@ class KNNOnlineEvaluator(Callback):
         return pred_scores.argsort(dim=-1, descending=True)
 
     @torch.no_grad()
-    def on_validation_epoch_end(
-        self, trainer: Trainer, pl_module: LightningModule
-    ) -> None:
+    def on_validation_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         assert not trainer.model.training
 
         def tqdm_rank_zero_only(iterator, *args, **kwargs):
@@ -105,16 +89,12 @@ class KNNOnlineEvaluator(Callback):
         target_bank = []
 
         # go through train data to generate feature bank
-        for batch in tqdm_rank_zero_only(
-            trainer.train_dataloader, desc="Generating feature bank", leave=False
-        ):
+        for batch in tqdm_rank_zero_only(trainer.train_dataloader, desc="Generating feature bank", leave=False):
             original_images = batch[0]
             labels = batch[1]
             x = original_images.to(pl_module.device)
             target = labels.to(pl_module.device)
-            feature = pl_module.forward(x, return_embedding=True)[0].flatten(
-                start_dim=1
-            )
+            feature = pl_module.forward(x, return_embedding=True)[0].flatten(start_dim=1)
             feature = F.normalize(feature, dim=1)
 
             feature_bank.append(feature)
@@ -137,16 +117,12 @@ class KNNOnlineEvaluator(Callback):
             target_bank = concat_all_gather(target_bank, pl_module)
 
         # go through val data to predict the label by weighted knn search
-        for batch in tqdm_rank_zero_only(
-            trainer.val_dataloaders, desc="Predicting labels", leave=False
-        ):
+        for batch in tqdm_rank_zero_only(trainer.val_dataloaders, desc="Predicting labels", leave=False):
             images = batch[0]
             labels = batch[1]
             x = images.to(pl_module.device)
             target = labels.to(pl_module.device)
-            feature = pl_module.forward(x, return_embedding=True)[0].flatten(
-                start_dim=1
-            )
+            feature = pl_module.forward(x, return_embedding=True)[0].flatten(start_dim=1)
             feature = F.normalize(feature, dim=1)
 
             pred_labels = self.predict(feature, feature_bank, target_bank)

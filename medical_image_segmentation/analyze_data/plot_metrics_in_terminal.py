@@ -5,16 +5,10 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--metrics", nargs="+", required=True, help="Which headers to plot"
-    )
+    parser.add_argument("--metrics", nargs="+", required=True, help="Which headers to plot")
     parser.add_argument("--files", nargs="+", help="One or more CSV files to process")
-    parser.add_argument(
-        "--ymin", type=float, required=False, help="Minimum y value to plot"
-    )
-    parser.add_argument(
-        "--ymax", type=float, required=False, help="Maximum y value to plot"
-    )
+    parser.add_argument("--ymin", type=float, required=False, help="Minimum y value to plot")
+    parser.add_argument("--ymax", type=float, required=False, help="Maximum y value to plot")
 
     return parser.parse_args()
 

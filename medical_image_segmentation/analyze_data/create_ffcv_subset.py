@@ -64,17 +64,13 @@ class DICOMImageDataset:
 
 def parse_args():
     """Create args for command line interface."""
-    parser = argparse.ArgumentParser(
-        description="Process DICOM images and write them as a ffcv dataset."
-    )
+    parser = argparse.ArgumentParser(description="Process DICOM images and write them as a ffcv dataset.")
     parser.add_argument(
         "--original_to_new_map_path",
         type=str,
         help="Map from original image paths to new image paths. Used to find the correct DICOM images to use.",
     )
-    parser.add_argument(
-        "--output_file_path", type=str, help="Path to write .beton file to."
-    )
+    parser.add_argument("--output_file_path", type=str, help="Path to write .beton file to.")
     parser.add_argument("--width", type=int, help="Width to resize the images to.")
     parser.add_argument("--height", type=int, help="Height to resize the images to.")
     parser.add_argument(

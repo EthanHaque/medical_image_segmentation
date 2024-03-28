@@ -15,9 +15,7 @@ from rich.progress import (
 )
 
 
-def get_file_paths(
-    roots: Union[str, List[str]], matching_function: Callable[[str], bool]
-) -> list[Union[str, bytes]]:
+def get_file_paths(roots: Union[str, List[str]], matching_function: Callable[[str], bool]) -> list[Union[str, bytes]]:
     """
     Gathers all file paths from the given directories which end with the given filetypes.
 
@@ -90,14 +88,10 @@ def process_files(
         the processing function.
     """
     if num_processes < 1:
-        raise ValueError(
-            f"num_processes must be greater than 1, but got {num_processes}"
-        )
+        raise ValueError(f"num_processes must be greater than 1, but got {num_processes}")
 
     image_info = {}
-    with ProcessPoolExecutor(
-        max_workers=num_processes, initializer=start_orphan_checker
-    ) as executor:
+    with ProcessPoolExecutor(max_workers=num_processes, initializer=start_orphan_checker) as executor:
         partial_processing_function = partial(processing_function, *args, **kwargs)
         future_to_file = {}
 
@@ -108,13 +102,9 @@ def process_files(
             TimeRemainingColumn(),
             transient=True,
         ) as progress:
-            task = progress.add_task(
-                "Batching files...", total=len(image_paths), file_count=0
-            )
+            task = progress.add_task("Batching files...", total=len(image_paths), file_count=0)
             for i, file_path in enumerate(image_paths):
-                future_to_file[
-                    executor.submit(partial_processing_function, file_path)
-                ] = file_path
+                future_to_file[executor.submit(partial_processing_function, file_path)] = file_path
                 progress.update(task, advance=1)
 
         with Progress(
@@ -123,9 +113,7 @@ def process_files(
             TimeElapsedColumn(),
             TimeRemainingColumn(),
         ) as progress:
-            task = progress.add_task(
-                "Processing files...", total=len(image_paths), file_count=0
-            )
+            task = progress.add_task("Processing files...", total=len(image_paths), file_count=0)
             for future in as_completed(future_to_file):
                 file_path = future_to_file[future]
                 try:
@@ -133,9 +121,7 @@ def process_files(
                 except Exception as e:
                     for f in future_to_file.keys():
                         f.cancel()
-                    raise RuntimeError(
-                        f"Error occurred during processing of {file_path}: {e}"
-                    )
+                    raise RuntimeError(f"Error occurred during processing of {file_path}: {e}")
 
                 image_info[file_path] = result
                 progress.update(task, advance=1)

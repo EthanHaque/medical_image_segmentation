@@ -104,9 +104,7 @@ def write_subset(
     size : int [default: 1000000] The total number of images to write. I.e. The size of the subset.
     max_retries : int [default:  10] If some of the images fail to write, retries on new images a max of "max_retries" times.
     """
-    possible_image_paths = pick_possible_images(
-        image_paths, dimensions_map, hashes_map, min_size=256, max_size=768
-    )
+    possible_image_paths = pick_possible_images(image_paths, dimensions_map, hashes_map, min_size=256, max_size=768)
     dataset_map = map_paths_to_dataset(possible_image_paths)
 
     # These datasets are very large, so we only use a subset of them.
@@ -155,9 +153,7 @@ def write_subset(
     return statuses
 
 
-def _write_subset_helper(
-    output_dir, image_path: str, write_to_null: bool = False, num_subfolders: int = 0
-) -> dict:
+def _write_subset_helper(output_dir, image_path: str, write_to_null: bool = False, num_subfolders: int = 0) -> dict:
     """
     Helper function to write an individual DICOM image to output dir.
 
@@ -202,9 +198,7 @@ def _write_subset_helper(
             with warnings.catch_warnings():
                 warnings.simplefilter("error")
                 try:
-                    arr = ((arr - min_val) / (max_val - min_val) * 65535).astype(
-                        np.uint16
-                    )
+                    arr = ((arr - min_val) / (max_val - min_val) * 65535).astype(np.uint16)
                 except RuntimeWarning as e:
                     return {"image_path": image_path, "output_path": None, "error": e}
         else:
@@ -257,12 +251,7 @@ def pick_possible_images(
             continue
 
         width, height = dimensions_map[path]
-        if (
-            (width > max_size)
-            or (height > max_size)
-            or (width < min_size)
-            or (height < min_size)
-        ):
+        if (width > max_size) or (height > max_size) or (width < min_size) or (height < min_size):
             continue
 
         hash = hashes_map[path]
@@ -302,9 +291,7 @@ def map_paths_to_dataset(image_paths: List[str]) -> dict[str, str]:
     return dataset_map
 
 
-def get_raster_image_dimensions(
-    image_paths: List[str], num_processes: int = 1
-) -> dict[str, List[int]]:
+def get_raster_image_dimensions(image_paths: List[str], num_processes: int = 1) -> dict[str, List[int]]:
     """
     Get the width and height of every image in the given list of image paths.
 
@@ -319,9 +306,7 @@ def get_raster_image_dimensions(
         A dictionary where the keys are the file paths and the values are a list where the first
         element is the width and the second is the height of the image.
     """
-    image_informaiton = utils.process_files(
-        image_paths, _get_raster_image_dimensions_helper, num_processes
-    )
+    image_informaiton = utils.process_files(image_paths, _get_raster_image_dimensions_helper, num_processes)
     value_as_list = {}
     for key, value in image_informaiton.items():
         if not value:
@@ -349,9 +334,7 @@ def _get_raster_image_dimensions_helper(image_path: str) -> dict:
     return {"width": width, "height": height}
 
 
-def get_raster_image_dimensions_wrapper(
-    dirs: List[str], output_path: str, num_processes: int = 1
-):
+def get_raster_image_dimensions_wrapper(dirs: List[str], output_path: str, num_processes: int = 1):
     """
     Wrapper to get the dimensions of all the images in "dirs".
 
@@ -374,9 +357,7 @@ def get_raster_image_dimensions_wrapper(
     print(f"Successfully computed the dimensions of {count} images")
 
 
-def get_dicom_image_dimensions_wrapper(
-    dirs: List[str], output_path: str, num_processes: int = 1
-):
+def get_dicom_image_dimensions_wrapper(dirs: List[str], output_path: str, num_processes: int = 1):
     """
     Wrapper to get the dimensions of all the pixel data from the dicom files in "dirs".
 
@@ -396,14 +377,10 @@ def get_dicom_image_dimensions_wrapper(
         if value:
             count += 1
 
-    print(
-        f"Successfully computed the dimensions of the pixel data from {count} DICOM images"
-    )
+    print(f"Successfully computed the dimensions of the pixel data from {count} DICOM images")
 
 
-def get_dicom_image_dimensions(
-    image_paths: List[str], num_processes: int = 1
-) -> dict[str, List[int]]:
+def get_dicom_image_dimensions(image_paths: List[str], num_processes: int = 1) -> dict[str, List[int]]:
     """
     Gets the width and height of every dicom file in the given list of image paths.
 
@@ -418,9 +395,7 @@ def get_dicom_image_dimensions(
         A dictionary where the keys are the file paths and the values are a list where the first
         element is the width and the second is the height of the DICOM image.
     """
-    dimension_information = utils.process_files(
-        image_paths, _get_dicom_image_dimensions_helper, num_processes
-    )
+    dimension_information = utils.process_files(image_paths, _get_dicom_image_dimensions_helper, num_processes)
     value_as_list = {}
     for key, value in dimension_information.items():
         if not value:
@@ -450,9 +425,7 @@ def _get_dicom_image_dimensions_helper(image_path: str) -> dict:
         return {}
 
 
-def get_dicom_image_hashes(
-    image_paths: List[str], num_processes: int = 1
-) -> dict[str, str]:
+def get_dicom_image_hashes(image_paths: List[str], num_processes: int = 1) -> dict[str, str]:
     """
     Gets the hashes of all the pixel data from the dicom files specified in `image_paths`.
 
@@ -465,9 +438,7 @@ def get_dicom_image_hashes(
     -------
         A dictionary where the keys are the file paths and the value is the hash of the pixel data.
     """
-    dimension_information = utils.process_files(
-        image_paths, _get_dicom_image_hashes_helper, num_processes
-    )
+    dimension_information = utils.process_files(image_paths, _get_dicom_image_hashes_helper, num_processes)
     value_as_list = {}
     for key, value in dimension_information.items():
         if not value:
@@ -499,9 +470,7 @@ def _get_dicom_image_hashes_helper(image_path: str) -> dict:
     return {"hash": sha_hash}
 
 
-def get_dicom_image_hashes_wrapper(
-    dirs: List[str], output_path: str, num_processes: int = 1
-):
+def get_dicom_image_hashes_wrapper(dirs: List[str], output_path: str, num_processes: int = 1):
     """
     Wrapper to get the hashes of all the pixel data from the dicom files in "dirs".
 
@@ -521,27 +490,17 @@ def get_dicom_image_hashes_wrapper(
         if value:
             count += 1
 
-    print(
-        f"Successfully computed the hashes of the pixel data from {count} DICOM images"
-    )
+    print(f"Successfully computed the hashes of the pixel data from {count} DICOM images")
 
 
 def parse_args():
     """Create args for command line interface."""
-    parser = argparse.ArgumentParser(
-        description="Process DICOM images and write them as raw images."
-    )
+    parser = argparse.ArgumentParser(description="Process DICOM images and write them as raw images.")
     sub_parsers = parser.add_subparsers(help="Sub-commands", dest="subcommand")
 
-    parser_get_dicom_hashes = sub_parsers.add_parser(
-        "dicom_hashes", help="Get the hashes of the dicom images."
-    )
-    parser_get_dicom_hashes.add_argument(
-        "--dirs", nargs="+", type=str, help="Directories to search DICOM images for."
-    )
-    parser_get_dicom_hashes.add_argument(
-        "--output_path", type=str, help="Where to write the map from paths to hashes."
-    )
+    parser_get_dicom_hashes = sub_parsers.add_parser("dicom_hashes", help="Get the hashes of the dicom images.")
+    parser_get_dicom_hashes.add_argument("--dirs", nargs="+", type=str, help="Directories to search DICOM images for.")
+    parser_get_dicom_hashes.add_argument("--output_path", type=str, help="Where to write the map from paths to hashes.")
     parser_get_dicom_hashes.add_argument(
         "--num_processes",
         type=int,
@@ -549,15 +508,9 @@ def parse_args():
         help="Number of processes to use for parallel processing.",
     )
 
-    parser_get_dicom_sizes = sub_parsers.add_parser(
-        "dicom_sizes", help="Get the sizes of the dicom images."
-    )
-    parser_get_dicom_sizes.add_argument(
-        "--dirs", nargs="+", type=str, help="Directories to search DICOM images for."
-    )
-    parser_get_dicom_sizes.add_argument(
-        "--output_path", type=str, help="Where to write the map from paths to sizes."
-    )
+    parser_get_dicom_sizes = sub_parsers.add_parser("dicom_sizes", help="Get the sizes of the dicom images.")
+    parser_get_dicom_sizes.add_argument("--dirs", nargs="+", type=str, help="Directories to search DICOM images for.")
+    parser_get_dicom_sizes.add_argument("--output_path", type=str, help="Where to write the map from paths to sizes.")
     parser_get_dicom_sizes.add_argument(
         "--num_processes",
         type=int,
@@ -565,12 +518,8 @@ def parse_args():
         help="Number of processes to use for parallel processing.",
     )
 
-    parser_write_subset = sub_parsers.add_parser(
-        "write_subset", help="Write a subset of the DICOM images as PNGs."
-    )
-    parser_write_subset.add_argument(
-        "--dirs", nargs="+", type=str, help="Directories to search DICOM images for."
-    )
+    parser_write_subset = sub_parsers.add_parser("write_subset", help="Write a subset of the DICOM images as PNGs.")
+    parser_write_subset.add_argument("--dirs", nargs="+", type=str, help="Directories to search DICOM images for.")
     parser_write_subset.add_argument(
         "--output_map_path",
         type=str,
@@ -591,9 +540,7 @@ def parse_args():
         type=str,
         help="Path to a json file that maps DICOM images to a hash.",
     )
-    parser_write_subset.add_argument(
-        "--size", type=int, help="Size of the subset to write."
-    )
+    parser_write_subset.add_argument("--size", type=int, help="Size of the subset to write.")
     parser_write_subset.add_argument(
         "--num_subfolders",
         type=int,
@@ -606,22 +553,12 @@ def parse_args():
         default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
         help="Number of processes to use for parallel processing.",
     )
-    parser_write_subset.add_argument(
-        "--seed", type=int, help="Sets random seed", required=False
-    )
-    parser_write_subset.add_argument(
-        "--write_to_null", action="store_true", help="Write all images to null file."
-    )
+    parser_write_subset.add_argument("--seed", type=int, help="Sets random seed", required=False)
+    parser_write_subset.add_argument("--write_to_null", action="store_true", help="Write all images to null file.")
 
-    parser_get_raster_sizes = sub_parsers.add_parser(
-        "raster_sizes", help="Get the sizes of raster images"
-    )
-    parser_get_raster_sizes.add_argument(
-        "--dirs", nargs="+", type=str, help="Directories to search DICOM images for."
-    )
-    parser_get_raster_sizes.add_argument(
-        "--output_path", type=str, help="Where to write the map from paths to sizes."
-    )
+    parser_get_raster_sizes = sub_parsers.add_parser("raster_sizes", help="Get the sizes of raster images")
+    parser_get_raster_sizes.add_argument("--dirs", nargs="+", type=str, help="Directories to search DICOM images for.")
+    parser_get_raster_sizes.add_argument("--output_path", type=str, help="Where to write the map from paths to sizes.")
     parser_get_raster_sizes.add_argument(
         "--num_processes",
         type=int,
@@ -635,17 +572,11 @@ def parse_args():
 def main():
     args = parse_args()
     if args.subcommand == "dicom_hashes":
-        get_dicom_image_hashes_wrapper(
-            args.dirs, args.output_path, num_processes=args.num_processes
-        )
+        get_dicom_image_hashes_wrapper(args.dirs, args.output_path, num_processes=args.num_processes)
     if args.subcommand == "dicom_sizes":
-        get_dicom_image_dimensions_wrapper(
-            args.dirs, args.output_path, num_processes=args.num_processes
-        )
+        get_dicom_image_dimensions_wrapper(args.dirs, args.output_path, num_processes=args.num_processes)
     if args.subcommand == "raster_sizes":
-        get_raster_image_dimensions_wrapper(
-            args.dirs, args.output_path, num_processes=args.num_processes
-        )
+        get_raster_image_dimensions_wrapper(args.dirs, args.output_path, num_processes=args.num_processes)
     if args.subcommand == "write_subset":
         random.seed(args.seed)
         write_subset_wrapper(
