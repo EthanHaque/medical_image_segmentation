@@ -301,7 +301,8 @@ def map_paths_to_dataset(image_paths: List[str]) -> dict[str, str]:
 
     Parameters
     ----------
-    image_paths : List[str] A list of image paths
+    image_paths : List[str]
+        A list of image paths
 
     Returns
     -------
