@@ -1,3 +1,5 @@
+import argparse
+
 import pytorch_lightning as pl
 
 from medical_image_segmentation.train.model.byol_pytorch import BYOL
@@ -7,7 +9,8 @@ from datetime import datetime
 import os
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
+    """Creates and parses command line arguments"""
     parser = ArgumentParser()
     parser.add_argument("--dataset", default="CIFAR10_FFCV", type=str, help="dataset")
     parser.add_argument(
