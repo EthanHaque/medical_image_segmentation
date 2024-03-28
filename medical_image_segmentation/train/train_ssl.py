@@ -10,7 +10,7 @@ import os
 
 
 def parse_args() -> argparse.Namespace:
-    """Creates and parses command line arguments"""
+    """Creates and parses command line arguments."""
     parser = ArgumentParser()
     parser.add_argument("--dataset", default="CIFAR10_FFCV", type=str, help="dataset")
     parser.add_argument(
