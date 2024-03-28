@@ -1,3 +1,4 @@
+"""Train BYOL with PyTorch Lightning."""
 import argparse
 
 import pytorch_lightning as pl
@@ -10,7 +11,7 @@ import os
 
 
 def parse_args() -> argparse.Namespace:
-    """Creates and parses command line arguments."""
+    """Create and parse command line arguments."""
     parser = ArgumentParser()
     parser.add_argument("--dataset", default="CIFAR10_FFCV", type=str, help="dataset")
     parser.add_argument(
@@ -59,7 +60,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main(args):
-    """Main entry point for training with PyTorch Lightning."""
+    """Entry point for training with PyTorch Lightning."""
     logger = pl.loggers.CSVLogger("logs")
 
     model = BYOL(**args.__dict__)
