@@ -1,9 +1,9 @@
-# Adapted from https://github.com/Lightning-Universe/lightning-bolts/blob/748715e50f52c83eb166ce91ebd814cc9ee4f043/src/pl_bolts/optimizers/lars.py#L13
 """
 References
 ----------
     - https://arxiv.org/pdf/1708.03888.pdf
     - https://github.com/pytorch/pytorch/blob/1.6/torch/optim/sgd.py
+    - https://github.com/Lightning-Universe/lightning-bolts/blob/748715e50f52c83eb166ce91ebd814cc9ee4f043/src/pl_bolts/optimizers/lars.py#L13
 """
 
 import torch
@@ -11,51 +11,64 @@ from torch.optim.optimizer import Optimizer, required
 
 
 class LARS(Optimizer):
-    """Extends SGD in PyTorch with LARS scaling from the paper
-    `Large batch training of Convolutional Networks <https://arxiv.org/pdf/1708.03888.pdf>`_.
-    Args:
-        params (iterable): iterable of parameters to optimize or dicts defining
-            parameter groups
-        lr (float): learning rate
-        momentum (float, optional): momentum factor (default: 0)
-        weight_decay (float, optional): weight decay (L2 penalty) (default: 0)
-        dampening (float, optional): dampening for momentum (default: 0)
-        nesterov (bool, optional): enables Nesterov momentum (default: False)
-        trust_coefficient (float, optional): trust coefficient for computing LR (default: 0.001)
-        eps (float, optional): eps for division denominator (default: 1e-8)
+    """
+    Extends SGD in PyTorch with LARS scaling from the paper `Large batch training of Convolutional Networks <https://arxiv.org/pdf/1708.03888.pdf>`.
 
-    Example:
-        >>> model = torch.nn.Linear(10, 1)
-        >>> input = torch.Tensor(10)
-        >>> target = torch.Tensor([1.])
-        >>> loss_fn = lambda input, target: (input - target) ** 2
-        >>> #
-        >>> optimizer = LARS(model.parameters(), lr=0.1, momentum=0.9)
-        >>> optimizer.zero_grad()
-        >>> loss_fn(model(input), target).backward()
-        >>> optimizer.step()
+    Parameters
+    ----------
+    params : iterable
+        Iterable of parameters to optimize or dicts defining parameter groups.
+    lr : float
+        Learning rate.
+    momentum : float, optional
+        Momentum factor.
+    weight_decay : float, optional
+        Weight decay (L2 penalty).
+    dampening : float, optional
+        Dampening for momentum.
+    nesterov : bool, optional
+        Enables Nesterov momentum.
+    trust_coefficient : float, optional
+        Trust coefficient for computing LR.
+    eps : float, optional
+        Eps for division denominator.
 
-    .. note::
-        The application of momentum in the SGD part is modified according to
-        the PyTorch standards. LARS scaling fits into the equation in the
-        following fashion.
 
-        .. math::
-            \begin{aligned}
-                g_{t+1} & = \text{lars_lr} * (\beta * p_{t} + g_{t+1}), \\
-                v_{t+1} & = \\mu * v_{t} + g_{t+1}, \\
-                p_{t+1} & = p_{t} - \text{lr} * v_{t+1},
-            \\end{aligned}
+    Example
+    -------
+    >>> model = torch.nn.Linear(10, 1)
+    >>> input = torch.Tensor(10)
+    >>> target = torch.Tensor([1.])
+    >>> loss_fn = lambda input, target: (input - target) ** 2
+    >>>
+    >>> optimizer = LARS(model.parameters(), lr=0.1, momentum=0.9)
+    >>> optimizer.zero_grad()
+    >>> loss_fn(model(input), target).backward()
+    >>> optimizer.step()
 
-        where :math:`p`, :math:`g`, :math:`v`, :math:`\\mu` and :math:`\beta` denote the
-        parameters, gradient, velocity, momentum, and weight decay respectively.
-        The :math:`lars_lr` is defined by Eq. 6 in the paper.
-        The Nesterov version is analogously modified.
+    Notes
+    -----
+    The application of momentum in the SGD part is modified according to
+    the PyTorch standards. LARS scaling fits into the equation in the
+    following fashion.
 
-    .. warning::
-        Parameters with weight decay set to 0 will automatically be excluded from
-        layer-wise LR scaling. This is to ensure consistency with papers like SimCLR
-        and BYOL.
+    .. math::
+        \begin{aligned}
+            g_{t+1} & = \text{lars_lr} * (\beta * p_{t} + g_{t+1}), \\
+            v_{t+1} & = \mu * v_{t} + g_{t+1}, \\
+            p_{t+1} & = p_{t} - \text{lr} * v_{t+1},
+        \end{aligned}
+
+    where :math:`p`, :math:`g`, :math:`v`, :math:`\mu` and :math:`\beta` denote the
+    parameters, gradient, velocity, momentum, and weight decay respectively.
+    The :math:`lars_lr` is defined by Eq. 6 in the paper.
+    The Nesterov version is analogously modified.
+
+    Warnings
+    --------
+    Parameters with weight decay set to 0 will automatically be excluded from
+    layer-wise LR scaling. This is to ensure consistency with papers like SimCLR
+    and BYOL.
     """
 
     def __init__(
@@ -91,6 +104,7 @@ class LARS(Optimizer):
         super().__init__(params, defaults)
 
     def __setstate__(self, state):
+        """Load state."""
         super().__setstate__(state)
 
         for group in self.param_groups:
@@ -98,12 +112,12 @@ class LARS(Optimizer):
 
     @torch.no_grad()
     def step(self, closure=None):
-        """Performs a single optimization step.
+        """Perform a single optimization step.
 
-        Args:
-            closure (callable, optional): A closure that reevaluates the model
-                and returns the loss.
-
+        Parameters
+        ----------
+        closure: callable, optional
+            A closure that reevaluates the model and returns the loss.
         """
         loss = None
         if closure is not None:
