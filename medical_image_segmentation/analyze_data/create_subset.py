@@ -350,7 +350,8 @@ def _get_raster_image_dimensions_helper(image_path: str) -> dict:
 
     Parameters
     ----------
-    image_path : str The path to the image.
+    image_path : str
+        The path to the image.
 
     Returns
     -------
@@ -368,9 +369,12 @@ def get_raster_image_dimensions_wrapper(dirs: List[str], output_path: str, num_p
 
     Parameters
     ----------
-    dirs : List[str] A list of directory paths to look for raster imagse.
-    output_path : str The path to write the map of image paths to dimensions as JSON.
-    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
+    dirs : List[str]
+        A list of directory paths to look for raster image.
+    output_path : str
+        The path to write the map of image paths to dimensions as JSON.
+    num_processes : int, optional
+        The number of processes to split the tasks among.
     """
     image_paths = utils.get_file_paths(dirs, lambda path: path.endswith(".png"))
     dimensions = get_raster_image_dimensions(image_paths, num_processes)
@@ -391,9 +395,12 @@ def get_dicom_image_dimensions_wrapper(dirs: List[str], output_path: str, num_pr
 
     Parameters
     ----------
-    dirs : List[str] A list of directory paths to look for DICOM images.
-    output_path : str A path where the hashes will be saved as JSON.
-    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
+    dirs : List[str]
+        A list of directory paths to look for DICOM images.
+    output_path : str
+        A path where the hashes will be saved as JSON.
+    num_processes : int, optional
+        The number of processes to split the tasks among.
     """
     image_paths = utils.get_file_paths(dirs, lambda path: path.endswith(".dcm"))
     dimensions = get_dicom_image_dimensions(image_paths, num_processes)
@@ -414,8 +421,10 @@ def get_dicom_image_dimensions(image_paths: List[str], num_processes: int = 1) -
 
     Parameters
     ----------
-    image_paths : List[str] A list of file paths to get the width and height of.
-    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
+    image_paths : List[str]
+        A list of file paths to get the width and height of.
+    num_processes : int, optional
+        The number of processes to split the tasks among.
 
     Returns
     -------
@@ -439,7 +448,8 @@ def _get_dicom_image_dimensions_helper(image_path: str) -> dict:
 
     Parameters
     ----------
-    image_path : str The path to the image.
+    image_path : str
+        The path to the image.
 
     Returns
     -------
@@ -459,8 +469,10 @@ def get_dicom_image_hashes(image_paths: List[str], num_processes: int = 1) -> di
 
     Parameters
     ----------
-    image_paths : List[str] A list of file paths.
-    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
+    image_paths : List[str]
+        A list of file paths.
+    num_processes : int, optional
+        The number of processes to split the tasks among.
 
     Returns
     -------
@@ -482,7 +494,8 @@ def _get_dicom_image_hashes_helper(image_path: str) -> dict:
 
     Parameters
     ----------
-    image_path : str The path to the image.
+    image_path : str
+        The path to the image.
 
     Returns
     -------
@@ -504,9 +517,12 @@ def get_dicom_image_hashes_wrapper(dirs: List[str], output_path: str, num_proces
 
     Parameters
     ----------
-    dirs : List[str] A list of directory paths to look for DICOM images.
-    output_path : str A path where the hashes will be saved as JSON.
-    num_processes : int, optional [default = 1]: The number of processes to split the tasks among.
+    dirs : List[str]
+        A list of directory paths to look for DICOM images.
+    output_path : str
+        A path where the hashes will be saved as JSON.
+    num_processes : int, optional
+        The number of processes to split the tasks among.
     """
     image_paths = utils.get_file_paths(dirs, lambda path: path.endswith(".dcm"))
     hashes = get_dicom_image_hashes(image_paths, num_processes)
