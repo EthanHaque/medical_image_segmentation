@@ -1,4 +1,7 @@
-# Adapted from https://github.com/Lightning-Universe/lightning-bolts/blob/748715e50f52c83eb166ce91ebd814cc9ee4f043/src/pl_bolts/optimizers/lr_scheduler.py#L12
+"""Cosine Annealing scheduler with linear warmups.
+
+Adapted from https://github.com/Lightning-Universe/lightning-bolts/blob/748715e50f52c83eb166ce91ebd814cc9ee4f043/src/pl_bolts/optimizers/lr_scheduler.py#L12
+"""
 
 import math
 import warnings
@@ -9,8 +12,7 @@ from torch.optim.lr_scheduler import _LRScheduler
 
 
 class LinearWarmupCosineAnnealingLR(_LRScheduler):
-    """Sets the learning rate of each parameter group to follow a linear warmup schedule between warmup_start_lr and
-    base_lr followed by a cosine annealing schedule between base_lr and eta_min.
+    """Sets the learning rate of each parameter group to follow a linear warmup schedule between warmup_start_lr and base_lr followed by a cosine annealing schedule between base_lr and eta_min.
 
     .. warning::
         It is recommended to call :func:`.step()` for :class:`LinearWarmupCosineAnnealingLR`
@@ -53,7 +55,8 @@ class LinearWarmupCosineAnnealingLR(_LRScheduler):
         eta_min: float = 0.0,
         last_epoch: int = -1,
     ) -> None:
-        """
+        """Initialize the scheduler.
+
         Parameters
         ----------
         optimizer: torch.optim.Optimizer
@@ -114,7 +117,10 @@ class LinearWarmupCosineAnnealingLR(_LRScheduler):
         ]
 
     def _get_closed_form_lr(self) -> List[float]:
-        """Called when epoch is passed as a param to the `step` function of the scheduler."""
+        """Get an ordered list of learning rates.
+
+        Called when epoch is passed as a param to the `step` function of the scheduler.
+        """
         if self.last_epoch < self.warmup_epochs:
             return [
                 self.warmup_start_lr + self.last_epoch * (base_lr - self.warmup_start_lr) / (self.warmup_epochs - 1)
