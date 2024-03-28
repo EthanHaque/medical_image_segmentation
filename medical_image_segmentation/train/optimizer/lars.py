@@ -1,4 +1,5 @@
-"""
+"""LARS optimizer implementation.
+
 References
 ----------
     - https://arxiv.org/pdf/1708.03888.pdf
@@ -11,7 +12,7 @@ from torch.optim.optimizer import Optimizer, required
 
 
 class LARS(Optimizer):
-    """
+    r"""
     Extends SGD in PyTorch with LARS scaling from the paper `Large batch training of Convolutional Networks <https://arxiv.org/pdf/1708.03888.pdf>`.
 
     Parameters

@@ -1,3 +1,11 @@
+"""BYOL self-supervised learner implementation in PyTorch.
+
+References
+----------
+    - https://github.com/DonkeyShot21/essential-BYOL/tree/main/byol
+"""
+from typing import Tuple, List
+
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
@@ -17,6 +25,7 @@ from torchvision import models
 
 
 class MLP(nn.Module):
+    """Multi-layer perceptron."""
     def __init__(self, input_dim, hidden_dim, output_dim):
         super().__init__()
 
@@ -25,7 +34,8 @@ class MLP(nn.Module):
         self.relu1 = nn.ReLU(inplace=True)
         self.l2 = nn.Linear(hidden_dim, output_dim)
 
-    def forward(self, x):
+    def forward(self, x) -> torch.Tensor:
+        """Forward pass."""
         x = self.l1(x)
         x = self.bn1(x)
         x = self.relu1(x)
@@ -34,6 +44,7 @@ class MLP(nn.Module):
 
 
 class Encoder(nn.Module):
+    """Encodes images into latent space."""
     def __init__(self, arch, hidden_dim, proj_dim, low_res):
         super().__init__()
 
@@ -53,6 +64,7 @@ class Encoder(nn.Module):
 
     @torch.no_grad()
     def _reinit_all_layers(self):
+        """Reinitialize all layers."""
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
@@ -60,13 +72,18 @@ class Encoder(nn.Module):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 
-    def forward(self, x):
+    def forward(self, x) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Forward pass.
+
+        Generates features and projection into latent space."""
         feats = self.encoder(x)
         z = self.projection(feats)
         return z, feats
 
 
 class BYOL(pl.LightningModule):
+    """BYOL learner."""
+
     def __init__(self, **kwargs):
         super().__init__()
         self.save_hyperparameters()
@@ -102,6 +119,7 @@ class BYOL(pl.LightningModule):
 
     @torch.no_grad()
     def initialize_momentum_encoder(self):
+        """Initialize the momentum encoder."""
         params_online = self.online_encoder.parameters()
         params_momentum = self.momentum_encoder.parameters()
         for po, pm in zip(params_online, params_momentum):
@@ -109,6 +127,7 @@ class BYOL(pl.LightningModule):
             pm.requires_grad = False
 
     def collect_params(self, models, exclude_bias_and_bn=True):
+        """Collect parameters from a list of models."""
         param_list = []
         for model in models:
             for name, param in model.named_parameters():
@@ -126,7 +145,8 @@ class BYOL(pl.LightningModule):
                 param_list.append(param_dict)
         return param_list
 
-    def configure_optimizers(self):
+    def configure_optimizers(self) -> Tuple[List[torch.optim.Optimizer], List[torch.optim.lr_scheduler.LRScheduler]]:
+        """Get optimizers and learning rate schedulers for training."""
         params = self.collect_params([self.online_encoder, self.predictor, self.linear])
         optimizer = LARS(
             params,
@@ -143,15 +163,30 @@ class BYOL(pl.LightningModule):
         )
         return [optimizer], [scheduler]
 
-    def forward(self, x):
+    def forward(self, x) -> torch.Tensor:
+        """Forward pass of data through the model."""
         return self.linear(self.online_encoder.encoder(x))
 
-    def cosine_similarity_loss(self, preds, targets):
+    def cosine_similarity_loss(self, preds, targets) -> torch.Tensor:
+        """Cosine similarity loss between two sets of vectors
+
+        Parameters
+        ----------
+        preds: torch.Tensor
+            A vector of batch predictions.
+        targets: torch.Tensor
+            A vector of batch targets.
+
+        Returns
+        -------
+        torch.Tensor
+            Average cosine similarity between p2 normalized predictions and targets.
+        """
         preds = F.normalize(preds, dim=-1, p=2)
         targets = F.normalize(targets, dim=-1, p=2)
         return 2 - 2 * (preds * targets).sum(dim=-1).mean()
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx) -> torch.Tensor:
         view_1 = batch[0]
         labels = batch[1]
         view_2 = batch[2]
