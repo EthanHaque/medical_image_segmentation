@@ -1,4 +1,4 @@
-"""Setup script for package"""
+"""Setup script for package."""
 from setuptools import find_packages, setup
 
 setup(
