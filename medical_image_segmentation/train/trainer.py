@@ -1,3 +1,4 @@
+"""Wrapper class to handle basic training process."""
 from pathlib import Path
 
 import torch
@@ -18,10 +19,12 @@ from accelerate import Accelerator
 
 
 def exists(v):
+    """Check if something exists."""
     return v is not None
 
 
 def cycle(dl):
+    """Get batches from a dataset."""
     while True:
         for batch in dl:
             yield batch
@@ -31,14 +34,18 @@ def cycle(dl):
 
 
 class MockDataset(Dataset):
+    """Dummy dataset which gives random data."""
+
     def __init__(self, image_size, length):
         self.length = length
         self.image_size = image_size
 
     def __len__(self):
+        """Return number of elements in dataset."""
         return self.length
 
     def __getitem__(self, idx):
+        """Return a 3-channel image composed of random data."""
         return torch.randn(3, self.image_size, self.image_size)
 
 
@@ -46,6 +53,8 @@ class MockDataset(Dataset):
 
 
 class BYOLTrainer(Module):
+    """Train wrapper class for BYOL model."""
+
     @beartype
     def __init__(
         self,
@@ -94,12 +103,15 @@ class BYOLTrainer(Module):
         self.register_buffer("step", torch.tensor(0))
 
     def wait(self):
+        """Sync with all processes."""
         return self.accelerator.wait_for_everyone()
 
     def print(self, msg):
+        """Print message to stdout."""
         return self.accelerator.print(msg)
 
     def forward(self):
+        """Perform self.num_train_setps forward passes through data."""
         step = self.step.item()
         data_it = cycle(self.dataloader)
 
