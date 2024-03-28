@@ -59,6 +59,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main(args):
+    """Main entry point for training with PyTorch Lightning."""
     logger = pl.loggers.CSVLogger("logs")
 
     model = BYOL(**args.__dict__)
