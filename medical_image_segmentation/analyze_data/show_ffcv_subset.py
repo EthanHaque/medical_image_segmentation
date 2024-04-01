@@ -44,7 +44,6 @@ def read_and_show_images(beton_file_path: str, num_images: int):
     plt.close()
 
 
-
 def parse_args():
     """Creates args for command line interface"""
     parser = argparse.ArgumentParser(description="Shows images from .beton file.")

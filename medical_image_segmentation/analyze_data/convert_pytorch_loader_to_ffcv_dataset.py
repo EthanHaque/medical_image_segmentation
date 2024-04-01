@@ -28,16 +28,8 @@ def parse_args():
         help="number of workers to load/write images with.",
         default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
     )
-    parser.add_argument(
-        "--test_only",
-        action="store_true",
-        help="Only writes test dataset."
-    )
-    parser.add_argument(
-        "--train_only",
-        action="store_true",
-        help="Only writes train dataset"
-    )
+    parser.add_argument("--test_only", action="store_true", help="Only writes test dataset.")
+    parser.add_argument("--train_only", action="store_true", help="Only writes train dataset")
 
     return parser.parse_args()
 
@@ -66,11 +58,13 @@ def get_cifar100_datasets(num_workers=1):
 
     return trainset, testset
 
+
 def get_nih_x_ray_datasets(num_workers=1):
     csv_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/nih_chest_x_ray_subset_info/original_image_path_to_label.csv"
     testset = ChestXRayDataset(csv_path)
 
     return None, testset
+
 
 def get_imagenet_datasets(num_workers=1):
     trainset = torchvision.datasets.ImageNet(
