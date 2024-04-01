@@ -1,3 +1,5 @@
+import argparse
+
 import matplotlib.pyplot as plt
 from ffcv.loader import Loader
 from ffcv.fields.decoders import SimpleRGBImageDecoder
@@ -34,8 +36,13 @@ def read_and_show_images(beton_file_path: str, num_images: int):
         plt.axis("off")
         plt.show()
 
+def parse_args():
+    """Creates args for command line interface"""
+    parser = argparse.ArgumentParser(description="Shows images from .beton file.")
+    parser.add_argument("--beton_path", type=str, help="Path to the .beton file to show images from.")
+    parser.add_argument("--num_images", type=int, help="Number of images to show.")
+    return parser.parse_args()
 
 if __name__ == "__main__":
-    beton_file_path = "/scratch/gpfs/RUSTOW/med_datasets/ffcv_datasets/test_radiology_1M.beton"  # Update this to your .beton file path
-    num_images = 5  # Number of images to display
-    read_and_show_images(beton_file_path, num_images)
+    args = parse_args()
+    read_and_show_images(args.beton_path, args.num_images)

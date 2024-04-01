@@ -7,5 +7,5 @@ python /scratch/gpfs/eh0560/repos/medical-image-segmentation/medical_image_segme
 --output_file_path /scratch/gpfs/RUSTOW/med_datasets/ffcv_datasets/test_radiology_1M.beton \
 --width 224 \
 --height 224 \
---test
+--test \
 --num_processes 8"
