@@ -47,10 +47,11 @@ def compute_mean_and_std(beton_file_path: str, epsilon=1e-8):
     # Calculate mean and standard deviation
     mean = sum_ / num_pixels
     mean_of_squares = sum_squared / num_pixels
-    print(mean)
+    mean_squared = mean ** 2
+    print(mean_squared)
     print(mean_of_squares)
     epsilon_tensor = torch.tensor(epsilon)
-    std = torch.sqrt((sum_squared / num_pixels - mean ** 2) + epsilon_tensor)
+    std = torch.sqrt((mean_of_squares - mean_squared) + epsilon_tensor)
 
     return mean, std
 
