@@ -5,6 +5,7 @@ import ffcv
 from ffcv.loader import Loader
 from ffcv.fields.decoders import SimpleRGBImageDecoder
 import numpy as np
+import torch
 
 
 def compute_mean_and_std(beton_file_path: str):
@@ -29,17 +30,21 @@ def compute_mean_and_std(beton_file_path: str):
         distributed=False,
     )
 
-    mean = 0
-    nb_samples = 0
-    for batch in loader:
-        images = batch[0]
-        batch_samples = images.size(0)
-        images = images.view(batch_samples, images.size(1), -1)
-        mean += images.mean(2).sum(0)
-        nb_samples += batch_samples
+    cnt = 0
+    fst_moment = torch.empty(3)
+    snd_moment = torch.empty(3)
 
-    mean /= nb_samples
-    print(f"Mean {mean:.4f}")
+    for data in loader:
+        b, c, h, w = data.shape
+        nb_pixels = b * h * w
+        sum_ = torch.sum(data, dim=[0, 2, 3])
+        sum_of_square = torch.sum(data ** 2, dim=[0, 2, 3])
+        fst_moment = (cnt * fst_moment + sum_) / (cnt + nb_pixels)
+        snd_moment = (cnt * snd_moment + sum_of_square) / (cnt + nb_pixels)
+
+        cnt += nb_pixels
+
+    return fst_moment, torch.sqrt(snd_moment - fst_moment ** 2)
 
 
 def parse_args():
@@ -51,4 +56,5 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    compute_mean_and_std(args.beton_path)
+    mean, std = compute_mean_and_std(args.beton_path)
+    print(f"Mean:{mean:.4f}, Std:{std:.4f}")
