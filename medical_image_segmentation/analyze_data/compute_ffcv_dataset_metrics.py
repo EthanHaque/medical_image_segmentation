@@ -9,7 +9,7 @@ import torch
 from tqdm import tqdm
 
 
-def compute_mean_and_std(beton_file_path: str, epsilon=1e-8):
+def compute_mean_and_std(beton_file_path: str):
     """
     Reads images from a .beton file and computes the mean and standard deviation.
 
@@ -17,8 +17,6 @@ def compute_mean_and_std(beton_file_path: str, epsilon=1e-8):
     ----------
     beton_file_path : str
         The path to the .beton file.
-    epsilon : float, optional
-        Small value to ensure that computations behave well.
     """
     # Define the loader with the appropriate transforms
     order = ffcv.loader.OrderOption.SEQUENTIAL
@@ -39,7 +37,7 @@ def compute_mean_and_std(beton_file_path: str, epsilon=1e-8):
 
     # Iterate through the DataLoader
     for batch in tqdm(loader):
-        images = batch[0]
+        images = batch[0].to(torch.float64)
         sum_ += torch.sum(images, dim=[0, 2, 3])  # Sum over batch, height, and width
         sum_squared += torch.sum(images ** 2, dim=[0, 2, 3])
         num_pixels += images.size(0) * images.size(2) * images.size(3)  # Batch size * Height * Width
@@ -50,8 +48,7 @@ def compute_mean_and_std(beton_file_path: str, epsilon=1e-8):
     mean = sum_ / num_pixels
     mean_of_squares = sum_squared / num_pixels
     mean_squared = mean ** 2
-    epsilon_tensor = torch.tensor(epsilon)
-    std = torch.sqrt((mean_of_squares - mean_squared) + epsilon_tensor)
+    std = torch.sqrt(mean_of_squares - mean_squared)
 
     return mean, std
 
