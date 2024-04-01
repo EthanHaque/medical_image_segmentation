@@ -1,6 +1,6 @@
 import os
 
-from ffcv.fields import NDArrayField
+from ffcv.fields import RGBImageField
 from ffcv.writer import DatasetWriter
 
 import argparse
@@ -55,8 +55,10 @@ class DICOMImageDataset:
         arr_max = image_arr.max()
         image_arr = ((image_arr - arr_min) / (arr_max - arr_min)).astype(np.float32)
 
+        image_arr_rgb = np.stack((image_arr,) * 3, axis=-1)
+
         # wrapping in tuple so that return value has correct shape (size 1).
-        return (image_arr,)
+        return (image_arr_rgb,)
 
     def __len__(self):
         return len(self.image_paths)
@@ -92,10 +94,11 @@ def main():
         image_paths = image_paths[:100]
 
     resize_dimensions = (args.height, args.width)
+    max_resolution = max(resize_dimensions)
 
     writer = DatasetWriter(
         args.output_file_path,
-        {"image": NDArrayField(shape=resize_dimensions, dtype=np.dtype("float32"))},
+        {"image": RGBImageField(max_resolution=max_resolution)},
         num_workers=args.num_processes,
     )
 

@@ -5,6 +5,6 @@ conda activate ffcv-ssl; \
 python /scratch/gpfs/eh0560/repos/medical-image-segmentation/medical_image_segmentation/analyze_data/create_ffcv_subset.py \
 --original_to_new_map_path /scratch/gpfs/eh0560/repos/medical-image-segmentation/data/subset_info/original_to_new_map.json \
 --output_file_path /scratch/gpfs/RUSTOW/med_datasets/ffcv_datasets/radiology_1M.beton \
---width 256 \
---height 256 \
+--width 224 \
+--height 224 \
 --num_processes 8"
