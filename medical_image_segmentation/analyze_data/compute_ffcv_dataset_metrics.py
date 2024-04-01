@@ -25,7 +25,7 @@ def compute_mean_and_std(beton_file_path: str):
         order=order,
         os_cache=True,
         drop_last=False,
-        pipelines={"image": [SimpleRGBImageDecoder()]},
+        pipelines={"image": [SimpleRGBImageDecoder(), ffcv.transforms.ToTensor()]},
         distributed=False,
     )
 
