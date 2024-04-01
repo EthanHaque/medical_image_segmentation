@@ -56,6 +56,7 @@ class DICOMImageDataset:
         image_arr = ((image_arr - arr_min) / (arr_max - arr_min)).astype(np.float32)
 
         image_arr_rgb = np.stack((image_arr,) * 3, axis=-1)
+        image_arr_rgb = (image_arr_rgb * 255).astype(np.uint8)
 
         # wrapping in tuple so that return value has correct shape (size 1).
         return (image_arr_rgb,)
