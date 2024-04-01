@@ -6,6 +6,7 @@ from ffcv.loader import Loader
 from ffcv.fields.decoders import SimpleRGBImageDecoder
 import numpy as np
 import torch
+from tqdm import tqdm
 
 
 def compute_mean_and_std(beton_file_path: str):
@@ -35,7 +36,7 @@ def compute_mean_and_std(beton_file_path: str):
     num_pixels = 0
 
     # Iterate through the DataLoader
-    for batch in loader:
+    for batch in tqdm(loader):
         images = batch[0]
         sum_ += torch.sum(images, dim=[0, 2, 3])  # Sum over batch, height, and width
         sum_squared += torch.sum(images ** 2, dim=[0, 2, 3])
