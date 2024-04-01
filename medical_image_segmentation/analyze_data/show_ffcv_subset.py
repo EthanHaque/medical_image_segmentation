@@ -1,8 +1,10 @@
 import argparse
 
 import matplotlib.pyplot as plt
+import ffcv
 from ffcv.loader import Loader
 from ffcv.fields.decoders import SimpleRGBImageDecoder
+import numpy as np
 
 
 def read_and_show_images(beton_file_path: str, num_images: int):
@@ -17,21 +19,29 @@ def read_and_show_images(beton_file_path: str, num_images: int):
         The number of images to display.
     """
     # Define the loader with the appropriate transforms
+    order = ffcv.loader.OrderOption.SEQUENTIAL
     loader = Loader(
         beton_file_path,
         batch_size=1,
-        num_workers=0,
-        order="sequential",
+        num_workers=1,
+        order=order,
+        os_cache=True,
+        drop_last=False,
         pipelines={"image": [SimpleRGBImageDecoder()]},
         distributed=False,
     )
 
     # Iterate over the loader and display the images
+    images = []
     for i, batch in enumerate(loader):
         if i >= num_images:
             break
-        image = batch["image"].numpy().squeeze().transpose(1, 2, 0)
-        plt.imshow(image)
+        image = batch[0]
+        image = np.squeeze(image)
+        images.append(image)
+
+    for i, im in enumerate(images):
+        plt.imshow(im)
         plt.title(f"Image {i + 1}")
         plt.axis("off")
         plt.show()
