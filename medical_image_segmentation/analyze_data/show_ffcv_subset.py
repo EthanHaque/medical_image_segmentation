@@ -1,10 +1,13 @@
 import argparse
 
+import math
 import matplotlib.pyplot as plt
 import ffcv
 from ffcv.loader import Loader
-from ffcv.fields.decoders import SimpleRGBImageDecoder
+from ffcv.fields.decoders import SimpleRGBImageDecoder, IntDecoder
+from ffcv.transforms import ToTensor, ToTorchImage
 import numpy as np
+import torchvision.utils as vutils
 
 
 def read_and_show_images(beton_file_path: str, num_images: int):
@@ -22,29 +25,24 @@ def read_and_show_images(beton_file_path: str, num_images: int):
     order = ffcv.loader.OrderOption.SEQUENTIAL
     loader = Loader(
         beton_file_path,
-        batch_size=1,
+        batch_size=num_images,
         num_workers=1,
         order=order,
         os_cache=True,
         drop_last=False,
-        pipelines={"image": [SimpleRGBImageDecoder()]},
+        pipelines={"image": [SimpleRGBImageDecoder(), ToTensor(), ToTorchImage()], "label": [IntDecoder()]},
         distributed=False,
     )
+    grid_size = math.ceil(math.sqrt(num_images))
+    images, labels = next(iter(loader))
+    grid = vutils.make_grid(images)
+    grid_np = grid.numpy().transpose((1, 2, 0))
+    plt.figure(figsize=(grid_size * 2, grid_size * 2))
+    plt.imshow(grid_np)
+    plt.axis("off")
+    plt.savefig("/bind_tmp/image_grid.png")
+    plt.close()
 
-    # Iterate over the loader and display the images
-    images = []
-    for i, batch in enumerate(loader):
-        if i >= num_images:
-            break
-        image = batch[0]
-        image = np.squeeze(image)
-        images.append(image)
-
-    for i, im in enumerate(images):
-        plt.imshow(im)
-        plt.title(f"Image {i + 1}")
-        plt.axis("off")
-        plt.show()
 
 
 def parse_args():
