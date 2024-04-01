@@ -58,4 +58,4 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     mean, std = compute_mean_and_std(args.beton_path)
-    print(f"Mean:{mean:.4f}, Std:{std:.4f}")
+    print(f"Mean:{mean}, Std:{std}")
