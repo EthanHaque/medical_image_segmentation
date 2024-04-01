@@ -4,6 +4,7 @@ References
 ----------
     - https://github.com/DonkeyShot21/essential-BYOL/tree/main/byol
 """
+
 from typing import Tuple, List
 
 import torch
@@ -211,11 +212,31 @@ class BYOL(pl.LightningModule):
         loss_linear = F.cross_entropy(preds_linear, labels.repeat(2))
 
         # gather results and log stats
-        loss_log = {"loss": loss, "loss_linear": loss_linear, }
-        hparam_log = {"lr": self.trainer.optimizers[0].param_groups[0]["lr"], "momentum": self.current_momentum, }
+        loss_log = {
+            "loss": loss,
+            "loss_linear": loss_linear,
+        }
+        hparam_log = {
+            "lr": self.trainer.optimizers[0].param_groups[0]["lr"],
+            "momentum": self.current_momentum,
+        }
 
-        self.log_dict(loss_log, on_step=False, on_epoch=True, sync_dist=True, prog_bar=True, logger=True, )
-        self.log_dict(hparam_log, on_step=False, on_epoch=True, sync_dist=True, prog_bar=False, logger=True, )
+        self.log_dict(
+            loss_log,
+            on_step=False,
+            on_epoch=True,
+            sync_dist=True,
+            prog_bar=True,
+            logger=True,
+        )
+        self.log_dict(
+            hparam_log,
+            on_step=False,
+            on_epoch=True,
+            sync_dist=True,
+            prog_bar=False,
+            logger=True,
+        )
 
         return loss + loss_linear * self.hparams.linear_loss_weight
 
@@ -225,10 +246,10 @@ class BYOL(pl.LightningModule):
         # update momentum value
         max_steps = len(self.trainer.train_dataloader) * self.trainer.max_epochs
         self.current_momentum = (
-                self.hparams.final_momentum
-                - (self.hparams.final_momentum - self.hparams.base_momentum)
-                * (math.cos(math.pi * self.trainer.global_step / max_steps) + 1)
-                / 2
+            self.hparams.final_momentum
+            - (self.hparams.final_momentum - self.hparams.base_momentum)
+            * (math.cos(math.pi * self.trainer.global_step / max_steps) + 1)
+            / 2
         )
 
     def train_dataloader(self):

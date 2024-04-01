@@ -1,4 +1,5 @@
 """Tests for medical_image_segmentation.analyze_data.utils."""
+
 import time
 import unittest
 

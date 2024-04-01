@@ -197,7 +197,7 @@ class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
             (112, 112),
             num_workers,
             device,
-            use_distributed
+            use_distributed,
         )
 
 

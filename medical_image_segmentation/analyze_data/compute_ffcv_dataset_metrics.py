@@ -39,7 +39,7 @@ def compute_mean_and_std(beton_file_path: str):
     for batch in tqdm(loader):
         images = batch[0].to(torch.float64)
         sum_ += torch.sum(images, dim=[0, 2, 3])  # Sum over batch, height, and width
-        sum_squared += torch.sum(images ** 2, dim=[0, 2, 3])
+        sum_squared += torch.sum(images**2, dim=[0, 2, 3])
         num_pixels += images.size(0) * images.size(2) * images.size(3)  # Batch size * Height * Width
 
     print(sum_)
@@ -47,7 +47,7 @@ def compute_mean_and_std(beton_file_path: str):
     # Calculate mean and standard deviation
     mean = sum_ / num_pixels
     mean_of_squares = sum_squared / num_pixels
-    mean_squared = mean ** 2
+    mean_squared = mean**2
     std = torch.sqrt(mean_of_squares - mean_squared)
 
     return mean, std

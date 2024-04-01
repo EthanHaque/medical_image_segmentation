@@ -46,12 +46,14 @@ def read_and_show_images(beton_file_path: str, num_images: int):
         plt.axis("off")
         plt.show()
 
+
 def parse_args():
     """Creates args for command line interface"""
     parser = argparse.ArgumentParser(description="Shows images from .beton file.")
     parser.add_argument("--beton_path", type=str, help="Path to the .beton file to show images from.")
     parser.add_argument("--num_images", type=int, help="Number of images to show.")
     return parser.parse_args()
+
 
 if __name__ == "__main__":
     args = parse_args()

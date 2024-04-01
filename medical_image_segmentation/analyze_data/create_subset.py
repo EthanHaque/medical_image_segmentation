@@ -250,7 +250,7 @@ def pick_possible_images(
 ) -> List[str]:
     """Determines which file paths from the images could potentially be used to create a subset of data. Excludes
     duplicate images and images whose dimensions are too big or small.
-    
+
     Parameters
     ----------
     image_paths : List[str]

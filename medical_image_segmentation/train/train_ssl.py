@@ -1,4 +1,5 @@
 """Train BYOL with PyTorch Lightning."""
+
 import argparse
 
 import pytorch_lightning as pl
@@ -82,7 +83,7 @@ def main(args):
         logger=logger,
         log_every_n_steps=1,
         check_val_every_n_epoch=1,
-        callbacks=callbacks
+        callbacks=callbacks,
     )
     trainer.fit(model)
 

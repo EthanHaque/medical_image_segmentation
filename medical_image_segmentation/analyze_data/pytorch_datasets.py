@@ -10,7 +10,6 @@ from torch.utils.data import DataLoader
 import os
 
 
-
 class ChestXRayDataset(Dataset):
     """
     A PyTorch dataset for chest X-ray images.
@@ -47,7 +46,7 @@ class ChestXRayDataset(Dataset):
 
     def _create_label_encoding(self) -> Dict[str, int]:
         """Creates a dictionary mapping labels to integers."""
-        labels = self.data_frame['label'].unique()
+        labels = self.data_frame["label"].unique()
         return {label: idx for idx, label in enumerate(labels)}
 
     def __len__(self) -> int:
@@ -69,7 +68,7 @@ class ChestXRayDataset(Dataset):
             A tuple containing the image as a torch.Tensor and its label as an integer.
         """
         img_path = self.data_frame.iloc[index, 1]
-        image = Image.open(img_path).convert('RGB')
+        image = Image.open(img_path).convert("RGB")
         label = self.data_frame.iloc[index, 0]
         label_encoded = self.label_encoding[label]
 
@@ -79,7 +78,9 @@ class ChestXRayDataset(Dataset):
         return image, label_encoded
 
 
-def save_image_grid(images: torch.Tensor, labels: torch.Tensor, label_mapping: Dict[int, str], save_dir: str, grid_size: int = 3):
+def save_image_grid(
+    images: torch.Tensor, labels: torch.Tensor, label_mapping: Dict[int, str], save_dir: str, grid_size: int = 3
+):
     """
     Saves a grid of images with their labels to a specified directory.
 
@@ -101,8 +102,8 @@ def save_image_grid(images: torch.Tensor, labels: torch.Tensor, label_mapping: D
     grid_np = grid.numpy().transpose((1, 2, 0))
     plt.figure(figsize=(grid_size * 2, grid_size * 2))
     plt.imshow(grid_np)
-    plt.axis('off')
-    plt.savefig(os.path.join(save_dir, 'image_grid.png'))
+    plt.axis("off")
+    plt.savefig(os.path.join(save_dir, "image_grid.png"))
     plt.close()
 
 
@@ -139,12 +140,10 @@ def print_batch_stats(images: torch.Tensor, labels: torch.Tensor, label_mapping:
     dtype = images.dtype
     print(f"Data type: {dtype}")
 
+
 # Example usage
 if __name__ == "__main__":
-    transform = transforms.Compose([
-        transforms.Resize((128, 128)),
-        transforms.ToTensor()
-    ])
+    transform = transforms.Compose([transforms.Resize((128, 128)), transforms.ToTensor()])
     csv_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/nih_chest_x_ray_subset_info/original_image_path_to_label.csv"
     dataset = ChestXRayDataset(csv_file=csv_path, transform=transform)
     dataloader = DataLoader(dataset, batch_size=9, shuffle=True)
