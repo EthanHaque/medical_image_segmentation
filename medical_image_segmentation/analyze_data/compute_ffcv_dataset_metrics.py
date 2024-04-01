@@ -33,23 +33,23 @@ def compute_mean_and_std(beton_file_path: str, epsilon=1e-8):
         distributed=False,
     )
 
-    sum_ = torch.tensor([0, 0, 0], dtype=torch.int64)
-    sum_squared = torch.tensor([0, 0, 0], dtype=torch.int64)
+    sum_ = 0
+    sum_squared = 0
     num_pixels = 0
 
     # Iterate through the DataLoader
     for batch in tqdm(loader):
         images = batch[0]
-        sum_ += torch.sum(images, dim=[0, 2, 3]).to(torch.int64)  # Convert to int64 to prevent overflow
-        sum_squared += torch.sum(images ** 2, dim=[0, 2, 3]).to(torch.int64)  # Convert to int64 to prevent overflow
+        sum_ += torch.sum(images, dim=[0, 2, 3])  # Sum over batch, height, and width
+        sum_squared += torch.sum(images ** 2, dim=[0, 2, 3])
         num_pixels += images.size(0) * images.size(2) * images.size(3)  # Batch size * Height * Width
 
+    print(sum_)
+    print(sum_squared)
     # Calculate mean and standard deviation
     mean = sum_ / num_pixels
     mean_of_squares = sum_squared / num_pixels
     mean_squared = mean ** 2
-    print(mean_squared)
-    print(mean_of_squares)
     epsilon_tensor = torch.tensor(epsilon)
     std = torch.sqrt((mean_of_squares - mean_squared) + epsilon_tensor)
 
