@@ -40,8 +40,6 @@ def compute_mean_and_std(beton_file_path: str):
         sum_squared += torch.sum(images**2, dim=[0, 2, 3])
         num_pixels += images.size(0) * images.size(2) * images.size(3)  # Batch size * Height * Width
 
-    print(sum_)
-    print(sum_squared)
     # Calculate mean and standard deviation
     mean = sum_ / num_pixels
     mean_of_squares = sum_squared / num_pixels
