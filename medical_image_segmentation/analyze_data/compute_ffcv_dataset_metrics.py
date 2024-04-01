@@ -40,11 +40,9 @@ def compute_mean_and_std(beton_file_path: str, epsilon=1e-8):
     # Iterate through the DataLoader
     for batch in tqdm(loader):
         images = batch[0]
-        if torch.any(torch.isnan(images)) or torch.any(torch.isinf(images)):
-            print("Found NaN or Inf values in the images. Skipping this batch.")
-            continue
         sum_ += torch.sum(images, dim=[0, 2, 3])  # Sum over batch, height, and width
         sum_squared += torch.sum(images ** 2, dim=[0, 2, 3])
+        print(sum, sum_squared)
         num_pixels += images.size(0) * images.size(2) * images.size(3)  # Batch size * Height * Width
 
     # Calculate mean and standard deviation
