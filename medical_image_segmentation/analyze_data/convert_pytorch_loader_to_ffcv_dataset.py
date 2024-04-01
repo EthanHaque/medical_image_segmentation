@@ -3,6 +3,7 @@ from ffcv.fields import RGBImageField, IntField
 import os
 import argparse
 import torchvision
+from medical_image_segmentation.analyze_data.pytorch_datasets import ChestXRayDataset
 
 
 def parse_args():
@@ -26,6 +27,16 @@ def parse_args():
         type=int,
         help="number of workers to load/write images with.",
         default=int(os.environ.get("SLURM_CPUS_ON_NODE", "1")),
+    )
+    parser.add_argument(
+        "--test_only",
+        action="store_true",
+        help="Only writes test dataset."
+    )
+    parser.add_argument(
+        "--train_only",
+        action="store_true",
+        help="Only writes train dataset"
     )
 
     return parser.parse_args()
@@ -54,6 +65,9 @@ def get_cifar100_datasets(num_workers=1):
 
     return trainset, testset
 
+def get_nih_x_ray_datasets(num_workers=1):
+    csv_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/nih_chest_x_ray_subset_info/original_image_path_to_label.csv"
+    trainset = ChestXRayDataset
 
 def get_imagenet_datasets(num_workers=1):
     trainset = torchvision.datasets.ImageNet(
@@ -78,18 +92,22 @@ def create_writer(output_path, max_resolution):
 
 def main():
     args = parse_args()
-
-    train_dataset, test_dataset = get_dataset(args.dataset_name, args.num_workers)
-    train_output_path = os.path.join(args.output_dir, f"{args.dataset_name}_{args.max_resolution}_train.beton")
-    test_output_path = os.path.join(args.output_dir, f"{args.dataset_name}_{args.max_resolution}_test.beton")
+    if args.test_only and args.train_only:
+        raise ValueError("Cannot have both train_only and test_only")
 
     os.makedirs(args.output_dir, exist_ok=True)
 
-    train_writer = create_writer(train_output_path, args.max_resolution)
-    train_writer.from_indexed_dataset(train_dataset)
+    train_dataset, test_dataset = get_dataset(args.dataset_name, args.num_workers)
 
-    test_writer = create_writer(test_output_path, args.max_resolution)
-    test_writer.from_indexed_dataset(test_dataset)
+    if not args.test_only:
+        train_output_path = os.path.join(args.output_dir, f"{args.dataset_name}_{args.max_resolution}_train.beton")
+        train_writer = create_writer(train_output_path, args.max_resolution)
+        train_writer.from_indexed_dataset(train_dataset)
+
+    if not args.train_only:
+        test_output_path = os.path.join(args.output_dir, f"{args.dataset_name}_{args.max_resolution}_test.beton")
+        test_writer = create_writer(test_output_path, args.max_resolution)
+        test_writer.from_indexed_dataset(test_dataset)
 
 
 if __name__ == "__main__":
