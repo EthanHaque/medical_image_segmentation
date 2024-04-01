@@ -1,0 +1,155 @@
+import pandas as pd
+import torch
+from torch.utils.data import Dataset
+from PIL import Image
+from typing import Tuple, Dict
+import matplotlib.pyplot as plt
+import torchvision.transforms as transforms
+import torchvision.utils as vutils
+from torch.utils.data import DataLoader
+import os
+
+
+
+class ChestXRayDataset(Dataset):
+    """
+    A PyTorch dataset for chest X-ray images.
+
+    Attributes
+    ----------
+    data_frame : pd.DataFrame
+        A DataFrame containing the labels and image paths.
+    transform : torchvision.transforms.Compose
+        A composition of transformations to apply to the images.
+    label_encoding : Dict[str, int]
+        A dictionary mapping labels to integers.
+
+    Methods
+    -------
+    __len__() -> int
+        Returns the number of samples in the dataset.
+    __getitem__(index: int) -> Tuple[torch.Tensor, int]
+        Returns the image and its label (as an integer) at the specified index.
+    """
+
+    def __init__(self, csv_file: str, transform=None):
+        """
+        Parameters
+        ----------
+        csv_file : str
+            The path to the CSV file containing the labels and image paths.
+        transform : torchvision.transforms.Compose, optional
+            A composition of transformations to apply to the images (default is None).
+        """
+        self.data_frame = pd.read_csv(csv_file)
+        self.transform = transform
+        self.label_encoding = self._create_label_encoding()
+
+    def _create_label_encoding(self) -> Dict[str, int]:
+        """Creates a dictionary mapping labels to integers."""
+        labels = self.data_frame['label'].unique()
+        return {label: idx for idx, label in enumerate(labels)}
+
+    def __len__(self) -> int:
+        """Returns the number of samples in the dataset."""
+        return len(self.data_frame)
+
+    def __getitem__(self, index: int) -> Tuple[torch.Tensor, int]:
+        """
+        Returns the image and its label (as an integer) at the specified index.
+
+        Parameters
+        ----------
+        index : int
+            The index of the sample to retrieve.
+
+        Returns
+        -------
+        Tuple[torch.Tensor, int]
+            A tuple containing the image as a torch.Tensor and its label as an integer.
+        """
+        img_path = self.data_frame.iloc[index, 1]
+        image = Image.open(img_path).convert('RGB')
+        label = self.data_frame.iloc[index, 0]
+        label_encoded = self.label_encoding[label]
+
+        if self.transform:
+            image = self.transform(image)
+
+        return image, label_encoded
+
+
+def save_image_grid(images: torch.Tensor, labels: torch.Tensor, label_mapping: Dict[int, str], save_dir: str, grid_size: int = 3):
+    """
+    Saves a grid of images with their labels to a specified directory.
+
+    Parameters
+    ----------
+    images : torch.Tensor
+        A tensor containing the images to save in a grid.
+    labels : torch.Tensor
+        A tensor containing the labels corresponding to the images.
+    label_mapping : Dict[int, str]
+        A dictionary mapping integer labels back to their string representations.
+    save_dir : str
+        The directory where the image grid will be saved.
+    grid_size : int, optional
+        The number of images per row in the grid (default is 3).
+    """
+    os.makedirs(save_dir, exist_ok=True)
+    grid = vutils.make_grid(images, nrow=grid_size, padding=2, normalize=True)
+    grid_np = grid.numpy().transpose((1, 2, 0))
+    plt.figure(figsize=(grid_size * 2, grid_size * 2))
+    plt.imshow(grid_np)
+    plt.axis('off')
+    plt.savefig(os.path.join(save_dir, 'image_grid.png'))
+    plt.close()
+
+
+def print_batch_stats(images: torch.Tensor, labels: torch.Tensor, label_mapping: Dict[int, str]):
+    """
+    Prints statistics about a batch of images and labels.
+
+    Parameters
+    ----------
+    images : torch.Tensor
+        A tensor containing the images in the batch.
+    labels : torch.Tensor
+        A tensor containing the labels corresponding to the images in the batch.
+    label_mapping : Dict[int, str]
+        A dictionary mapping integer labels back to their string representations.
+    """
+    print(f"Batch size: {len(images)}")
+
+    label_counts = {label_mapping[label.item()]: (labels == label).sum().item() for label in labels.unique()}
+    print("Label distribution:")
+    for label, count in label_counts.items():
+        print(f"  {label}: {count}")
+
+    mean = images.mean(dim=[0, 2, 3])
+    std = images.std(dim=[0, 2, 3])
+    print(f"Mean pixel values (RGB): {mean.tolist()}")
+    print(f"Standard deviation of pixel values (RGB): {std.tolist()}")
+
+    max_value = images.max().item()
+    min_value = images.min().item()
+    print(f"Max pixel value: {max_value}")
+    print(f"Min pixel value: {min_value}")
+
+    dtype = images.dtype
+    print(f"Data type: {dtype}")
+
+# Example usage
+if __name__ == "__main__":
+    transform = transforms.Compose([
+        transforms.Resize((128, 128)),
+        transforms.ToTensor()
+    ])
+    csv_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/nih_chest_x_ray_subset_info/original_image_path_to_label.csv"
+    dataset = ChestXRayDataset(csv_file=csv_path, transform=transform)
+    dataloader = DataLoader(dataset, batch_size=9, shuffle=True)
+
+    images, labels = next(iter(dataloader))
+    label_mapping = {v: k for k, v in dataset.label_encoding.items()}
+    save_image_grid(images, labels, label_mapping, save_dir="/tmp")
+    print_batch_stats(images, labels, label_mapping)
