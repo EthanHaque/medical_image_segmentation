@@ -1,10 +1,8 @@
 import argparse
 
-import matplotlib.pyplot as plt
 import ffcv
 from ffcv.loader import Loader
 from ffcv.fields.decoders import SimpleRGBImageDecoder
-import numpy as np
 import torch
 from tqdm import tqdm
 
