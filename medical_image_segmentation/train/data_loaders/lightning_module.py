@@ -189,6 +189,7 @@ class RGBFFCVDataModule(LightningDataModule):
 
 @register_datamodule("RADIOLOGY_1M_FFCV")
 class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
+    NUM_CLASSES = 10
     def __init__(self, batch_size, num_workers, device, use_distributed, test_dataset, **kwargs):
         super().__init__(
             "/scratch/gpfs/RUSTOW/med_datasets/ffcv_datasets/radiology_1M.beton",
@@ -200,7 +201,69 @@ class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
             use_distributed,
         )
 
-    def
+    def num_classes(self):
+        return self.NUM_CLASSES
+
+    def train_dataloader(self):
+        image_pipeline_1, image_pipeline_2 = BYOLRGBFFCVDataTransforms(
+            device=self.device, crop_size=self.image_size, mean=self.mean, std=self.std
+        ).get_transforms()
+
+        pipelines = {
+            "image": image_pipeline_1,
+            "image_1": image_pipeline_2,
+        }
+        custom_field_mapper = {"image_1": "image"}
+
+        order = ffcv.loader.OrderOption.QUASI_RANDOM if self.use_distributed else ffcv.loader.OrderOption.RANDOM
+        loader = ffcv.loader.Loader(
+            self.train_path,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            order=order,
+            os_cache=True,
+            drop_last=True,
+            pipelines=pipelines,
+            custom_field_mapper=custom_field_mapper,
+        )
+        return loader
+
+    def val_dataloader(self):
+        mean = (126.57, 126.57, 126.57)
+        std = (63.46, 63.46, 63.46)
+
+        image_pipeline = [
+            SimpleRGBImageDecoder(),
+            ffcv.transforms.ToTensor(),
+            ffcv.transforms.ToDevice(self.device, non_blocking=True),
+            ffcv.transforms.ToTorchImage(),
+            ffcv.transforms.Convert(torch.float32),
+            torchvision.transforms.Normalize(mean, std),
+        ]
+
+        label_pipeline = [
+            IntDecoder(),
+            ffcv.transforms.ToTensor(),
+            ffcv.transforms.Squeeze(),
+        ]
+
+        pipelines = {
+            "image": image_pipeline,
+            "label": label_pipeline,
+        }
+
+        order = ffcv.loader.OrderOption.SEQUENTIAL
+        loader = ffcv.loader.Loader(
+            self.test_path,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            order=order,
+            os_cache=True,
+            drop_last=False,
+            pipelines=pipelines,
+        )
+        return loader
+
 
 
 @register_datamodule("CIFAR100_FFCV")

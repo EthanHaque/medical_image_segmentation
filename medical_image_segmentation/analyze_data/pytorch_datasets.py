@@ -8,6 +8,7 @@ import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torch.utils.data import DataLoader
 import os
+from medical_image_segmentation.analyze_data.utils import get_file_paths
 
 
 class ChestXRayDataset(Dataset):
@@ -78,6 +79,67 @@ class ChestXRayDataset(Dataset):
         return image, label_encoded
 
 
+class Radiology1MDataset(Dataset):
+    """
+    A PyTorch dataset for radiological images.
+
+    Attributes
+    ----------
+    data_root: str
+        Root directory where all .png images are located.
+    file_paths: List[str]
+        List of file paths to all .png images in the dataset.
+    transform : torchvision.transforms.Compose
+        A composition of transformations to apply to the images.
+
+    Methods
+    -------
+    __len__() -> int
+        Returns the number of samples in the dataset.
+    __getitem__(index: int) -> Tuple[torch.Tensor]
+        Returns the image inside a tuple.
+    """
+
+    def __init__(self, data_root: str, transform=None):
+        """
+        Parameters
+        ----------
+        data_root : str
+            Path where all .png images are located.
+        transform : torchvision.transforms.Compose, optional
+            A composition of transformations to apply to the images (default is None).
+        """
+        self.data_root = data_root
+        self.file_paths = get_file_paths(data_root, lambda x: x.endswith(".png"))
+        self.transform = transform
+
+    def __len__(self) -> int:
+        """Returns the number of samples in the dataset."""
+        return len(self.file_paths)
+
+    def __getitem__(self, index: int) -> Tuple[torch.Tensor,]:
+        """
+        Returns the image and its label (as an integer) at the specified index.
+
+        Parameters
+        ----------
+        index : int
+            The index of the sample to retrieve.
+
+        Returns
+        -------
+        Tuple[torch.Tensor, int]
+            A tuple containing the image as a torch.Tensor and its label as an integer.
+        """
+        img_path = self.file_paths[index]
+        image = Image.open(img_path).convert("RGB")
+
+        if self.transform:
+            image = self.transform(image)
+
+        return (image,)
+
+
 def save_image_grid(
     images: torch.Tensor, labels: torch.Tensor, label_mapping: Dict[int, str], save_dir: str, grid_size: int = 3
 ):
@@ -144,8 +206,8 @@ def print_batch_stats(images: torch.Tensor, labels: torch.Tensor, label_mapping:
 # Example usage
 if __name__ == "__main__":
     transform = transforms.Compose([transforms.Resize((128, 128)), transforms.ToTensor()])
-    csv_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/nih_chest_x_ray_subset_info/original_image_path_to_label.csv"
-    dataset = ChestXRayDataset(csv_file=csv_path, transform=transform)
+    # csv_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/nih_chest_x_ray_subset_info/original_image_path_to_label.csv"
+    # dataset = ChestXRayDataset(csv_file=csv_path, transform=transform)
     dataloader = DataLoader(dataset, batch_size=9, shuffle=True)
 
     images, labels = next(iter(dataloader))
