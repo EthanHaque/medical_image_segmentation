@@ -200,6 +200,8 @@ class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
             use_distributed,
         )
 
+    def
+
 
 @register_datamodule("CIFAR100_FFCV")
 class CIFAR100FFCVDataModule(RGBFFCVDataModule):

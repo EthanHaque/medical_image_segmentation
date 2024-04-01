@@ -2,7 +2,7 @@ import argparse
 
 import ffcv
 from ffcv.loader import Loader
-from ffcv.fields.decoders import SimpleRGBImageDecoder
+from ffcv.fields.decoders import SimpleRGBImageDecoder, IntDecoder
 import torch
 from tqdm import tqdm
 
@@ -25,7 +25,7 @@ def compute_mean_and_std(beton_file_path: str):
         order=order,
         os_cache=True,
         drop_last=False,
-        pipelines={"image": [SimpleRGBImageDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()]},
+        pipelines={"image": [SimpleRGBImageDecoder(), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()], "label": [IntDecoder()]},
         distributed=False,
     )
 
