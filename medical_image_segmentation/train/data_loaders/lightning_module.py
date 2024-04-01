@@ -187,6 +187,20 @@ class RGBFFCVDataModule(LightningDataModule):
         return transform
 
 
+@register_datamodule("RADIOLOGY_1M_FFCV")
+class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
+    def __init__(self, batch_size, num_workers, device, use_distributed, test_dataset, **kwargs):
+        super().__init__(
+            "/scratch/gpfs/RUSTOW/med_datasets/ffcv_datasets/radiology_1M.beton",
+            "",
+            batch_size,
+            (112, 112),
+            num_workers,
+            device,
+            use_distributed
+        )
+
+
 @register_datamodule("CIFAR100_FFCV")
 class CIFAR100FFCVDataModule(RGBFFCVDataModule):
     NUM_CLASSES = 100
