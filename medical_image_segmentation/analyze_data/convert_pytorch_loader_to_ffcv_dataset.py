@@ -48,6 +48,7 @@ def get_dataset(dataset_name, num_workers):
         "cifar10": get_cifar10_datasets,
         "cifar100": get_cifar100_datasets,
         "imagenet": get_imagenet_datasets,
+        "nih_chest_x_ray": get_nih_x_ray_datasets,
     }
     return dataset_map[dataset_name](num_workers)
 
@@ -67,7 +68,9 @@ def get_cifar100_datasets(num_workers=1):
 
 def get_nih_x_ray_datasets(num_workers=1):
     csv_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/nih_chest_x_ray_subset_info/original_image_path_to_label.csv"
-    trainset = ChestXRayDataset
+    testset = ChestXRayDataset(csv_path)
+
+    return None, testset
 
 def get_imagenet_datasets(num_workers=1):
     trainset = torchvision.datasets.ImageNet(
