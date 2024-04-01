@@ -30,22 +30,22 @@ def compute_mean_and_std(beton_file_path: str):
         distributed=False,
     )
 
-    cnt = 0
-    fst_moment = torch.empty(3)
-    snd_moment = torch.empty(3)
+    sum_ = 0
+    sum_squared = 0
+    num_pixels = 0
 
-    for data in loader:
-        data = data[0]
-        b, c, h, w = data.shape
-        nb_pixels = b * h * w
-        sum_ = torch.sum(data, dim=[0, 2, 3])
-        sum_of_square = torch.sum(data ** 2, dim=[0, 2, 3])
-        fst_moment = (cnt * fst_moment + sum_) / (cnt + nb_pixels)
-        snd_moment = (cnt * snd_moment + sum_of_square) / (cnt + nb_pixels)
+    # Iterate through the DataLoader
+    for batch in loader:
+        images = batch[0]
+        sum_ += torch.sum(images, dim=[0, 2, 3])  # Sum over batch, height, and width
+        sum_squared += torch.sum(images ** 2, dim=[0, 2, 3])
+        num_pixels += images.size(0) * images.size(2) * images.size(3)  # Batch size * Height * Width
 
-        cnt += nb_pixels
+    # Calculate mean and standard deviation
+    mean = sum_ / num_pixels
+    std = torch.sqrt(sum_squared / num_pixels - mean ** 2)
 
-    return fst_moment, torch.sqrt(snd_moment - fst_moment ** 2)
+    return mean, std
 
 
 def parse_args():
