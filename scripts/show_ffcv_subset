@@ -3,4 +3,5 @@ apptainer exec /scratch/gpfs/eh0560/repos/medical-image-segmentation/docker/ffcv
 bash -c "source activate; \
 conda activate ffcv-ssl; \
 python /scratch/gpfs/eh0560/repos/medical-image-segmentation/medical_image_segmentation/analyze_data/show_ffcv_subset.py \
---beton_path /scratch/gpfs/eh0560/RUSTOW/med_datasets/ffcv_datasets/test_radiology_1M.beton"
+--beton_path /scratch/gpfs/eh0560/RUSTOW/med_datasets/ffcv_datasets/test_radiology_1M.beton \
+--num_images 5"
