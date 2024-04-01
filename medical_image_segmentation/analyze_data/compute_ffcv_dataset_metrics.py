@@ -35,6 +35,7 @@ def compute_mean_and_std(beton_file_path: str):
     snd_moment = torch.empty(3)
 
     for data in loader:
+        data = data[0]
         b, c, h, w = data.shape
         nb_pixels = b * h * w
         sum_ = torch.sum(data, dim=[0, 2, 3])
