@@ -239,7 +239,8 @@ class BYOL(pl.LightningModule):
             logger=True,
         )
 
-        return loss + loss_linear * self.hparams.linear_loss_weight
+        # return loss + loss_linear * self.hparams.linear_loss_weight
+        return loss
 
     def on_train_batch_end(self, outputs, batch, batch_idx):
         # update momentum encoder
