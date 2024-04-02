@@ -190,10 +190,10 @@ class RGBFFCVDataModule(LightningDataModule):
 @register_datamodule("RADIOLOGY_1M_FFCV")
 class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
     NUM_CLASSES = 10
-    def __init__(self, batch_size, num_workers, device, use_distributed, test_dataset, **kwargs):
+    def __init__(self, batch_size, num_workers, device, use_distributed, **kwargs):
         super().__init__(
-            "/scratch/gpfs/RUSTOW/med_datasets/ffcv_datasets/radiology_1M.beton",
-            "",
+            "/scratch/gpfs/eh0560/data/med_datasets/radiology_1M_ffcv/radiology_1M_224_train.beton",
+            "/scratch/gpfs/eh0560/data/med_datasets/nih_chest_x_ray_ffcv/nih_chest_x_ray_224_test.beton",
             batch_size,
             (112, 112),
             num_workers,
@@ -205,8 +205,8 @@ class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
         return self.NUM_CLASSES
 
     def train_dataloader(self):
-        mean = ()
-        std = ()
+        mean = (57.9764, 57.9764, 57.9764)
+        std = (60.4759, 60.4759, 60.4759)
         image_pipeline_1, image_pipeline_2 = BYOLRGBFFCVDataTransforms(
             device=self.device, crop_size=self.image_size, mean=mean, std=std
         ).get_transforms()
