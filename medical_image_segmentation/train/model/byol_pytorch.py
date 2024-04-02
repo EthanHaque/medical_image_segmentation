@@ -210,12 +210,12 @@ class BYOL(pl.LightningModule):
 
         # train linear layer
         preds_linear = self.linear(feats.detach())
-        loss_linear = F.cross_entropy(preds_linear, labels.repeat(2))
+        # loss_linear = F.cross_entropy(preds_linear, labels.repeat(2))
 
         # gather results and log stats
         loss_log = {
             "loss": loss,
-            "loss_linear": loss_linear,
+            # "loss_linear": loss_linear,
         }
         hparam_log = {
             "lr": self.trainer.optimizers[0].param_groups[0]["lr"],
