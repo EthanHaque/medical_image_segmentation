@@ -2,6 +2,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 from PIL import Image
+import cv2
 from typing import Tuple, Dict
 import matplotlib.pyplot as plt
 import torchvision.transforms as transforms
@@ -9,6 +10,7 @@ import torchvision.utils as vutils
 from torch.utils.data import DataLoader
 import os
 from medical_image_segmentation.analyze_data.utils import get_file_paths
+import numpy as np
 
 
 class ChestXRayDataset(Dataset):
@@ -132,8 +134,12 @@ class Radiology1MDataset(Dataset):
             A tuple containing the image as a torch.Tensor and its label as an integer.
         """
         img_path = self.file_paths[index]
-        image = Image.open(img_path).convert("RGB")
+        image = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
+        if image.dtype == np.uint16:
+            image = (image / 256).astype(np.uint8)
 
+        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+        image = Image.fromarray(image)
         if self.transform:
             image = self.transform(image)
 
@@ -184,10 +190,10 @@ def print_batch_stats(images: torch.Tensor, labels: torch.Tensor, label_mapping:
     """
     print(f"Batch size: {len(images)}")
 
-    label_counts = {label_mapping[label.item()]: (labels == label).sum().item() for label in labels.unique()}
-    print("Label distribution:")
-    for label, count in label_counts.items():
-        print(f"  {label}: {count}")
+    # label_counts = {label_mapping[label.item()]: (labels == label).sum().item() for label in labels.unique()}
+    # print("Label distribution:")
+    # for label, count in label_counts.items():
+    #     print(f"  {label}: {count}")
 
     mean = images.mean(dim=[0, 2, 3])
     std = images.std(dim=[0, 2, 3])
@@ -205,14 +211,14 @@ def print_batch_stats(images: torch.Tensor, labels: torch.Tensor, label_mapping:
 
 # Example usage
 if __name__ == "__main__":
-    transform = transforms.Compose([transforms.Resize((128, 128)), transforms.ToTensor()])
+    transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
     # csv_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/nih_chest_x_ray_subset_info/original_image_path_to_label.csv"
     # dataset = ChestXRayDataset(csv_file=csv_path, transform=transform)
     radiology_root_dir = "/scratch/gpfs/eh0560/data/med_datasets/radiology_1M"
     dataset = Radiology1MDataset(radiology_root_dir, transform)
     dataloader = DataLoader(dataset, batch_size=9, shuffle=True)
 
-    images, labels = next(iter(dataloader))
-    label_mapping = {v: k for k, v in dataset.label_encoding.items()}
-    save_image_grid(images, labels, label_mapping, save_dir="/tmp")
-    print_batch_stats(images, labels, label_mapping)
+    images = next(iter(dataloader))[0]
+    # label_mapping = {v: k for k, v in dataset.label_encoding.items()}
+    save_image_grid(images, None, None, save_dir="/tmp")
+    print_batch_stats(images, None, None)
