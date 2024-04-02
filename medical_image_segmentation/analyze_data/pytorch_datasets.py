@@ -208,6 +208,8 @@ if __name__ == "__main__":
     transform = transforms.Compose([transforms.Resize((128, 128)), transforms.ToTensor()])
     # csv_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/nih_chest_x_ray_subset_info/original_image_path_to_label.csv"
     # dataset = ChestXRayDataset(csv_file=csv_path, transform=transform)
+    radiology_root_dir = "/scratch/gpfs/eh0560/data/med_datasets/radiology_1M"
+    dataset = Radiology1MDataset(radiology_root_dir, transform)
     dataloader = DataLoader(dataset, batch_size=9, shuffle=True)
 
     images, labels = next(iter(dataloader))
