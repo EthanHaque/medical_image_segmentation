@@ -40,7 +40,7 @@ def read_and_show_images(beton_file_path: str, num_images: int):
     plt.figure(figsize=(grid_size * 2, grid_size * 2))
     plt.imshow(grid_np)
     plt.axis("off")
-    plt.savefig("/bind_tmp/image_grid.png")
+    plt.savefig("/tmp/image_grid.png")
     plt.close()
 
 

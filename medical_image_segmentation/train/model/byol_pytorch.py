@@ -272,7 +272,6 @@ class BYOL(pl.LightningModule):
         device = self.trainer.local_rank
         distributed = len(self.trainer.device_ids) > 1
         dataset = get_datamodule(self.hparams.dataset)
-        print("got dataset", dataset)
         module = dataset(
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
