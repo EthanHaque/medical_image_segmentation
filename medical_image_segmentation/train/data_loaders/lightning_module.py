@@ -213,6 +213,7 @@ class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
 
         pipelines = {
             "image": image_pipeline_1,
+            "label": [IntDecoder()],
             "image_1": image_pipeline_2,
         }
         custom_field_mapper = {"image_1": "image"}
