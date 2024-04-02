@@ -21,7 +21,7 @@ def compute_mean_and_std(beton_file_path: str):
     loader = Loader(
         beton_file_path,
         batch_size=128,
-        num_workers=1,
+        num_workers=4,
         order=order,
         os_cache=True,
         drop_last=False,
