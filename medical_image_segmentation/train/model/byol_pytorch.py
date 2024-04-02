@@ -255,7 +255,7 @@ class BYOL(pl.LightningModule):
         )
 
     def train_dataloader(self):
-        print("getting dataloader")
+        print("getting train dataloader")
         # Must put loaders in this method to ensure DDP process groups are constructed before creating data loaders
         device = self.trainer.local_rank
         distributed = len(self.trainer.device_ids) > 1
@@ -269,7 +269,7 @@ class BYOL(pl.LightningModule):
         return module.train_dataloader()
 
     def val_dataloader(self):
-        print("getting dataloader")
+        print("getting val dataloader")
         # Must put loaders in this method to ensure DDP process groups are constructed before creating data loaders
         device = self.trainer.local_rank
         distributed = len(self.trainer.device_ids) > 1
