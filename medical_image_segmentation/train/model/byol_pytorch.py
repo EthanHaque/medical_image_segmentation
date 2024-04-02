@@ -265,6 +265,7 @@ class BYOL(pl.LightningModule):
             device=device,
             use_distributed=distributed,
         )
+        print(module.train_dataloader())
         return module.train_dataloader()
 
     def val_dataloader(self):
