@@ -193,7 +193,7 @@ class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
     def __init__(self, batch_size, num_workers, device, use_distributed, **kwargs):
         super().__init__(
             "/scratch/gpfs/eh0560/data/med_datasets/radiology_1M_ffcv/radiology_1M_224_train.beton",
-            "/scratch/gpfs/eh0560/data/med_datasets/nih_chest_x_ray_ffcv/nih_chest_x_ray_224_test.beton",
+            "/scratch/gpfs/RUSTOW/med_datasets/ffcv_datasets/nih_chest_x_ray_224_test.beton",
             batch_size,
             (112, 112),
             num_workers,
