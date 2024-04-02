@@ -205,8 +205,10 @@ class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
         return self.NUM_CLASSES
 
     def train_dataloader(self):
+        mean = ()
+        std = ()
         image_pipeline_1, image_pipeline_2 = BYOLRGBFFCVDataTransforms(
-            device=self.device, crop_size=self.image_size, mean=self.mean, std=self.std
+            device=self.device, crop_size=self.image_size, mean=mean, std=std
         ).get_transforms()
 
         pipelines = {
