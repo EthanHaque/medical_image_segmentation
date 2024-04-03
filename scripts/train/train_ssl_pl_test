@@ -5,6 +5,6 @@ conda activate ffcv-ssl; \
 python medical_image_segmentation/train/train_ssl.py \
     --dataset RADIOLOGY_1M_FFCV \
     --batch_size 2048 \
-    --max_epochs 1000 \
+    --max_epochs 200 \
     --arch resnet18"
 
