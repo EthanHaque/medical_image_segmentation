@@ -61,8 +61,9 @@ def save_nii_slices(image_file_path: str, output_dir: str, slice_dim: int = 1, p
         progress.remove_task(task_id)
 
 
-def process_pair(pair: Tuple[str, str], image_output_dir: str, masks_output_dir: str, slice_dim: int,
-                 progress: Progress):
+def process_pair(
+    pair: Tuple[str, str], image_output_dir: str, masks_output_dir: str, slice_dim: int, progress: Progress
+):
     """Processes a pair of image and mask paths."""
     image_path, mask_path = pair
     save_nii_slices(image_path, image_output_dir, slice_dim, progress)
@@ -79,8 +80,10 @@ def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int = 1,
         main_task_id = progress.add_task("[cyan]Processing images and masks...", total=len(pairs) * 2)
 
         with ThreadPoolExecutor(max_workers) as executor:
-            futures = [executor.submit(process_pair, pair, image_output_dir, masks_output_dir, slice_dim, progress) for
-                       pair in pairs]
+            futures = [
+                executor.submit(process_pair, pair, image_output_dir, masks_output_dir, slice_dim, progress)
+                for pair in pairs
+            ]
             for future in futures:
                 future.result()  # Wait for each task to complete
                 progress.update(main_task_id, advance=2)
@@ -92,8 +95,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--mask_dir", type=str, help="Root directory with nifti files of masks.")
     parser.add_argument("--root_output_dir", type=str, help="Where to write images and masks to.")
     parser.add_argument("--slice_dim", type=int, default=1, help="Which dimension to slice along.")
-    parser.add_argument("--max_workers", type=int, default=8,
-                        help="Max number of workers to use for parallel processing.")
+    parser.add_argument(
+        "--max_workers", type=int, default=8, help="Max number of workers to use for parallel processing."
+    )
 
     return parser.parse_args()
 
