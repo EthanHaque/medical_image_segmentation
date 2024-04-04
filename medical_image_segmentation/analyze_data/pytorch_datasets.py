@@ -182,7 +182,7 @@ class DecathlonDataset(Dataset):
         """
         self.image_paths = get_file_paths(images_dir, lambda x: x.endswith(".png"))
         self.mask_paths = get_file_paths(masks_dir, lambda x: x.endswith(".png"))
-        if len(images) != len(self.mask_paths):
+        if len(self.image_paths) != len(self.mask_paths):
             raise ValueError(
                 f"Number of images and masks do not match. {len(self.image_paths)} images and {len(self.mask_paths)} masks")
 
@@ -232,7 +232,9 @@ class DecathlonDataset(Dataset):
         image_path = self.image_paths[index]
         mask_path = self.image_and_mask_bidict[image_path]
         image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+        image = Image.fromarray(image)
         mask = cv2.imread(mask_path, cv2.IMREAD_UNCHANGED)
+        mask = Image.fromarray(mask)
         if self.image_transform:
             image = self.image_transform(image)
         if self.mask_transform:
@@ -307,13 +309,14 @@ def print_batch_stats(images: torch.Tensor, labels: torch.Tensor, label_mapping:
 # Example usage
 if __name__ == "__main__":
     transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
-    # csv_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/nih_chest_x_ray_subset_info/original_image_path_to_label.csv"
-    # dataset = ChestXRayDataset(csv_file=csv_path, transform=transform)
-    radiology_root_dir = "/scratch/gpfs/eh0560/data/med_datasets/radiology_1M"
-    dataset = Radiology1MDataset(radiology_root_dir, transform)
+    task_heart_images_root = "/bind_tmp/test_write_nii/images"
+    task_heart_masks_root = "/bind_tmp/test_write_nii/masks"
+    dataset = DecathlonDataset(task_heart_images_root, task_heart_masks_root, transform, transform)
     dataloader = DataLoader(dataset, batch_size=9, shuffle=True)
 
-    images = next(iter(dataloader))[0]
-    # label_mapping = {v: k for k, v in dataset.label_encoding.items()}
-    save_image_grid(images, None, None, save_dir="/tmp")
+    images, masks = next(iter(dataloader))
+
+    images_next_to_masks = torch.cat((images, masks), dim=0)
+
+    save_image_grid(images_next_to_masks, None, None, save_dir="/bind_tmp")
     print_batch_stats(images, None, None)

@@ -572,3 +572,17 @@ class CIFAR100DataModule(CIFARDataModule):
     @property
     def std(self):
         return self.STD
+
+
+@register_datamodule("DECATHLON_HEART")
+class DecathlonHeartDataModule(LightningDataModule):
+    # TODO: Should be 1 or 2?
+    NUM_CLASSES = 2
+    MEAN = ()
+    STD = ()
+    
+    def __init__(self, images_dir, masks_dir, batch_size):
+        super().__init__()
+        self.images_dir = images_dir
+        self.masks_dir = masks_dir
+        self.batch_size = batch_size
