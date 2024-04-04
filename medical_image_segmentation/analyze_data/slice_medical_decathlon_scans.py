@@ -92,7 +92,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--mask_dir", type=str, help="Root directory with nifti files of masks.")
     parser.add_argument("--root_output_dir", type=str, help="Where to write images and masks to.")
     parser.add_argument("--slice_dim", type=int, default=1, help="Which dimension to slice along.")
-    parser.add_argument("--max_workers", type=int, default=16,
+    parser.add_argument("--max_workers", type=int, default=8,
                         help="Max number of workers to use for parallel processing.")
 
     return parser.parse_args()
