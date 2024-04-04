@@ -21,7 +21,7 @@ def main(args):
     ]
 
     model = smp.Unet(
-        encoder_name="resnet34",  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
+        encoder_name="resnet18",  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
         encoder_weights=None,  # use `imagenet` pre-trained weights for encoder initialization
         in_channels=1,  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
         classes=1,  # model output channels (number of classes in your dataset)
@@ -38,7 +38,8 @@ def main(args):
         callbacks=callbacks,
     )
 
-    print(model)
+
+
     trainer.fit(model)
 
 

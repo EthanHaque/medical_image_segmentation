@@ -1,5 +1,6 @@
 import torch
 import torchvision
+from pytorch_lightning.utilities.types import TRAIN_DATALOADERS
 from torchvision import datasets
 from torchvision.transforms import v2 as transform_lib
 from pytorch_lightning import LightningDataModule
@@ -14,6 +15,8 @@ import numpy as np
 
 
 import os
+
+from medical_image_segmentation.analyze_data.pytorch_datasets import DecathlonDataset
 
 DATAMODULE_REGISTRY = {}
 
@@ -578,11 +581,63 @@ class CIFAR100DataModule(CIFARDataModule):
 class DecathlonHeartDataModule(LightningDataModule):
     # TODO: Should be 1 or 2?
     NUM_CLASSES = 2
-    MEAN = ()
-    STD = ()
+    MEAN = (0.1064,)
+    STD = (0.1598,)
     
-    def __init__(self, images_dir, masks_dir, batch_size):
+    def __init__(self, images_dir, masks_dir, batch_size, num_workers):
         super().__init__()
+        self.decathlon_heart_train = None
         self.images_dir = images_dir
         self.masks_dir = masks_dir
         self.batch_size = batch_size
+        self.num_workers = num_workers
+        
+    @property
+    def num_classes(self):
+        return self.NUM_CLASSES
+
+    @property
+    def mean(self):
+        return self.MEAN
+
+    @property
+    def std(self):
+        return self.STD
+
+    def setup(self, stage):
+        image_transform = self.default_transform()
+        mask_transform = transform_lib.Compose(
+            [
+                transform_lib.ToImage(),
+                transform_lib.ToDtype(torch.float32, scale=True)
+            ]
+        )
+        self.decathlon_heart_train = DecathlonDataset(self.images_dir, self.masks_dir, image_transform, mask_transform)
+
+    def train_dataloader(self):
+        loader = torch.utils.data.DataLoader(
+            dataset=self.decathlon_heart_train,
+            shuffle=True,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            pin_memory=True,
+            drop_last=True,
+        )
+
+        return loader
+
+    def val_dataloader(self):
+        pass
+
+    def test_dataloader(self):
+        pass
+
+    def default_transform(self):
+        transform = transform_lib.Compose(
+            [
+                transform_lib.ToImage(),
+                transform_lib.ToDtype(torch.float32, scale=True),
+                transform_lib.Normalize(mean=self.mean, std=self.std),
+            ]
+        )
+        return transform
