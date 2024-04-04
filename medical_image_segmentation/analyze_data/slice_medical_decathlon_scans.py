@@ -76,6 +76,9 @@ def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int = 1,
     image_output_dir = os.path.join(root_output_dir, "images")
     masks_output_dir = os.path.join(root_output_dir, "masks")
 
+    os.makedirs(image_output_dir, exist_ok=True)
+    os.makedirs(masks_output_dir, exist_ok=True)
+
     with Progress() as progress:
         main_task_id = progress.add_task("[cyan]Processing images and masks...", total=len(pairs) * 2)
 
