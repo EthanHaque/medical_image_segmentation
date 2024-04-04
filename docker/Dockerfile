@@ -32,6 +32,7 @@ RUN conda run -n ffcv-ssl pip install matplotlib \
     pillow \
     python-gdcm \
     pylibjpeg[all] \
+    nibabel \
     segmentation-models-pytorch
 
 RUN git clone https://github.com/EthanHaque/FFCV-SSL.git
