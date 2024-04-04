@@ -5,6 +5,7 @@ import nibabel as nib
 import numpy as np
 import cv2
 from rich.progress import Progress
+from concurrent.futures import ThreadPoolExecutor
 
 from medical_image_segmentation.analyze_data.utils import get_file_paths
 
@@ -60,7 +61,15 @@ def save_nii_slices(image_file_path: str, output_dir: str, slice_dim: int = 1, p
         progress.remove_task(task_id)
 
 
-def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int = 1):
+def process_pair(pair: Tuple[str, str], image_output_dir: str, masks_output_dir: str, slice_dim: int,
+                 progress: Progress):
+    """Processes a pair of image and mask paths."""
+    image_path, mask_path = pair
+    save_nii_slices(image_path, image_output_dir, slice_dim, progress)
+    save_nii_slices(mask_path, masks_output_dir, slice_dim, progress)
+
+
+def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int = 1, max_workers: int = 16):
     pairs = get_scan_and_mask_pairs(scan_dir, mask_dir)
 
     image_output_dir = os.path.join(root_output_dir, "images")
@@ -69,10 +78,12 @@ def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int = 1)
     with Progress() as progress:
         main_task_id = progress.add_task("[cyan]Processing images and masks...", total=len(pairs) * 2)
 
-        for image_path, mask_path in pairs:
-            save_nii_slices(image_path, image_output_dir, slice_dim, progress)
-            save_nii_slices(mask_path, masks_output_dir, slice_dim, progress)
-            progress.update(main_task_id, advance=2)
+        with ThreadPoolExecutor(max_workers) as executor:
+            futures = [executor.submit(process_pair, pair, image_output_dir, masks_output_dir, slice_dim, progress) for
+                       pair in pairs]
+            for future in futures:
+                future.result()  # Wait for each task to complete
+                progress.update(main_task_id, advance=2)
 
 
 def parse_args() -> argparse.Namespace:
@@ -81,10 +92,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--mask_dir", type=str, help="Root directory with nifti files of masks.")
     parser.add_argument("--root_output_dir", type=str, help="Where to write images and masks to.")
     parser.add_argument("--slice_dim", type=int, default=1, help="Which dimension to slice along.")
+    parser.add_argument("--max_workers", type=int, default=16,
+                        help="Max number of workers to use for parallel processing.")
 
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
-    main(args.scan_dir, args.mask_dir, args.root_output_dir, args.slice_dim)
+    main(args.scan_dir, args.mask_dir, args.root_output_dir, args.slice_dim, args.max_workers)
