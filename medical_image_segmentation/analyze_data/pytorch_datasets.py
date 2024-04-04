@@ -306,7 +306,6 @@ def print_batch_stats(images: torch.Tensor, labels: torch.Tensor, label_mapping:
     print(f"Data type: {dtype}")
 
 
-# Example usage
 if __name__ == "__main__":
     transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
     task_heart_images_root = "/bind_tmp/test_write_nii/images"
