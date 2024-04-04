@@ -25,7 +25,14 @@ RUN conda install -y -n ffcv-ssl \
         numpy \
         -c conda-forge
 
-RUN conda run -n ffcv-ssl pip install matplotlib pytorch-lightning pydicom rich pillow python-gdcm pylibjpeg[all]
+RUN conda run -n ffcv-ssl pip install matplotlib \
+    pytorch-lightning \
+    pydicom \
+    rich \
+    pillow \
+    python-gdcm \
+    pylibjpeg[all] \
+    segmentation-models-pytorch
 
 RUN git clone https://github.com/EthanHaque/FFCV-SSL.git
 RUN conda run -n ffcv-ssl pip install -e FFCV-SSL
