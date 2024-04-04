@@ -146,8 +146,103 @@ class Radiology1MDataset(Dataset):
         return (image,)
 
 
+class DecathlonDataset(Dataset):
+    """
+    A PyTorch dataset for image segmentation using the Medical Decathlon dataset.
+
+    Attributes
+    ----------
+    image_paths: List[str]
+        List of paths to each image.
+    mask_paths: List[str]
+        List of paths to each image mask.
+    transform : torchvision.transforms.Compose
+        A composition of transformations to apply to the images.
+
+    Methods
+    -------
+    __len__() -> int
+        Returns the number of samples in the dataset.
+    __getitem__(index: int) -> Tuple[torch.Tensor]
+        Returns the image inside a tuple.
+    """
+
+    def __init__(self, images_dir: str, masks_dir: str, image_transform=None, mask_transform=None):
+        """
+        Parameters
+        ----------
+        images_dir: str
+            Root directory where all scans are located.
+        masks_dir: str
+            Root directory where all scan masks are located.
+        image_transform : torchvision.transforms.Compose, optional
+            A composition of transformations to apply to the images (default is None).
+        mask_transform : torchvision.transforms.Compose, optional
+            A composition of transformations to apply to the masks (default is None).
+        """
+        self.image_paths = get_file_paths(images_dir, lambda x: x.endswith(".png"))
+        self.mask_paths = get_file_paths(masks_dir, lambda x: x.endswith(".png"))
+        if len(images) != len(self.mask_paths):
+            raise ValueError(
+                f"Number of images and masks do not match. {len(self.image_paths)} images and {len(self.mask_paths)} masks")
+
+        self.image_and_mask_bidict = self._create_image_and_mask_bidict()
+        if len(self.image_and_mask_bidict) != len(self.image_paths) + len(self.mask_paths):
+            raise ValueError(
+                (f"Some images and masks do not match. I.e. a bijection between images and masks does not exist."
+                 f"{len(self.image_paths) + len(self.mask_paths)} images and masks, but {len(self.image_and_mask_bidict)} matches."))
+
+        self.image_transform = image_transform
+        self.mask_transform = mask_transform
+
+    def _create_image_and_mask_bidict(self):
+        """Creates a dictionary that maps image paths to the mask path, and masks paths to image paths."""
+        image_uids_to_path = {path.split("/")[-1]: path for path in self.image_paths}
+        pairs = []
+        for mask_path in self.mask_paths:
+            uid = mask_path.split("/")[-1]
+            image_path = image_uids_to_path[uid]
+            pairs.append((image_path, mask_path))
+
+        bidict = {}
+        for image_path, mask_path in pairs:
+            bidict[image_path] = mask_path
+            bidict[mask_path] = image_path
+
+        return bidict
+
+    def __len__(self) -> int:
+        """Returns the number of samples in the dataset."""
+        return len(self.image_paths)
+
+    def __getitem__(self, index: int) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Returns the image and its label (as an integer) at the specified index.
+
+        Parameters
+        ----------
+        index : int
+            The index of the sample to retrieve.
+
+        Returns
+        -------
+        Tuple[np.ndarray, np.ndarray]
+            The image and its corresponding mask
+        """
+        image_path = self.image_paths[index]
+        mask_path = self.image_and_mask_bidict[image_path]
+        image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+        mask = cv2.imread(mask_path, cv2.IMREAD_UNCHANGED)
+        if self.image_transform:
+            image = self.image_transform(image)
+        if self.mask_transform:
+            mask = self.mask_transform(mask)
+
+        return image, mask
+
+
 def save_image_grid(
-    images: torch.Tensor, labels: torch.Tensor, label_mapping: Dict[int, str], save_dir: str, grid_size: int = 3
+        images: torch.Tensor, labels: torch.Tensor, label_mapping: Dict[int, str], save_dir: str, grid_size: int = 3
 ):
     """
     Saves a grid of images with their labels to a specified directory.
