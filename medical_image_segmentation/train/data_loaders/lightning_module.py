@@ -586,7 +586,6 @@ class DecathlonHeartDataModule(LightningDataModule):
     
     def __init__(self, images_dir, masks_dir, batch_size, num_workers):
         super().__init__()
-        self.decathlon_heart_train = None
         self.images_dir = images_dir
         self.masks_dir = masks_dir
         self.batch_size = batch_size
