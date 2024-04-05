@@ -3,6 +3,10 @@ import pytorch_lightning as pl
 import torch
 from argparse import ArgumentParser
 from pytorch_lightning.callbacks import RichProgressBar, RichModelSummary
+import torchvision.transforms as transforms
+
+from medical_image_segmentation.analyze_data.pytorch_datasets import DecathlonDataset
+
 
 def parse_args():
     parser = ArgumentParser()
@@ -38,9 +42,11 @@ def main(args):
         callbacks=callbacks,
     )
 
-
-
-    trainer.fit(model)
+    transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
+    images_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/images"
+    masks_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/masks"
+    decathlon_dataset = DecathlonDataset(images_dir, masks_dir, transform, transform)
+    trainer.fit(model, decathlon_dataset)
 
 
 if __name__ == "__main__":
