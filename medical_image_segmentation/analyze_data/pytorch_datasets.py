@@ -248,6 +248,9 @@ class DecathlonDataset(Dataset):
         if self.mask_transform:
             mask = self.mask_transform(mask)
 
+        image = image.unsqueeze(0)
+        mask = mask.unsqueeze(0)
+
         return image, mask
 
 
