@@ -1,6 +1,7 @@
 import pytorch_lightning as pl
 import segmentation_models_pytorch as smp
 import torch
+import torch.nn as nn
 
 
 class Segmentation(pl.LightningModule):
@@ -16,7 +17,7 @@ class Segmentation(pl.LightningModule):
             classes=2,  # model output channels (number of classes in your dataset)
         )
         
-        self.loss_fn = smp.utils.losses.DiceLoss()
+        self.loss_fn = nn.BCEWithLogitsLoss()
 
     def forward(self, x) -> torch.Tensor:
         return self.model(x)
