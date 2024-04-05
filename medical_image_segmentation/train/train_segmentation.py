@@ -5,7 +5,6 @@ from argparse import ArgumentParser
 from pytorch_lightning.callbacks import RichProgressBar, RichModelSummary
 import torchvision.transforms as transforms
 
-from medical_image_segmentation.analyze_data.pytorch_datasets import DecathlonDataset
 from medical_image_segmentation.train.data_loaders.lightning_module import DecathlonHeartDataModule
 from medical_image_segmentation.train.model.segmentation import Segmentation
 

@@ -34,4 +34,17 @@ class Segmentation(pl.LightningModule):
         logits = self.forward(images)
         loss = self.loss_fn(logits, masks)
 
+        loss_log = {
+            "loss": loss
+        }
+
+        self.log_dict(
+            loss_log,
+            on_step=False,
+            on_epoch=True,
+            sync_dist=True,
+            prog_bar=True,
+            logger=True,
+        )
+
         return loss
