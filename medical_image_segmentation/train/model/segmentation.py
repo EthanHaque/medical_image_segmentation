@@ -7,7 +7,7 @@ class Segmentation(pl.LightningModule):
     """Segmentation learner."""
 
     def __init__(self, **kwargs):
-        super.__init__()
+        super().__init__()
         self.save_hyperparameters()
         self.model = smp.Unet(
             encoder_name=self.hparams.arch,  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
