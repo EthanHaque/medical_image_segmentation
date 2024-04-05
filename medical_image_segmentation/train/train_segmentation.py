@@ -22,6 +22,13 @@ def parse_args():
         type=int,
         help="Number of GPUs to use for training",
     )
+    parser.add_argument(
+        "--num_workers",
+        default=int(os.environ.get("SLURM_CPUS_PER_TASK", "16")),
+        type=int,
+        help="number of workers",
+    )
+    parser.add_argument("--batch_size", default=256, type=int, help="batch size")
 
     return parser.parse_args()
 
@@ -51,7 +58,7 @@ def main(args):
 
     images_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/images"
     masks_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/masks"
-    decathlon_dataset = DecathlonHeartDataModule(images_dir, masks_dir, 2, 2)
+    decathlon_dataset = DecathlonHeartDataModule(images_dir, masks_dir, args.batch_size, args.num_workers)
     trainer.fit(model, decathlon_dataset)
 
 
