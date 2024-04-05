@@ -1,4 +1,5 @@
 import pytorch_lightning as pl
+import os
 import torch
 from argparse import ArgumentParser
 from pytorch_lightning.callbacks import RichProgressBar, RichModelSummary
@@ -13,6 +14,13 @@ def parse_args():
     parser.add_argument("--torch_matmul_precision", default="high", type=str, help="torch matmul precision")
     parser.add_argument("--arch", default="resnet18", type=str, help="backbone architecture")
     parser.add_argument("--lr", default=4e-3, type=float, help="base learning rate")
+    parser.add_argument("--max_epochs", default=100, type=int, help="Number of training epochs")
+    parser.add_argument(
+        "--num_gpus",
+        default=int(os.environ.get("SLURM_GPUS_ON_NODE", "4")),
+        type=int,
+        help="Number of GPUs to use for training",
+    )
 
     return parser.parse_args()
 
