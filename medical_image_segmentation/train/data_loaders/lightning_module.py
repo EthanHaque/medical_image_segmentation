@@ -629,6 +629,7 @@ class DecathlonHeartDataModule(LightningDataModule):
         image_transform = transform_lib.Compose(
             [
                 transform_lib.ToImage(),
+                transform_lib.Resize((224, 224)),
                 transform_lib.ToDtype(torch.float32, scale=True),
                 transform_lib.Normalize(mean=self.mean, std=self.std),
             ]
@@ -636,6 +637,7 @@ class DecathlonHeartDataModule(LightningDataModule):
         mask_transform = transform_lib.Compose(
             [
                 transform_lib.ToImage(),
+                transform_lib.Resize((224, 224)),
                 transform_lib.ToDtype(torch.float32, scale=True)
             ]
         )
