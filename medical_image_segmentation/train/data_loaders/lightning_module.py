@@ -604,13 +604,7 @@ class DecathlonHeartDataModule(LightningDataModule):
         return self.STD
 
     def setup(self, stage):
-        image_transform = self.default_transform()
-        mask_transform = transform_lib.Compose(
-            [
-                transform_lib.ToImage(),
-                transform_lib.ToDtype(torch.float32, scale=True)
-            ]
-        )
+        image_transform, mask_transform = self.default_transforms()
         self.decathlon_heart_train = DecathlonDataset(self.images_dir, self.masks_dir, image_transform, mask_transform)
 
     def train_dataloader(self):
@@ -631,12 +625,19 @@ class DecathlonHeartDataModule(LightningDataModule):
     def test_dataloader(self):
         pass
 
-    def default_transform(self):
-        transform = transform_lib.Compose(
+    def default_transforms(self):
+        image_transform = transform_lib.Compose(
             [
                 transform_lib.ToImage(),
                 transform_lib.ToDtype(torch.float32, scale=True),
                 transform_lib.Normalize(mean=self.mean, std=self.std),
             ]
         )
-        return transform
+        mask_transform = transform_lib.Compose(
+            [
+                transform_lib.ToImage(),
+                transform_lib.ToDtype(torch.float32, scale=True)
+            ]
+        )
+
+        return image_transform, mask_transform
