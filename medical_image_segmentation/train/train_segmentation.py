@@ -6,6 +6,7 @@ from pytorch_lightning.callbacks import RichProgressBar, RichModelSummary
 import torchvision.transforms as transforms
 
 from medical_image_segmentation.analyze_data.pytorch_datasets import DecathlonDataset
+from medical_image_segmentation.train.data_loaders.lightning_module import DecathlonHeartDataModule
 from medical_image_segmentation.train.model.segmentation import Segmentation
 
 
@@ -48,10 +49,9 @@ def main(args):
 
     model = Segmentation(**args.__dict__)
 
-    transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
     images_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/images"
     masks_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/masks"
-    decathlon_dataset = DecathlonDataset(images_dir, masks_dir, transform, transform)
+    decathlon_dataset = DecathlonHeartDataModule(images_dir, masks_dir, 2, 2)
     trainer.fit(model, decathlon_dataset)
 
 
