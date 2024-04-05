@@ -232,9 +232,17 @@ class DecathlonDataset(Dataset):
         image_path = self.image_paths[index]
         mask_path = self.image_and_mask_bidict[image_path]
         image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
-        image = Image.fromarray(image)
         mask = cv2.imread(mask_path, cv2.IMREAD_UNCHANGED)
+
+        # Check if the image is grayscale (single channel)
+        if len(image.shape) == 2:
+            image = np.expand_dims(image, axis=0)
+        if len(mask.shape) == 2:
+            mask = np.expand_dims(mask, axis=0)
+
+        image = Image.fromarray(image)
         mask = Image.fromarray(mask)
+
         if self.image_transform:
             image = self.image_transform(image)
         if self.mask_transform:
