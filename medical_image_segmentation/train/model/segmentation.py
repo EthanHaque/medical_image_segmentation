@@ -20,6 +20,7 @@ class Segmentation(pl.LightningModule):
         self.loss_fn = nn.BCEWithLogitsLoss()
 
     def forward(self, x) -> torch.Tensor:
+        print(x.shape)
         return self.model(x)
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
