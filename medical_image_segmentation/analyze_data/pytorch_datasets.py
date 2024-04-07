@@ -244,7 +244,7 @@ class DecathlonDataset(Dataset):
 
 
 def save_image_grid(
-        images: torch.Tensor, save_dir: str, grid_size: int = 3
+        images: torch.Tensor, save_dir: str, grid_size: int = 3, output_name: str = "image_grid"
 ):
     """
     Saves a grid of images with their labels to a specified directory.
@@ -264,7 +264,7 @@ def save_image_grid(
     plt.figure(figsize=(grid_size * 2, grid_size * 2))
     plt.imshow(grid_np)
     plt.axis("off")
-    plt.savefig(os.path.join(save_dir, "image_grid.png"))
+    plt.savefig(os.path.join(save_dir, f"{output_name}.png"))
     plt.close()
 
 
