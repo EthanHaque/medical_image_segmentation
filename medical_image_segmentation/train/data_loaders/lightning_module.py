@@ -625,6 +625,10 @@ class DecathlonHeartDataModule(LightningDataModule):
     def test_dataloader(self):
         pass
 
+    def predict_dataloader(self):
+        # TODO: Fix this. Temp solution.
+        return self.train_dataloader()
+
     def default_transforms(self):
         image_transform = transform_lib.Compose(
             [
