@@ -56,8 +56,8 @@ def main(args):
 
     model = Segmentation(**args.__dict__)
 
-    images_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/images"
-    masks_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/masks"
+    images_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task02_Heart/images"
+    masks_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task02_Heart/masks"
     decathlon_dataset = DecathlonHeartDataModule(images_dir, masks_dir, args.batch_size, args.num_workers)
     trainer.fit(model, decathlon_dataset)
     preds = trainer.predict(model, decathlon_dataset)
