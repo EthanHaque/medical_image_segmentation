@@ -63,6 +63,8 @@ def main(args):
     print(preds)
     print(type(preds))
     print(len(preds))
+    print(type(preds[0]))
+    print(preds[0].shape)
 
 
 if __name__ == "__main__":
