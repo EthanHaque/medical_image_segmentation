@@ -61,7 +61,7 @@ def main(args):
     decathlon_dataset = DecathlonHeartDataModule(images_dir, masks_dir, args.batch_size, args.num_workers)
     trainer.fit(model, decathlon_dataset)
     preds = trainer.predict(model, decathlon_dataset)
-    save_image_grid(preds[0], "/tmp")
+    save_image_grid(preds[0], "/tmp", grid_size=16)
 
 if __name__ == "__main__":
     args = parse_args()
