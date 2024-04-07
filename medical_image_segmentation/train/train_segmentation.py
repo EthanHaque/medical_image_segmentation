@@ -59,7 +59,7 @@ def main(args):
     images_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/images"
     masks_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/masks"
     decathlon_dataset = DecathlonHeartDataModule(images_dir, masks_dir, args.batch_size, args.num_workers)
-    # trainer.fit(model, decathlon_dataset)
+    trainer.fit(model, decathlon_dataset)
     preds = trainer.predict(model, decathlon_dataset)
     save_image_grid(preds[0], "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/images", grid_size=16)
 
