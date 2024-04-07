@@ -257,6 +257,8 @@ def save_image_grid(
         The directory where the image grid will be saved.
     grid_size : int, optional
         The number of images per row in the grid (default is 3).
+    output_name : str, optional
+        The name of the file to write.
     """
     os.makedirs(save_dir, exist_ok=True)
     grid = vutils.make_grid(images, nrow=grid_size, padding=2, normalize=True)
