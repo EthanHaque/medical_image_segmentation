@@ -59,7 +59,7 @@ def main(args):
     masks_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/masks"
     decathlon_dataset = DecathlonHeartDataModule(images_dir, masks_dir, args.batch_size, args.num_workers)
     # trainer.fit(model, decathlon_dataset)
-    trainer.predict(model, decathlon_dataset)
+    print(trainer.predict(model, decathlon_dataset))
 
 
 if __name__ == "__main__":
