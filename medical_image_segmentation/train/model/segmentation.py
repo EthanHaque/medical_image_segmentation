@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytorch_lightning as pl
 import segmentation_models_pytorch as smp
 import torch
@@ -17,8 +19,6 @@ class Segmentation(pl.LightningModule):
             classes=1,  # model output channels (number of classes in your dataset)
         )
         
-        self.loss_fn = nn.BCEWithLogitsLoss()
-
     def forward(self, x) -> torch.Tensor:
         return self.model(x)
 
@@ -32,14 +32,15 @@ class Segmentation(pl.LightningModule):
         images, masks = batch
 
         logits = self.forward(images)
-        loss = self.loss_fn(logits, masks)
+        loss_fn = nn.BCEWithLogitsLoss()
+        loss = loss_fn(logits, masks)
 
-        loss_log = {
+        metric_log = {
             "loss": loss
         }
 
         self.log_dict(
-            loss_log,
+            metric_log,
             on_step=False,
             on_epoch=True,
             sync_dist=True,
@@ -48,3 +49,6 @@ class Segmentation(pl.LightningModule):
         )
 
         return loss
+
+    def predict_step(self, batch, batch_idx):
+        return self.forward(batch)
