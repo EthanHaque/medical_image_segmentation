@@ -266,7 +266,9 @@ def save_image_grid(
     plt.figure(figsize=(grid_size * 2, grid_size * 2))
     plt.imshow(grid_np)
     plt.axis("off")
-    plt.savefig(os.path.join(save_dir, f"{output_name}.png"))
+    output_path = os.path.join(save_dir, f"{output_name}.png")
+    plt.savefig(output_path)
+    print(f"saved to {output_path}")
     plt.close()
 
 
