@@ -244,7 +244,7 @@ class DecathlonDataset(Dataset):
 
 
 def save_image_grid(
-        images: torch.Tensor, labels: torch.Tensor, label_mapping: Dict[int, str], save_dir: str, grid_size: int = 3
+        images: torch.Tensor, save_dir: str, grid_size: int = 3
 ):
     """
     Saves a grid of images with their labels to a specified directory.
@@ -253,10 +253,6 @@ def save_image_grid(
     ----------
     images : torch.Tensor
         A tensor containing the images to save in a grid.
-    labels : torch.Tensor
-        A tensor containing the labels corresponding to the images.
-    label_mapping : Dict[int, str]
-        A dictionary mapping integer labels back to their string representations.
     save_dir : str
         The directory where the image grid will be saved.
     grid_size : int, optional
@@ -317,5 +313,5 @@ if __name__ == "__main__":
 
     images_next_to_masks = torch.cat((images, masks), dim=0)
 
-    save_image_grid(images_next_to_masks, None, None, save_dir="/bind_tmp")
+    save_image_grid(images_next_to_masks,  save_dir="/bind_tmp")
     print_batch_stats(images, None, None)
