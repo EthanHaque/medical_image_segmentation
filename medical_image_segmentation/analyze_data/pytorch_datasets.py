@@ -264,8 +264,6 @@ class DecathlonDataset(Dataset):
         if self.mask_transform:
             mask = self.mask_transform(mask)
 
-        mask = mask.squeeze()
-
         return image, mask
 
 
