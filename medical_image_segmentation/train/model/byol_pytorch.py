@@ -266,18 +266,18 @@ class BYOL(pl.LightningModule):
         )
         return module.train_dataloader()
 
-    def val_dataloader(self):
-        # Must put loaders in this method to ensure DDP process groups are constructed before creating data loaders
-        device = self.trainer.local_rank
-        distributed = len(self.trainer.device_ids) > 1
-        dataset = get_datamodule(self.hparams.dataset)
-        module = dataset(
-            batch_size=self.hparams.batch_size,
-            num_workers=self.hparams.num_workers,
-            device=device,
-            use_distributed=distributed,
-        )
-        return module.val_dataloader()
+    # def val_dataloader(self):
+    #     # Must put loaders in this method to ensure DDP process groups are constructed before creating data loaders
+    #     device = self.trainer.local_rank
+    #     distributed = len(self.trainer.device_ids) > 1
+    #     dataset = get_datamodule(self.hparams.dataset)
+    #     module = dataset(
+    #         batch_size=self.hparams.batch_size,
+    #         num_workers=self.hparams.num_workers,
+    #         device=device,
+    #         use_distributed=distributed,
+    #     )
+    #     return module.val_dataloader()
 
     @torch.no_grad()
     def momentum_update(self, online_encoder, momentum_encoder, m):

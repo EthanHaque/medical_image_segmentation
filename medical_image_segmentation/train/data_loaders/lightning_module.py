@@ -237,41 +237,41 @@ class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
         )
         return loader
 
-    def val_dataloader(self):
-        mean = (126.57, 126.57, 126.57)
-        std = (63.46, 63.46, 63.46)
-
-        image_pipeline = [
-            SimpleRGBImageDecoder(),
-            ffcv.transforms.ToTensor(),
-            ffcv.transforms.ToDevice(self.device, non_blocking=True),
-            ffcv.transforms.ToTorchImage(),
-            ffcv.transforms.Convert(torch.float32),
-            torchvision.transforms.Normalize(mean, std),
-        ]
-
-        label_pipeline = [
-            IntDecoder(),
-            ffcv.transforms.ToTensor(),
-            ffcv.transforms.Squeeze(),
-        ]
-
-        pipelines = {
-            "image": image_pipeline,
-            "label": label_pipeline,
-        }
-
-        order = ffcv.loader.OrderOption.SEQUENTIAL
-        loader = ffcv.loader.Loader(
-            self.test_path,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            order=order,
-            os_cache=True,
-            drop_last=False,
-            pipelines=pipelines,
-        )
-        return loader
+    # def val_dataloader(self):
+    #     mean = (126.57, 126.57, 126.57)
+    #     std = (63.46, 63.46, 63.46)
+    #
+    #     image_pipeline = [
+    #         SimpleRGBImageDecoder(),
+    #         ffcv.transforms.ToTensor(),
+    #         ffcv.transforms.ToDevice(self.device, non_blocking=True),
+    #         ffcv.transforms.ToTorchImage(),
+    #         ffcv.transforms.Convert(torch.float32),
+    #         torchvision.transforms.Normalize(mean, std),
+    #     ]
+    #
+    #     label_pipeline = [
+    #         IntDecoder(),
+    #         ffcv.transforms.ToTensor(),
+    #         ffcv.transforms.Squeeze(),
+    #     ]
+    #
+    #     pipelines = {
+    #         "image": image_pipeline,
+    #         "label": label_pipeline,
+    #     }
+    #
+    #     order = ffcv.loader.OrderOption.SEQUENTIAL
+    #     loader = ffcv.loader.Loader(
+    #         self.test_path,
+    #         batch_size=self.batch_size,
+    #         num_workers=self.num_workers,
+    #         order=order,
+    #         os_cache=True,
+    #         drop_last=False,
+    #         pipelines=pipelines,
+    #     )
+    #     return loader
 
 
 
