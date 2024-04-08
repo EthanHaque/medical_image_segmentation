@@ -194,10 +194,6 @@ class BYOL(pl.LightningModule):
         view_2 = batch[2]
         views = [view_1, view_2]
 
-        print(f"type of view_1 {type(view_1)}")
-        print(f"type of view_2 {type(view_2)}")
-        print(f"type of labels {type(labels)}")
-
         # forward online encoder
         input_online = torch.cat(views, dim=0)
         z, feats = self.online_encoder(input_online)
