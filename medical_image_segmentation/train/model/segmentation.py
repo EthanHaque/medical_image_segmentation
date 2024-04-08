@@ -4,6 +4,7 @@ import pytorch_lightning as pl
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
+from segmentation_models_pytorch.losses import FocalLoss
 from segmentation_models_pytorch.losses._functional import focal_loss_with_logits, softmax_focal_loss_with_logits
 
 
@@ -30,7 +31,8 @@ class Segmentation(pl.LightningModule):
         return optimizer
 
     def loss(self, logits, masks):
-        loss = softmax_focal_loss_with_logits(logits, masks, gamma=2.0, reduction="mean")
+        loss_fn = FocalLoss("multiclass")
+        loss = loss_fn(logits, masks)
         return loss
 
     def training_step(self, batch, batch_idx):
