@@ -211,9 +211,15 @@ class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
             device=self.device, crop_size=self.image_size, mean=mean, std=std
         ).get_transforms()
 
+        label_pipeline = [
+            IntDecoder(),
+            ffcv.transforms.ToTensor(),
+            ffcv.transforms.Squeeze(),
+        ]
+
         pipelines = {
             "image": image_pipeline_1,
-            "label": [IntDecoder()],
+            "label": label_pipeline,
             "image_1": image_pipeline_2,
         }
         custom_field_mapper = {"image_1": "image"}
