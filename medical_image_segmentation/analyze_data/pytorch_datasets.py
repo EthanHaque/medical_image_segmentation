@@ -265,6 +265,8 @@ class DecathlonDataset(Dataset):
             mask = self.mask_transform(mask)
 
         mask = mask.squeeze()
+        #TODO :remove this
+        mask = (mask / 200).long()
 
         return image, mask
 
