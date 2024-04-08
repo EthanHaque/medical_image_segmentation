@@ -584,7 +584,7 @@ class DecathlonHeartDataModule(LightningDataModule):
     MEAN = (0.1064,)
     STD = (0.1598,)
     
-    def __init__(self, images_dir, masks_dir, split_file, split, batch_size, num_workers):
+    def __init__(self, images_dir, masks_dir, split_file, batch_size, num_workers):
         super().__init__()
         self.images_dir = images_dir
         self.masks_dir = masks_dir
