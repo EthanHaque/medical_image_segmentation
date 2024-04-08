@@ -32,8 +32,6 @@ class Segmentation(pl.LightningModule):
 
     def loss(self, logits, masks):
         loss_fn = FocalLoss("multiclass")
-        print(f"logits shape {logits.shape}")
-        print(f"masks shape {masks.shape}")
         loss = loss_fn(logits, masks)
         return loss
 
