@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 import os
 from medical_image_segmentation.analyze_data.utils import get_file_paths
 import numpy as np
+import json
 
 
 class ChestXRayDataset(Dataset):
@@ -183,6 +184,13 @@ class DecathlonDataset(Dataset):
         """
         self.image_paths = get_file_paths(images_dir, lambda x: x.endswith(".png"))
         self.mask_paths = get_file_paths(masks_dir, lambda x: x.endswith(".png"))
+
+        with open(split_file, "r") as f:
+            splits = json.load(f)
+
+        image_ids_subset = set([int(x) for x in splits[split]])
+        self.image_paths = [path for path in self.image_paths if int(path.split("_")[1]) in image_ids_subset]
+        self.mask_paths = [path for path in self.mask_paths if int(path.split("_")[1]) in image_ids_subset]
 
         if len(self.image_paths) != len(self.mask_paths):
             raise ValueError(
