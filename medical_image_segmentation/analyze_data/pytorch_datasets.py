@@ -266,7 +266,6 @@ class DecathlonDataset(Dataset):
 
         mask = mask.squeeze()
         #TODO :remove this
-        mask = (mask / 255).long()
 
         return image, mask
 
