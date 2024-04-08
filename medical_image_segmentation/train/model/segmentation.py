@@ -6,12 +6,6 @@ import torch
 import torch.nn as nn
 
 
-def post_process_masks(logits):
-    probs = torch.softmax(logits, dim=1)  # Assuming channel 0 is for background
-    masks = torch.argmax(probs, dim=1)  # Take the argmax across channel dimension
-    return masks
-
-
 
 class Segmentation(pl.LightningModule):
     """Segmentation learner."""
@@ -83,8 +77,7 @@ class Segmentation(pl.LightningModule):
         return loss
 
     def predict_step(self, batch, batch_idx):
-        images, masks = batch
-        logits = self.forward(images)
-
-        predicted_masks = post_process_masks(logits)
-        return images, predicted_masks, masks
+        images, _ = batch
+        logits = self(images)
+        predicted_masks = torch.argmax(torch.softmax(logits, dim=1), dim=1)
+        return predicted_masks

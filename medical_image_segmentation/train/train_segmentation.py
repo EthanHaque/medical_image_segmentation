@@ -61,7 +61,6 @@ def main(args):
     decathlon_dataset = DecathlonHeartDataModule(images_dir, masks_dir, split_file, args.batch_size, args.num_workers, )
 
     model = Segmentation(n_classes, **args.__dict__)
-    print(model )
     trainer.fit(model, decathlon_dataset)
 
     preds = trainer.predict(model, decathlon_dataset)
