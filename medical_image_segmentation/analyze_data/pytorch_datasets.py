@@ -296,16 +296,11 @@ def save_image_grid(
     plt.savefig(output_path)
     print(f"saved to {output_path}")
     plt.close()
-    
 
-import os
-import torch
-import torchvision.utils as vutils
-import matplotlib.pyplot as plt
 
 def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size=3, output_name="combined_grid"):
     """
-    Saves a grid of original images, predicted masks, and ground truth masks with enhancements for multiclass segmentation.
+    Saves a grid of original images with predicted and ground truth masks overlaid.
 
     Parameters:
         images (torch.Tensor): A tensor containing the original images.
@@ -316,40 +311,45 @@ def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size
         output_name (str, optional): The name of the file to write.
     """
     os.makedirs(save_dir, exist_ok=True)
+    overlay_images = []
 
-    # Assuming images are in (C, H, W) format, normalize and convert them to RGB if they are not
-    images = images.float()  # Ensure float for normalization
-    images = (images - images.min()) / (images.max() - images.min())  # Normalize to [0, 1]
-    if images.size(1) == 1:  # Convert grayscale to RGB
-        images = images.repeat(1, 3, 1, 1)
+    # Ensure images are in the range [0, 1]
+    images = images.float() / 255 if images.max() > 1 else images.float()
 
-    # Function to convert masks to color images
-    def masks_to_color(masks):
-        # Assuming masks are in (H, W), scale and apply colormap
-        masks = masks.float()  # Ensure float for scaling
-        masks = (masks - masks.min()) / (masks.max() - masks.min())  # Normalize to [0, 1]
-        masks_np = masks.numpy()  # Convert to numpy for matplotlib
-        colored_masks = []
-        for i in range(masks_np.shape[0]):
-            colored_mask = plt.get_cmap('viridis')(masks_np[i])  # Apply colormap
-            colored_masks.append(torch.from_numpy(colored_mask).float().permute(2, 0, 1)[:3, :, :])  # Drop alpha channel
-        return torch.stack(colored_masks)
+    for i in range(images.shape[0]):
+        img = images[i]  # Assuming images are CxHxW and normalized
+        if img.size(0) == 1:  # If grayscale, convert to RGB
+            img = img.repeat(3, 1, 1)
 
-    pred_masks_color = masks_to_color(pred_masks)
-    true_masks_color = masks_to_color(true_masks)
+        pred_mask = pred_masks[i].repeat(3, 1, 1)
+        true_mask = true_masks[i].repeat(3, 1, 1)
 
-    combined = torch.cat((images, pred_masks_color, true_masks_color), dim=0)
+        # Create color masks; we use red for prediction and blue for true mask
+        pred_color_mask = torch.zeros_like(img)
+        pred_color_mask[0] = pred_mask[0]  # Red channel for predicted
 
-    grid = vutils.make_grid(combined, nrow=grid_size, padding=2, normalize=False)
-    grid_np = grid.numpy().transpose((1, 2, 0))
+        true_color_mask = torch.zeros_like(img)
+        true_color_mask[2] = true_mask[0]  # Blue channel for true mask
 
-    plt.figure(figsize=(grid_size * 2, grid_size * 6))
-    plt.imshow(grid_np)
-    plt.axis("off")
+        # Overlay masks by adding them to the image with some transparency
+        overlay_img = img + 0.3 * pred_color_mask + 0.3 * true_color_mask
+        overlay_img = torch.clamp(overlay_img, 0, 1)  # Ensure values are within [0, 1]
+
+        overlay_images.append(overlay_img)
+
+    # Use torchvision's make_grid to compile the overlaid images into a grid
+    overlay_grid = vutils.make_grid(overlay_images, nrow=grid_size, normalize=True, scale_each=True)
+
+    # Convert grid to numpy array and plot
+    np_grid = overlay_grid.numpy().transpose((1, 2, 0))
+    plt.figure(figsize=(grid_size * 2, grid_size * 2))
+    plt.imshow(np_grid, interpolation='nearest')
+    plt.axis('off')
+
     output_path = os.path.join(save_dir, f"{output_name}.png")
-    plt.savefig(output_path)
-    print(f"Saved to {output_path}")
+    plt.savefig(output_path, bbox_inches='tight')
     plt.close()
+    print(f"Saved to {output_path}")
 
 
 def print_batch_stats(images: torch.Tensor, labels: torch.Tensor, label_mapping: Dict[int, str]):
