@@ -187,10 +187,24 @@ class DecathlonDataset(Dataset):
 
         with open(split_file, "r") as f:
             splits = json.load(f)
+        ids_subset = set([int(x) for x in splits[split]])
 
-        image_ids_subset = set([int(x) for x in splits[split]])
-        self.image_paths = [path for path in self.image_paths if int(path.split("_")[1]) in image_ids_subset]
-        self.mask_paths = [path for path in self.mask_paths if int(path.split("_")[1]) in image_ids_subset]
+        filtered_image_paths = []
+        for image_path in self.image_paths:
+            image_fname = os.path.basename(image_path)
+            image_id = int(image_fname.split("_")[1])
+            if image_id in ids_subset:
+                filtered_image_paths.append(image_path)
+
+        filtered_mask_paths = []
+        for mask_path in self.mask_paths:
+            mask_fname = os.path.basename(mask_path)
+            mask_id = int(mask_fname.split("_")[1])
+            if mask_id in ids_subset:
+                filtered_mask_paths.append(mask_path)
+
+        self.image_paths = filtered_image_paths
+        self.mask_paths = filtered_mask_paths
 
         if len(self.image_paths) != len(self.mask_paths):
             raise ValueError(
