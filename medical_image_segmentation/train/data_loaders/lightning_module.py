@@ -584,10 +584,11 @@ class DecathlonHeartDataModule(LightningDataModule):
     MEAN = (0.1064,)
     STD = (0.1598,)
     
-    def __init__(self, images_dir, masks_dir, batch_size, num_workers):
+    def __init__(self, images_dir, masks_dir, split_file, split, batch_size, num_workers):
         super().__init__()
         self.images_dir = images_dir
         self.masks_dir = masks_dir
+        self.split_file = split_file
         self.batch_size = batch_size
         self.num_workers = num_workers
         
@@ -605,7 +606,13 @@ class DecathlonHeartDataModule(LightningDataModule):
 
     def setup(self, stage):
         image_transform, mask_transform = self.default_transforms()
-        self.decathlon_heart_train = DecathlonDataset(self.images_dir, self.masks_dir, image_transform, mask_transform)
+        if stage == "fit":
+            self.decathlon_heart_train = DecathlonDataset(self.images_dir, self.masks_dir, image_transform, mask_transform, "train", self.split_file)
+            self.decathlon_heart_val = DecathlonDataset(self.images_dir, self.masks_dir, image_transform, mask_transform, "val", self.split_file)
+        if stage == "test":
+            self.decathlon_heart_test = DecathlonDataset(self.images_dir, self.masks_dir, image_transform, mask_transform, "test", self.split_file)
+        if stage == "predict":
+            self.decathlon_heart_test = DecathlonDataset(self.images_dir, self.masks_dir, image_transform, mask_transform, "test", self.split_file)
 
     def train_dataloader(self):
         loader = torch.utils.data.DataLoader(
@@ -620,14 +627,31 @@ class DecathlonHeartDataModule(LightningDataModule):
         return loader
 
     def val_dataloader(self):
-        pass
+        loader = torch.utils.data.DataLoader(
+            dataset=self.decathlon_heart_val,
+            shuffle=False,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            pin_memory=True,
+            drop_last=False,
+        )
+
+        return loader
 
     def test_dataloader(self):
-        pass
+        loader = torch.utils.data.DataLoader(
+            dataset=self.decathlon_heart_test,
+            shuffle=False,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            pin_memory=True,
+            drop_last=False,
+        )
+
+        return loader
 
     def predict_dataloader(self):
-        # TODO: Fix this. Temp solution.
-        return self.train_dataloader()
+        return self.test_dataloader()
 
     def default_transforms(self):
         image_transform = transform_lib.Compose(
