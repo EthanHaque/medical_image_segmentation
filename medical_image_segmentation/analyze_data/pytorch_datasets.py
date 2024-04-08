@@ -265,7 +265,9 @@ class DecathlonDataset(Dataset):
         if self.mask_transform:
             mask = self.mask_transform(mask)
 
+        mask = mask.squeeze()
         mask = torch.nn.functional.one_hot(mask, num_classes=self.num_classes)
+        mask = mask.permute(2,0,1)
 
         return image, mask
 
