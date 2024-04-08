@@ -167,7 +167,8 @@ class DecathlonDataset(Dataset):
         Returns the image inside a tuple.
     """
 
-    def __init__(self, images_dir: str, masks_dir: str, image_transform=None, mask_transform=None, split="train"):
+    def __init__(self, images_dir: str, masks_dir: str, image_transform=None, mask_transform=None, split: str = "train",
+                 split_file: str = None):
         """
         Parameters
         ----------
@@ -182,8 +183,6 @@ class DecathlonDataset(Dataset):
         """
         self.image_paths = get_file_paths(images_dir, lambda x: x.endswith(".png"))
         self.mask_paths = get_file_paths(masks_dir, lambda x: x.endswith(".png"))
-
-
 
         if len(self.image_paths) != len(self.mask_paths):
             raise ValueError(
@@ -320,5 +319,5 @@ if __name__ == "__main__":
 
     images_next_to_masks = torch.cat((images, masks), dim=0)
 
-    save_image_grid(images_next_to_masks,  save_dir="/bind_tmp")
+    save_image_grid(images_next_to_masks, save_dir="/bind_tmp")
     print_batch_stats(images, None, None)
