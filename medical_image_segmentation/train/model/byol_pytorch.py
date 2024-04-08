@@ -256,8 +256,9 @@ class BYOL(pl.LightningModule):
     def train_dataloader(self):
         # Must put loaders in this method to ensure DDP process groups are constructed before creating data loaders
         device = self.trainer.local_rank
+        print(device)
         distributed = len(self.trainer.device_ids) > 1
-        print(distributed)
+        print(f"device: {device}, distributed: {distributed}")
         dataset = get_datamodule(self.hparams.dataset)
         module = dataset(
             batch_size=self.hparams.batch_size,
