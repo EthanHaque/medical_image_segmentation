@@ -182,6 +182,7 @@ class DecathlonDataset(Dataset):
         mask_transform : torchvision.transforms.Compose, optional
             A composition of transformations to apply to the masks (default is None).
         """
+        self.num_classes = num_classes
         self.image_paths = get_file_paths(images_dir, lambda x: x.endswith(".png"))
         self.mask_paths = get_file_paths(masks_dir, lambda x: x.endswith(".png"))
 
