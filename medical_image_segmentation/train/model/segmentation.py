@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
-
+from segmentation_models_pytorch.losses._functional import focal_loss_with_logits
 
 
 class Segmentation(pl.LightningModule):
@@ -30,8 +30,7 @@ class Segmentation(pl.LightningModule):
         return optimizer
 
     def loss(self, logits, masks):
-        loss_fn = nn.CrossEntropyLoss()
-        loss = loss_fn(logits, masks)
+        loss = focal_loss_with_logits(output=logits, target=masks, gamma=2.0, alpha=0.25, reduction="mean")
         return loss
 
     def training_step(self, batch, batch_idx):
