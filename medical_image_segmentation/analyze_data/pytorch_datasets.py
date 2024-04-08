@@ -258,6 +258,7 @@ class DecathlonDataset(Dataset):
         image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
         image = Image.fromarray(image)
         mask = cv2.imread(mask_path, cv2.IMREAD_UNCHANGED)
+        print(mask.max(), mask.min())
         mask = Image.fromarray(mask)
         if self.image_transform:
             image = self.image_transform(image)
@@ -265,8 +266,6 @@ class DecathlonDataset(Dataset):
             mask = self.mask_transform(mask)
 
         mask = mask.squeeze()
-        #TODO :remove this
-        mask = (mask / 200).long()
 
         return image, mask
 
