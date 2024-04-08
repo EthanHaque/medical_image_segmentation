@@ -37,8 +37,9 @@ class Segmentation(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         images, masks = batch
-
+        print(f"image shape {images.shape}")
         logits = self.forward(images)
+        print(f"logits shape {logits.shape}")
         loss = self.loss(logits, masks)
 
         metric_log = {
