@@ -297,9 +297,9 @@ class BYOL(pl.LightningModule):
             ffcv.transforms.Convert(torch.float32),
         ]
         label_pipeline = [
-            IntDecoder(),
-            ffcv.transforms.ToTensor(),
-            ffcv.transforms.Squeeze(),
+            # IntDecoder(),
+            # ffcv.transforms.ToTensor(),
+            # ffcv.transforms.Squeeze(),
         ]
 
         pipelines = {
