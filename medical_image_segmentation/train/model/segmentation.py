@@ -77,7 +77,7 @@ class Segmentation(pl.LightningModule):
         return loss
 
     def predict_step(self, batch, batch_idx):
-        images, _ = batch
+        images, masks = batch
         logits = self(images)
         predicted_masks = torch.argmax(torch.softmax(logits, dim=1), dim=1)
-        return predicted_masks
+        return images, predicted_masks, masks
