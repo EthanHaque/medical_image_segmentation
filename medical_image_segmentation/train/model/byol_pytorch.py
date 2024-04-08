@@ -7,10 +7,18 @@ References
 
 from typing import Tuple, List
 
+import ffcv
+import numpy as np
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
 import pytorch_lightning as pl
+from ffcv.fields.decoders import (
+    SimpleRGBImageDecoder,
+    RandomResizedCropRGBImageDecoder,
+    IntDecoder,
+    CenterCropRGBImageDecoder,
+)
 from medical_image_segmentation.train.data_loaders.lightning_module import (
     get_datamodule,
 )
@@ -255,16 +263,61 @@ class BYOL(pl.LightningModule):
 
     def train_dataloader(self):
         # Must put loaders in this method to ensure DDP process groups are constructed before creating data loaders
-        device = self.trainer.local_rank
-        distributed = len(self.trainer.device_ids) > 1
-        dataset = get_datamodule(self.hparams.dataset)
-        module = dataset(
+        # device = self.trainer.local_rank
+        # distributed = len(self.trainer.device_ids) > 1
+        # dataset = get_datamodule(self.hparams.dataset)
+        # module = dataset(
+        #     batch_size=self.hparams.batch_size,
+        #     num_workers=self.hparams.num_workers,
+        #     device=device,
+        #     use_distributed=distributed,
+        # )
+        # return module.train_dataloader()
+        # image_pipeline_1, image_pipeline_2 = BYOLRGBFFCVDataTransforms(
+        #     device=self.device, crop_size=self.image_size, mean=self.mean, std=self.std
+        # ).get_transforms()
+
+        transforms = [
+            RandomResizedCropRGBImageDecoder(self.crop_size, scale=(0.08, 1.0), ratio=(0.75, 1.33333)),
+            ffcv.transforms.RandomHorizontalFlip(flip_prob=0.5),
+            # ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
+            # ffcv.transforms.RandomBrightness(0.4, 0.8),
+            # ffcv.transforms.RandomContrast(0.4, 0.8),
+            # ffcv.transforms.RandomSaturation(0.2, 0.8),
+            # ffcv.transforms.RandomGrayscale(0.2),
+            # ffcv.transforms.GaussianBlur(1.0, kernel_size=23),
+            # ffcv.transforms.RandomSolarization(solarize_prob, 128),
+            ffcv.transforms.NormalizeImage(np.array(self.mean) * 255, np.array(self.std) * 255, np.float32),
+            ffcv.transforms.ToTensor(),
+            ffcv.transforms.ToDevice(self.device, non_blocking=True),
+            ffcv.transforms.ToTorchImage(),
+            ffcv.transforms.Convert(torch.float32),
+        ]
+        label_pipeline = [
+            IntDecoder(),
+            ffcv.transforms.ToTensor(),
+            ffcv.transforms.Squeeze(),
+        ]
+
+        pipelines = {
+            "image": transforms,
+            "image_1": transforms,
+            "label": label_pipeline,
+        }
+        custom_field_mapper = {"image_1": "image"}
+
+        order = ffcv.loader.OrderOption.QUASI_RANDOM if self.use_distributed else ffcv.loader.OrderOption.RANDOM
+        loader = ffcv.loader.Loader(
+            "/scratch/gpfs/RUSTOW/med_datasets/ffcv_datasets/radiology_1M_224_train.beton",
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
-            device=device,
-            use_distributed=distributed,
+            order=order,
+            os_cache=True,
+            drop_last=True,
+            pipelines=pipelines,
+            custom_field_mapper=custom_field_mapper,
         )
-        return module.train_dataloader()
+        return loader
 
     @torch.no_grad()
     def momentum_update(self, online_encoder, momentum_encoder, m):
