@@ -2,7 +2,7 @@ import torch
 import torchvision
 from pytorch_lightning.utilities.types import TRAIN_DATALOADERS
 from torchvision import datasets
-from torchvision.transforms import v2 as transform_lib
+from torchvision.transforms import v2 as transform_lib, InterpolationMode
 from pytorch_lightning import LightningDataModule
 import ffcv
 from ffcv.fields.decoders import (
@@ -665,8 +665,8 @@ class DecathlonHeartDataModule(LightningDataModule):
         mask_transform = transform_lib.Compose(
             [
                 transform_lib.ToImage(),
-                transform_lib.Resize((224, 224)),
-                transform_lib.ToDtype(torch.float32, scale=True)
+                transform_lib.Resize((224, 224), interpolation=InterpolationMode.NEAREST),
+                transform_lib.ToDtype(torch.long)
             ]
         )
 
