@@ -66,7 +66,7 @@ def main(args):
     preds = trainer.predict(model, decathlon_dataset)
     images, pred_masks, true_masks = preds[0]
     save_combined_image_grid(images, pred_masks, true_masks, "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/images", grid_size=16)
-    save_image_grid(pred_masks, "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/images", grid_size=16)
+    save_image_grid(pred_masks.unsqueeze(1), "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/images", grid_size=16)
 
 if __name__ == "__main__":
     args = parse_args()
