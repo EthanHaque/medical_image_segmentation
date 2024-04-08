@@ -32,7 +32,7 @@ class Segmentation(pl.LightningModule):
 
     def loss(self, logits, masks):
         loss_fn = FocalLoss("multiclass")
-        loss = loss_fn(logits, masks)
+        loss = loss_fn(logits.unsqueeze(1), masks)
         return loss
 
     def training_step(self, batch, batch_idx):
