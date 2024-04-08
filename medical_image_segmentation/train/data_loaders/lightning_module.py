@@ -215,36 +215,6 @@ class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
     def std(self):
         return self.STD
 
-    # def train_dataloader(self):
-    #     image_pipeline_1, image_pipeline_2 = BYOLRGBFFCVDataTransforms(
-    #         device=self.device, crop_size=self.image_size, mean=mean, std=std
-    #     ).get_transforms()
-    #
-    #     label_pipeline = [
-    #         IntDecoder(),
-    #         ffcv.transforms.ToTensor(),
-    #         ffcv.transforms.Squeeze(),
-    #     ]
-    #
-    #     pipelines = {
-    #         "image": image_pipeline_1,
-    #         "label": label_pipeline,
-    #         "image_1": image_pipeline_2,
-    #     }
-    #     custom_field_mapper = {"image_1": "image"}
-    #
-    #     order = ffcv.loader.OrderOption.QUASI_RANDOM if self.use_distributed else ffcv.loader.OrderOption.RANDOM
-    #     loader = ffcv.loader.Loader(
-    #         self.train_path,
-    #         batch_size=self.batch_size,
-    #         num_workers=self.num_workers,
-    #         order=order,
-    #         os_cache=True,
-    #         drop_last=True,
-    #         pipelines=pipelines,
-    #         custom_field_mapper=custom_field_mapper,
-    #     )
-    #     return loader
 
 
 @register_datamodule("CIFAR100_FFCV")
