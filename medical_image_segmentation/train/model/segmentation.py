@@ -22,8 +22,6 @@ class Segmentation(pl.LightningModule):
         )
         
     def forward(self, x) -> torch.Tensor:
-        print(x.shape)
-        print(self.model(x).shape)
         return self.model(x)
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
@@ -34,6 +32,8 @@ class Segmentation(pl.LightningModule):
 
     def loss(self, logits, masks):
         loss_fn = FocalLoss("multiclass")
+        print(f"logits shape {logits.shape}")
+        print(f"masks shape {masks.shape}")
         loss = loss_fn(logits, masks)
         return loss
 
