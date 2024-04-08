@@ -28,15 +28,39 @@ class Segmentation(pl.LightningModule):
 
         return optimizer
 
+    def loss(self, logits, masks):
+        loss_fn = nn.BCEWithLogitsLoss()
+        loss = loss_fn(logits, masks)
+        return loss
+
     def training_step(self, batch, batch_idx):
         images, masks = batch
 
         logits = self.forward(images)
-        loss_fn = nn.BCEWithLogitsLoss()
-        loss = loss_fn(logits, masks)
+        loss = self.loss(logits, masks)
 
         metric_log = {
-            "loss": loss
+            "train/loss": loss
+        }
+
+        self.log_dict(
+            metric_log,
+            on_step=True,
+            sync_dist=True,
+            prog_bar=True,
+            logger=True,
+        )
+
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        images, masks = batch
+
+        logits = self.forward(images)
+        loss = self.loss(logits, masks)
+
+        metric_log = {
+            "val/loss": loss
         }
 
         self.log_dict(
