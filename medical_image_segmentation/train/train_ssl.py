@@ -70,7 +70,7 @@ def main(args):
     logger = pl.loggers.CSVLogger("logs")
     callbacks = [
         RichModelSummary(),
-        RichProgressBar(),
+        # RichProgressBar(),
     ]
 
     model = BYOL(**args.__dict__)
