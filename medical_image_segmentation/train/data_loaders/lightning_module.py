@@ -664,7 +664,7 @@ class DecathlonHeartDataModule(LightningDataModule):
         )
         mask_transform = transform_lib.Compose(
             [
-                # transform_lib.ToImage(),
+                transform_lib.ToImage(),
                 transform_lib.Resize((224, 224), interpolation=InterpolationMode.NEAREST),
                 transform_lib.ToDtype(torch.long)
             ]
