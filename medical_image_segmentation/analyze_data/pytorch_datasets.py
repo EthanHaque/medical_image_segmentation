@@ -313,34 +313,29 @@ def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size
     os.makedirs(save_dir, exist_ok=True)
     overlay_images = []
 
-    # Ensure images are in the range [0, 1]
     images = images.float() / 255 if images.max() > 1 else images.float()
 
     for i in range(images.shape[0]):
-        img = images[i]  # Assuming images are CxHxW and normalized
-        if img.size(0) == 1:  # If grayscale, convert to RGB
+        img = images[i]
+        if img.size(0) == 1:
             img = img.repeat(3, 1, 1)
 
         pred_mask = pred_masks[i].repeat(3, 1, 1)
         true_mask = true_masks[i].repeat(3, 1, 1)
 
-        # Create color masks; we use red for prediction and blue for true mask
         pred_color_mask = torch.zeros_like(img)
-        pred_color_mask[0] = pred_mask[0]  # Red channel for predicted
+        pred_color_mask[0] = pred_mask[0]
 
         true_color_mask = torch.zeros_like(img)
-        true_color_mask[2] = true_mask[0]  # Blue channel for true mask
+        true_color_mask[2] = true_mask[0]
 
-        # Overlay masks by adding them to the image with some transparency
         overlay_img = img + 0.3 * pred_color_mask + 0.3 * true_color_mask
-        overlay_img = torch.clamp(overlay_img, 0, 1)  # Ensure values are within [0, 1]
+        overlay_img = torch.clamp(overlay_img, 0, 1)
 
         overlay_images.append(overlay_img)
 
-    # Use torchvision's make_grid to compile the overlaid images into a grid
     overlay_grid = vutils.make_grid(overlay_images, nrow=grid_size, normalize=True, scale_each=True)
 
-    # Convert grid to numpy array and plot
     np_grid = overlay_grid.numpy().transpose((1, 2, 0))
     plt.figure(figsize=(grid_size * 2, grid_size * 2))
     plt.imshow(np_grid, interpolation='nearest')
