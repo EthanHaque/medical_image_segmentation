@@ -327,7 +327,7 @@ def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size
         pred_color_mask[0] = pred_mask[0]
 
         true_color_mask = torch.zeros_like(img)
-        true_color_mask[2] = true_mask[0]
+        # true_color_mask[2] = true_mask[0]
 
         overlay_img = img + 0.3 * pred_color_mask + 0.3 * true_color_mask
         overlay_img = torch.clamp(overlay_img, 0, 1)
