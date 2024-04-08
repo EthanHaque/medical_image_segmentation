@@ -41,7 +41,7 @@ def get_slice_output_path(image_file_path: str, output_dir: str, slice_number: i
     return os.path.join(output_dir, output_file_name)
 
 
-def save_nii_slices(image_file_path: str, output_dir: str, slice_dim: int = 1, progress: Progress = None):
+def save_nii_slices(image_file_path: str, output_dir: str, slice_dim: int = 1, progress: Progress = None, is_mask: bool = False):
     """Saves slices of nifti file to an output directory."""
     image_arr = get_image_arr(image_file_path)
     num_slices = image_arr.shape[slice_dim]
@@ -51,7 +51,9 @@ def save_nii_slices(image_file_path: str, output_dir: str, slice_dim: int = 1, p
 
     for slice_number in range(num_slices):
         slice = image_arr.take(indices=slice_number, axis=slice_dim)
-        slice = ((slice - slice.min()) / (slice.max() - slice.min()) * 255).astype(np.uint8)
+        if not is_mask:
+            slice = ((slice - slice.min()) / (slice.max() - slice.min()) * 255)
+        slice = slice.astype(np.uint8)
         output_path = get_slice_output_path(image_file_path, output_dir, slice_number)
         cv2.imwrite(output_path, slice)
         if progress is not None:
