@@ -305,7 +305,7 @@ import matplotlib.pyplot as plt
 
 def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size=3, output_name="combined_grid"):
     """
-    Saves a grid of original images, predicted masks, and ground truth masks.
+    Saves a grid of original images, predicted masks, and ground truth masks with enhancements for multiclass segmentation.
 
     Parameters:
         images (torch.Tensor): A tensor containing the original images.
@@ -317,9 +317,30 @@ def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size
     """
     os.makedirs(save_dir, exist_ok=True)
 
-    combined = torch.cat((images, pred_masks, true_masks), dim=2)
+    # Assuming images are in (C, H, W) format, normalize and convert them to RGB if they are not
+    images = images.float()  # Ensure float for normalization
+    images = (images - images.min()) / (images.max() - images.min())  # Normalize to [0, 1]
+    if images.size(1) == 1:  # Convert grayscale to RGB
+        images = images.repeat(1, 3, 1, 1)
 
-    grid = vutils.make_grid(combined, nrow=grid_size, padding=2, normalize=True)
+    # Function to convert masks to color images
+    def masks_to_color(masks):
+        # Assuming masks are in (H, W), scale and apply colormap
+        masks = masks.float()  # Ensure float for scaling
+        masks = (masks - masks.min()) / (masks.max() - masks.min())  # Normalize to [0, 1]
+        masks_np = masks.numpy()  # Convert to numpy for matplotlib
+        colored_masks = []
+        for i in range(masks_np.shape[0]):
+            colored_mask = plt.get_cmap('viridis')(masks_np[i])  # Apply colormap
+            colored_masks.append(torch.from_numpy(colored_mask).float().permute(2, 0, 1)[:3, :, :])  # Drop alpha channel
+        return torch.stack(colored_masks)
+
+    pred_masks_color = masks_to_color(pred_masks)
+    true_masks_color = masks_to_color(true_masks)
+
+    combined = torch.cat((images, pred_masks_color, true_masks_color), dim=0)
+
+    grid = vutils.make_grid(combined, nrow=grid_size, padding=2, normalize=False)
     grid_np = grid.numpy().transpose((1, 2, 0))
 
     plt.figure(figsize=(grid_size * 2, grid_size * 6))
@@ -329,7 +350,6 @@ def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size
     plt.savefig(output_path)
     print(f"Saved to {output_path}")
     plt.close()
-
 
 
 def print_batch_stats(images: torch.Tensor, labels: torch.Tensor, label_mapping: Dict[int, str]):
