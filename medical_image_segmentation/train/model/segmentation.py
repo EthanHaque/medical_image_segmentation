@@ -22,6 +22,9 @@ class Segmentation(pl.LightningModule):
         )
         
     def forward(self, x) -> torch.Tensor:
+        print(x.shape)
+        logits = self.model(x)
+        print(logits.shape)
         return self.model(x)
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
