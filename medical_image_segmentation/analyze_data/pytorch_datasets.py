@@ -294,6 +294,40 @@ def save_image_grid(
     plt.savefig(output_path)
     print(f"saved to {output_path}")
     plt.close()
+    
+
+import os
+import torch
+import torchvision.utils as vutils
+import matplotlib.pyplot as plt
+
+def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size=3, output_name="combined_grid"):
+    """
+    Saves a grid of original images, predicted masks, and ground truth masks.
+
+    Parameters:
+        images (torch.Tensor): A tensor containing the original images.
+        pred_masks (torch.Tensor): A tensor containing the predicted masks.
+        true_masks (torch.Tensor): A tensor containing the ground truth masks.
+        save_dir (str): The directory where the image grid will be saved.
+        grid_size (int, optional): The number of images per row in the grid (default is 3).
+        output_name (str, optional): The name of the file to write.
+    """
+    os.makedirs(save_dir, exist_ok=True)
+
+    combined = torch.cat((images, pred_masks, true_masks), dim=2)
+
+    grid = vutils.make_grid(combined, nrow=grid_size, padding=2, normalize=True)
+    grid_np = grid.numpy().transpose((1, 2, 0))
+
+    plt.figure(figsize=(grid_size * 2, grid_size * 6))
+    plt.imshow(grid_np)
+    plt.axis("off")
+    output_path = os.path.join(save_dir, f"{output_name}.png")
+    plt.savefig(output_path)
+    print(f"Saved to {output_path}")
+    plt.close()
+
 
 
 def print_batch_stats(images: torch.Tensor, labels: torch.Tensor, label_mapping: Dict[int, str]):

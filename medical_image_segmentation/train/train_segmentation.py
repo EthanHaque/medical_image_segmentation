@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 from pytorch_lightning.callbacks import RichProgressBar, RichModelSummary
 import torchvision.transforms as transforms
 
-from medical_image_segmentation.analyze_data.pytorch_datasets import save_image_grid
+from medical_image_segmentation.analyze_data.pytorch_datasets import save_image_grid, save_combined_image_grid
 from medical_image_segmentation.train.data_loaders.lightning_module import DecathlonHeartDataModule
 from medical_image_segmentation.train.model.segmentation import Segmentation
 
@@ -62,7 +62,8 @@ def main(args):
     decathlon_dataset = DecathlonHeartDataModule(images_dir, masks_dir, split_file, args.batch_size, args.num_workers, )
     trainer.fit(model, decathlon_dataset)
     preds = trainer.predict(model, decathlon_dataset)
-    save_image_grid(preds[0], "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/images", grid_size=16)
+    images, pred_masks, true_masks = preds[0]
+    save_combined_image_grid(images, pred_masks, true_masks, "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/images", grid_size=16)
 
 if __name__ == "__main__":
     args = parse_args()

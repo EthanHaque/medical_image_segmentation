@@ -81,8 +81,8 @@ class Segmentation(pl.LightningModule):
         return loss
 
     def predict_step(self, batch, batch_idx):
-        images, _ = batch
+        images, masks = batch
         logits = self.forward(images)
 
-        masks = post_process_masks(logits)
-        return masks
+        predicted_masks = post_process_masks(logits)
+        return images, predicted_masks, masks
