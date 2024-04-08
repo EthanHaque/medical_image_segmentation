@@ -607,12 +607,12 @@ class DecathlonHeartDataModule(LightningDataModule):
     def setup(self, stage):
         image_transform, mask_transform = self.default_transforms()
         if stage == "fit":
-            self.decathlon_heart_train = DecathlonDataset(self.images_dir, self.masks_dir, image_transform, mask_transform, "train", self.split_file)
-            self.decathlon_heart_val = DecathlonDataset(self.images_dir, self.masks_dir, image_transform, mask_transform, "val", self.split_file)
+            self.decathlon_heart_train = DecathlonDataset(self.images_dir, self.masks_dir, self.num_classes, image_transform, mask_transform, "train", self.split_file)
+            self.decathlon_heart_val = DecathlonDataset(self.images_dir, self.masks_dir,  self.num_classes,image_transform, mask_transform, "val", self.split_file)
         if stage == "test":
-            self.decathlon_heart_test = DecathlonDataset(self.images_dir, self.masks_dir, image_transform, mask_transform, "test", self.split_file)
+            self.decathlon_heart_test = DecathlonDataset(self.images_dir, self.masks_dir,  self.num_classes,image_transform, mask_transform, "test", self.split_file)
         if stage == "predict":
-            self.decathlon_heart_test = DecathlonDataset(self.images_dir, self.masks_dir, image_transform, mask_transform, "test", self.split_file)
+            self.decathlon_heart_test = DecathlonDataset(self.images_dir, self.masks_dir,  self.num_classes,image_transform, mask_transform, "test", self.split_file)
 
     def train_dataloader(self):
         loader = torch.utils.data.DataLoader(

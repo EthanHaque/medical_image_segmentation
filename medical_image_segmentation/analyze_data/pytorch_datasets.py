@@ -168,8 +168,8 @@ class DecathlonDataset(Dataset):
         Returns the image inside a tuple.
     """
 
-    def __init__(self, images_dir: str, masks_dir: str, image_transform=None, mask_transform=None, split: str = "train",
-                 split_file: str = None):
+    def __init__(self, images_dir: str, masks_dir: str, num_classes: int, image_transform=None, mask_transform=None, split: str = "train",
+                 split_file: str = None, ):
         """
         Parameters
         ----------
@@ -264,7 +264,7 @@ class DecathlonDataset(Dataset):
         if self.mask_transform:
             mask = self.mask_transform(mask)
 
-        mask = mask.squeeze()
+        mask = torch.nn.functional.one_hot(mask, num_classes=self.num_classes)
 
         return image, mask
 
