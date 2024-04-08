@@ -264,10 +264,7 @@ class DecathlonDataset(Dataset):
         if self.mask_transform:
             mask = self.mask_transform(mask)
 
-        print("Before squeeze:", mask.shape)
         mask = mask.squeeze()
-        print("After squeeze:", mask.shape)
-
         #TODO :remove this
         mask = (mask / 255).long()
 
