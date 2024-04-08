@@ -36,6 +36,12 @@ class Segmentation(pl.LightningModule):
         return optimizer
 
     def loss(self, logits, masks):
+        print(f"logits shape {logits.shape}")
+        print(f"masks shape {masks.shape}")
+        print(f"logits dtype {logits.dtype}")
+        print(f"masks dtype {masks.dtype}")
+        assert logits.dtype.is_floating_point
+        assert masks.dtype == torch.long
         loss_fn = nn.CrossEntropyLoss()
         loss = loss_fn(logits, masks)
         return loss
