@@ -68,8 +68,8 @@ def process_pair(
 ):
     """Processes a pair of image and mask paths."""
     image_path, mask_path = pair
-    save_nii_slices(image_path, image_output_dir, slice_dim, progress)
-    save_nii_slices(mask_path, masks_output_dir, slice_dim, progress)
+    save_nii_slices(image_path, image_output_dir, slice_dim, progress, is_mask=False)
+    save_nii_slices(mask_path, masks_output_dir, slice_dim, progress, is_mask=True)
 
 
 def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int = 1, max_workers: int = 16):
