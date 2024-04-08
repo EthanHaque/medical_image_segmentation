@@ -265,7 +265,7 @@ class DecathlonDataset(Dataset):
             mask = self.mask_transform(mask)
 
         print("Before squeeze:", mask.shape)
-        mask = mask.squeeze(1)
+        mask = mask.squeeze()
         print("After squeeze:", mask.shape)
 
         #TODO :remove this
