@@ -52,6 +52,7 @@ class Segmentation(pl.LightningModule):
         self.log_dict(
             metric_log,
             on_step=True,
+            on_epoch=True,
             sync_dist=True,
             prog_bar=True,
             logger=True,
