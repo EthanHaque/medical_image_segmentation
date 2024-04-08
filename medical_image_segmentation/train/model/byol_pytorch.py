@@ -119,16 +119,6 @@ class BYOL(pl.LightningModule):
         num_classes = get_datamodule(self.hparams.dataset).NUM_CLASSES
         self.linear = torch.nn.Linear(self.online_encoder.feat_dim, num_classes)
 
-        device = self.trainer.local_rank
-        distributed = len(self.trainer.device_ids) > 1
-        dataset = get_datamodule(self.hparams.dataset)
-        self.module = dataset(
-            batch_size=self.hparams.batch_size,
-            num_workers=self.hparams.num_workers,
-            device=device,
-            use_distributed=distributed,
-        )
-
     @torch.no_grad()
     def initialize_momentum_encoder(self):
         """Initialize the momentum encoder."""
@@ -265,11 +255,29 @@ class BYOL(pl.LightningModule):
 
     def train_dataloader(self):
         # Must put loaders in this method to ensure DDP process groups are constructed before creating data loaders
-        return self.module.train_dataloader()
+        device = self.trainer.local_rank
+        distributed = len(self.trainer.device_ids) > 1
+        dataset = get_datamodule(self.hparams.dataset)
+        module = dataset(
+            batch_size=self.hparams.batch_size,
+            num_workers=self.hparams.num_workers,
+            device=device,
+            use_distributed=distributed,
+        )
+        return module.train_dataloader()
 
     def val_dataloader(self):
         # Must put loaders in this method to ensure DDP process groups are constructed before creating data loaders
-        return self.module.val_dataloader()
+        device = self.trainer.local_rank
+        distributed = len(self.trainer.device_ids) > 1
+        dataset = get_datamodule(self.hparams.dataset)
+        module = dataset(
+            batch_size=self.hparams.batch_size,
+            num_workers=self.hparams.num_workers,
+            device=device,
+            use_distributed=distributed,
+        )
+        return module.val_dataloader()
 
     @torch.no_grad()
     def momentum_update(self, online_encoder, momentum_encoder, m):
