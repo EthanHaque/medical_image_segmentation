@@ -277,8 +277,11 @@ class BYOL(pl.LightningModule):
         #     device=self.device, crop_size=self.image_size, mean=self.mean, std=self.std
         # ).get_transforms()
 
+        MEAN = (57.9764, 57.9764, 57.9764)
+        STD = (60.4759, 60.4759, 60.4759)
+
         transforms = [
-            RandomResizedCropRGBImageDecoder(self.crop_size, scale=(0.08, 1.0), ratio=(0.75, 1.33333)),
+            RandomResizedCropRGBImageDecoder((112,112), scale=(0.08, 1.0), ratio=(0.75, 1.33333)),
             ffcv.transforms.RandomHorizontalFlip(flip_prob=0.5),
             # ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
             # ffcv.transforms.RandomBrightness(0.4, 0.8),
@@ -287,7 +290,7 @@ class BYOL(pl.LightningModule):
             # ffcv.transforms.RandomGrayscale(0.2),
             # ffcv.transforms.GaussianBlur(1.0, kernel_size=23),
             # ffcv.transforms.RandomSolarization(solarize_prob, 128),
-            ffcv.transforms.NormalizeImage(np.array(self.mean) * 255, np.array(self.std) * 255, np.float32),
+            ffcv.transforms.NormalizeImage(np.array(MEAN), np.array(STD), np.float32),
             ffcv.transforms.ToTensor(),
             ffcv.transforms.ToDevice(self.device, non_blocking=True),
             ffcv.transforms.ToTorchImage(),
@@ -306,7 +309,7 @@ class BYOL(pl.LightningModule):
         }
         custom_field_mapper = {"image_1": "image"}
 
-        order = ffcv.loader.OrderOption.QUASI_RANDOM if self.use_distributed else ffcv.loader.OrderOption.RANDOM
+        order = ffcv.loader.OrderOption.QUASI_RANDOM if self.hparams.num_gpus > 1 else ffcv.loader.OrderOption.RANDOM
         loader = ffcv.loader.Loader(
             "/scratch/gpfs/RUSTOW/med_datasets/ffcv_datasets/radiology_1M_224_train.beton",
             batch_size=self.hparams.batch_size,
