@@ -287,6 +287,8 @@ def save_image_grid(
         The name of the file to write.
     """
     os.makedirs(save_dir, exist_ok=True)
+    if images.dtype != torch.float32:
+        images = images.to(torch.float32)
     grid = vutils.make_grid(images, nrow=grid_size, padding=2, normalize=True)
     grid_np = grid.numpy().transpose((1, 2, 0))
     plt.figure(figsize=(grid_size * 2, grid_size * 2))

@@ -7,12 +7,8 @@ import torch.nn as nn
 
 
 def post_process_masks(logits):
-    print("logits shape", logits.shape)
     probs = torch.softmax(logits, dim=1)  # Assuming channel 0 is for background
-    print("probs shape", probs.shape)
     masks = torch.argmax(probs, dim=1)  # Take the argmax across channel dimension
-    print("masks shape", masks.shape)
-    print(masks.min(), masks.max())
     return masks
 
 
