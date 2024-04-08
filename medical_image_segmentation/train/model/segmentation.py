@@ -6,23 +6,24 @@ import torch
 import torch.nn as nn
 
 
-def post_process_masks(logits, threshold=0.5):
-    probs = torch.sigmoid(logits)
-    masks = (probs > threshold).float()
+def post_process_masks(logits):
+    probs = torch.softmax(logits, dim=1)  # Assuming channel 0 is for background
+    masks = torch.argmax(probs, dim=1)  # Take the argmax across channel dimension
     return masks
+
 
 
 class Segmentation(pl.LightningModule):
     """Segmentation learner."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, n_classes, **kwargs):
         super().__init__()
         self.save_hyperparameters()
         self.model = smp.Unet(
-            encoder_name=self.hparams.arch,  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
-            encoder_weights=None,  # use `imagenet` pre-trained weights for encoder initialization
-            in_channels=1,  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
-            classes=1,  # model output channels (number of classes in your dataset)
+            encoder_name=self.hparams.arch,
+            encoder_weights=None,
+            in_channels=1,
+            classes=n_classes,
         )
         
     def forward(self, x) -> torch.Tensor:
@@ -35,7 +36,7 @@ class Segmentation(pl.LightningModule):
         return optimizer
 
     def loss(self, logits, masks):
-        loss_fn = nn.BCEWithLogitsLoss()
+        loss_fn = nn.CrossEntropyLoss()
         loss = loss_fn(logits, masks)
         return loss
 

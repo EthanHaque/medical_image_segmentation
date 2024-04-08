@@ -54,13 +54,15 @@ def main(args):
         callbacks=callbacks,
     )
 
-    model = Segmentation(**args.__dict__)
-
+    n_classes = 1
     images_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task02_Heart/images"
     masks_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task02_Heart/masks"
     split_file = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task02_Heart/split.json"
     decathlon_dataset = DecathlonHeartDataModule(images_dir, masks_dir, split_file, args.batch_size, args.num_workers, )
+
+    model = Segmentation(n_classes, **args.__dict__)
     trainer.fit(model, decathlon_dataset)
+
     preds = trainer.predict(model, decathlon_dataset)
     images, pred_masks, true_masks = preds[0]
     save_combined_image_grid(images, pred_masks, true_masks, "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/images", grid_size=16)
