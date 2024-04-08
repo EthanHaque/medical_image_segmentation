@@ -292,7 +292,7 @@ class BYOL(pl.LightningModule):
             # ffcv.transforms.RandomSolarization(solarize_prob, 128),
             ffcv.transforms.NormalizeImage(np.array(MEAN), np.array(STD), np.float32),
             ffcv.transforms.ToTensor(),
-            ffcv.transforms.ToDevice(self.device, non_blocking=True),
+            ffcv.transforms.ToDevice(self.trainer.local_rank, non_blocking=True),
             ffcv.transforms.ToTorchImage(),
             ffcv.transforms.Convert(torch.float32),
         ]
