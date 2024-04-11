@@ -54,7 +54,7 @@ def save_nii_slices(image_file_path: str, output_dir: str, slice_dim: int = 1, p
         if not is_mask:
             slice = ((slice - slice.min()) / (slice.max() - slice.min()) * 255)
         else:
-            slice = (slice != 0).astype(np.uint8)
+            slice = (slice != 0).astype(np.uint8) * 255
         slice = slice.astype(np.uint8)
         output_path = get_slice_output_path(image_file_path, output_dir, slice_number)
         cv2.imwrite(output_path, slice)
