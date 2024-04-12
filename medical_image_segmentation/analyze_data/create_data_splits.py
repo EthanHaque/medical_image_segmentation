@@ -50,7 +50,8 @@ def get_ids(image_dir):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--image_dir", type=str, help="Root dir with image files whose names have unique ids")
+    parser.add_argument("--image_dir", type=str, help="Root dir with image files whose names have unique ids.")
+    parser.add_argument("--output_dir", type=str, help="Where to write output json files with splits.")
 
     return parser.parse_args()
 
@@ -60,7 +61,7 @@ def main():
     ids = get_ids(args.image_dir)
     splits = create_split_by_percent(ids)
     for size, split in splits.items():
-        print(size, json.dumps(split))
+        print(f"{size:0.2f}", json.dumps(split))
 
 
 if __name__ == "__main__":
