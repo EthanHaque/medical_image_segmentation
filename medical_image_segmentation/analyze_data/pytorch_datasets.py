@@ -1,3 +1,5 @@
+import random
+
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
@@ -264,6 +266,17 @@ class DecathlonDataset(Dataset):
             image = self.image_transform(image)
         if self.mask_transform:
             mask = self.mask_transform(mask)
+
+        do_hflip = random.random() < 0.5
+        if do_hflip:
+            torch.flip(image, [2])
+            torch.flip(mask, [2])
+
+        do_vflip = random.random() < 0.5
+        if do_vflip:
+            torch.flip(image, [1])
+            torch.flip(mask, [1])
+
 
         return image, mask
 
