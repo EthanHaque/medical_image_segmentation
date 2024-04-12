@@ -63,7 +63,7 @@ def main(args):
     images_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task02_Heart/images"
     masks_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task02_Heart/masks"
     split_file = (
-        "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task02_Heart/split_10_percent_train.json"
+        "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task02_Heart/split_100_percent_train.json"
     )
     decathlon_dataset = DecathlonHeartDataModule(
         images_dir,
