@@ -43,9 +43,9 @@ def load_file_headers(paths):
     return [nib.load(path) for path in paths]
 
 
-def get_slice_output_path(segmentation_file: NIBSegmentationFile, output_dir: str, slice_number: int) -> str:
+def get_slice_output_path(file_path: str, output_dir: str, slice_number: int) -> str:
     """Gets output path for a single slice of a nifti file."""
-    file_name = segmentation_file.file_path.split("/")[-1]
+    file_name = file_path.split("/")[-1]
     uid_no_ext = file_name.split(".")[0]
     uid_no_ext = uid_no_ext + f"_{slice_number}"
     output_file_name = uid_no_ext + ".png"
