@@ -57,11 +57,11 @@ def save_nii_slices(segmentation_file: NIBSegmentationFile, output_dir: str, sli
     image_arr = segmentation_file.get_arr()
     num_slices = image_arr.shape[slice_dim]
 
-    # if segmentation_file.is_mask:
-    #     image_arr = (image_arr != 0).astype(np.uint8) * 255
-    # else:
-    #     image_arr = (image_arr - image_arr.min()) / (image_arr.max() - image_arr.min()) * 255
-    #     image_arr = image_arr.astype(np.uint8)
+    if segmentation_file.is_mask:
+        image_arr = (image_arr != 0).astype(np.uint8) * 255
+    else:
+        image_arr = (image_arr - image_arr.min()) / (image_arr.max() - image_arr.min()) * 255
+        image_arr = image_arr.astype(np.uint8)
 
     for slice_number in range(num_slices):
         if slice_dim == 0:
@@ -72,14 +72,8 @@ def save_nii_slices(segmentation_file: NIBSegmentationFile, output_dir: str, sli
             slice = image_arr[:, :, slice_number]
         else:
             raise ValueError(f"Cannot slice along dim {slice_dim}")
-
-        if segmentation_file.is_mask:
-            slice = (slice != 0).astype(np.uint18) * 255
-        else:
-            slice = (slice - slice.min()) / (slice.max() - slice.min()) * 255
-            slice = slice.astype(np.uint18)
-    #     output_path = get_slice_output_path(segmentation_file.file_path, output_dir, slice_number)
-    #     cv2.imwrite(output_path, slice)
+        output_path = get_slice_output_path(segmentation_file.file_path, output_dir, slice_number)
+        cv2.imwrite(output_path, slice)
 
     return {
         "file_path": segmentation_file.file_path,
