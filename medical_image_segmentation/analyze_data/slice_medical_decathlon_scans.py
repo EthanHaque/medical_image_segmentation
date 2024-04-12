@@ -64,8 +64,10 @@ def save_nii_slices(segmentation_file: NIBSegmentationFile, output_dir: str, sli
         image_arr = image_arr.astype(np.uint8)
 
     for slice_number in range(num_slices):
-        pass
-        slice = image_arr.take(indices=slice_number, axis=slice_dim)
+        # Slightly convoluted way of slicing the array
+        slice_indices = [slice(None)] * image_arr.ndim
+        slice_indices[slice_dim] = slice_number
+        slice = image_arr[tuple(slice_indices)]
     #     output_path = get_slice_output_path(segmentation_file.file_path, output_dir, slice_number)
     #     cv2.imwrite(output_path, slice)
 
