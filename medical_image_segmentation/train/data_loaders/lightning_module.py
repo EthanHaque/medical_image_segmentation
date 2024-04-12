@@ -765,3 +765,51 @@ class DecathlonLiverDataModule(DecathlonDataModule):
     @property
     def std(self):
         return self.STD
+
+@register_datamodule("DECATHLON_HIPPOCAMPUS")
+class DecathlonHippocampusDataModule(DecathlonDataModule):
+    NUM_CLASSES = 1
+    MEAN = (0.4982,)
+    STD = (0.2373,)
+
+    def __init__(self, images_dir, masks_dir, split_file, batch_size, num_workers):
+        super().__init__(images_dir, masks_dir, split_file, batch_size, num_workers)
+
+
+    @property
+    def num_classes(self):
+        return self.NUM_CLASSES
+
+
+    @property
+    def mean(self):
+        return self.MEAN
+
+
+    @property
+    def std(self):
+        return self.STD
+
+@register_datamodule("DECATHLON_LUNG")
+class DecathlonLungDataModule(DecathlonDataModule):
+    NUM_CLASSES = 1
+    MEAN = (0.1475,)
+    STD = (0.1685,)
+
+    def __init__(self, images_dir, masks_dir, split_file, batch_size, num_workers):
+        super().__init__(images_dir, masks_dir, split_file, batch_size, num_workers)
+
+
+    @property
+    def num_classes(self):
+        return self.NUM_CLASSES
+
+
+    @property
+    def mean(self):
+        return self.MEAN
+
+
+    @property
+    def std(self):
+        return self.STD
