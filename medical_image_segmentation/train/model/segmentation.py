@@ -6,6 +6,7 @@ import torch.nn as nn
 
 def post_process_masks(logits, threshold=0.5):
     probs = torch.sigmoid(logits)
+    print(probs.max())
     masks = (probs > threshold).float()
     return masks
 
@@ -81,7 +82,5 @@ class Segmentation(pl.LightningModule):
     def predict_step(self, batch, batch_idx):
         images, masks = batch
         logits = self(images)
-        print(f"logits max {logits.max()}")
         predicted_masks = post_process_masks(logits)
-        print(f"mask max {predicted_masks.max()}")
         return images, predicted_masks, masks
