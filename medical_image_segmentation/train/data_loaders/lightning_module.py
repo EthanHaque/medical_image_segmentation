@@ -641,7 +641,7 @@ class DecathlonDataModule(LightningDataModule):
                 "test",
                 self.split_file,
             )
-    
+
     def train_dataloader(self):
         loader = torch.utils.data.DataLoader(
             dataset=self.decathlon_train,
@@ -720,6 +720,7 @@ class DecathlonDataModule(LightningDataModule):
 
         return image_transform, mask_transform
 
+
 @register_datamodule("DECATHLON_HEART")
 class DecathlonHeartDataModule(DecathlonDataModule):
     NUM_CLASSES = 1
@@ -751,20 +752,18 @@ class DecathlonLiverDataModule(DecathlonDataModule):
     def __init__(self, images_dir, masks_dir, split_file, batch_size, num_workers):
         super().__init__(images_dir, masks_dir, split_file, batch_size, num_workers)
 
-
     @property
     def num_classes(self):
         return self.NUM_CLASSES
-
 
     @property
     def mean(self):
         return self.MEAN
 
-
     @property
     def std(self):
         return self.STD
+
 
 @register_datamodule("DECATHLON_HIPPOCAMPUS")
 class DecathlonHippocampusDataModule(DecathlonDataModule):
@@ -775,20 +774,18 @@ class DecathlonHippocampusDataModule(DecathlonDataModule):
     def __init__(self, images_dir, masks_dir, split_file, batch_size, num_workers):
         super().__init__(images_dir, masks_dir, split_file, batch_size, num_workers)
 
-
     @property
     def num_classes(self):
         return self.NUM_CLASSES
-
 
     @property
     def mean(self):
         return self.MEAN
 
-
     @property
     def std(self):
         return self.STD
+
 
 @register_datamodule("DECATHLON_LUNG")
 class DecathlonLungDataModule(DecathlonDataModule):
@@ -799,16 +796,13 @@ class DecathlonLungDataModule(DecathlonDataModule):
     def __init__(self, images_dir, masks_dir, split_file, batch_size, num_workers):
         super().__init__(images_dir, masks_dir, split_file, batch_size, num_workers)
 
-
     @property
     def num_classes(self):
         return self.NUM_CLASSES
 
-
     @property
     def mean(self):
         return self.MEAN
-
 
     @property
     def std(self):

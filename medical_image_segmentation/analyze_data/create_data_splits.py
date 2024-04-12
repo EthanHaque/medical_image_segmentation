@@ -63,9 +63,7 @@ def main():
     ids = get_ids(args.image_dir)
     splits = create_split_by_percent(ids)
     full = splits[1.0]
-    combined_data = {
-        "train": full["train"] + full["val"] + full["test"]
-    }
+    combined_data = {"train": full["train"] + full["val"] + full["test"]}
     splits[-1] = combined_data
     for size, split in splits.items():
         if size == -1:
