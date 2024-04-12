@@ -72,6 +72,7 @@ def save_nii_slices(segmentation_file: NIBSegmentationFile, output_dir: str, sli
 
     return {
         "file_path": segmentation_file.file_path,
+        "is_mask": segmentation_file.is_mask,
         "num_slices": num_slices,
     }
 
@@ -103,11 +104,23 @@ def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int, max
         for file in files:
             output_dir = masks_output_dir if file.is_mask else image_output_dir
             futures.append(executor.submit(save_nii_slices, file, output_dir, slice_dim))
+
         with Progress() as progress:
-            main_task_id = progress.add_task("[cyan]Processing images and masks...", total=total_slices)
+            main_task_id = progress.add_task("[cyan]Processing images and masks...",
+                                             total=total_slices,
+                                             images_processed=0,
+                                             masks_processed=0,
+                                             files_remaining=len(futures))
             for future in as_completed(futures):
                 result = future.result()
-                progress.update(main_task_id, advance=result["num_slices"])
+                progress.update(main_task_id,
+                                advance=result["num_slices"],
+                                files_remaining=progress.tasks[main_task_id].fields['files_remaining'] - 1 )
+                if result["is_mask"]:
+                    progress.update(main_task_id, masks_processed=progress.tasks[main_task_id].fields['masks_processed'] + 1)
+                else:
+                    progress.update(main_task_id, images_processed=progress.tasks[main_task_id].fields['images_processed'] + 1)
+
 
 
 def parse_args() -> argparse.Namespace:
