@@ -265,6 +265,8 @@ class DecathlonDataset(Dataset):
         if self.mask_transform:
             mask = self.mask_transform(mask)
 
+        mask /= 255
+
         return image, mask
 
 
