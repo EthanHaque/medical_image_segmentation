@@ -32,7 +32,7 @@ def parse_args():
         type=int,
         help="number of workers",
     )
-    parser.add_argument("--batch_size", default=1024, type=int, help="batch size")
+    parser.add_argument("--batch_size", default=512, type=int, help="batch size")
 
     return parser.parse_args()
 
