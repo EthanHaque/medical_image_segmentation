@@ -577,12 +577,7 @@ class CIFAR100DataModule(CIFARDataModule):
         return self.STD
 
 
-@register_datamodule("DECATHLON_HEART")
-class DecathlonHeartDataModule(LightningDataModule):
-    NUM_CLASSES = 1
-    MEAN = (0.1064,)
-    STD = (0.1598,)
-
+class DecathlonDataModule(LightningDataModule):
     def __init__(self, images_dir, masks_dir, split_file, batch_size, num_workers):
         super().__init__()
         self.images_dir = images_dir
@@ -593,21 +588,21 @@ class DecathlonHeartDataModule(LightningDataModule):
 
     @property
     def num_classes(self):
-        return self.NUM_CLASSES
+        raise NotImplementedError("Subclasses must define num_classes")
 
     @property
     def mean(self):
-        return self.MEAN
+        raise NotImplementedError("Subclasses must define mean")
 
     @property
     def std(self):
-        return self.STD
+        raise NotImplementedError("Subclasses must define std")
 
     def setup(self, stage):
         train_image_transform, train_mask_transform = self.train_transforms()
         test_image_transform, test_mask_transform = self.default_transforms()
         if stage == "fit":
-            self.decathlon_heart_train = DecathlonDataset(
+            self.decathlon_train = DecathlonDataset(
                 self.images_dir,
                 self.masks_dir,
                 self.num_classes,
@@ -617,7 +612,7 @@ class DecathlonHeartDataModule(LightningDataModule):
                 self.split_file,
                 do_pair_transforms=True,
             )
-            self.decathlon_heart_val = DecathlonDataset(
+            self.decathlon_val = DecathlonDataset(
                 self.images_dir,
                 self.masks_dir,
                 self.num_classes,
@@ -627,7 +622,7 @@ class DecathlonHeartDataModule(LightningDataModule):
                 self.split_file,
             )
         if stage == "test":
-            self.decathlon_heart_test = DecathlonDataset(
+            self.decathlon_test = DecathlonDataset(
                 self.images_dir,
                 self.masks_dir,
                 self.num_classes,
@@ -637,7 +632,7 @@ class DecathlonHeartDataModule(LightningDataModule):
                 self.split_file,
             )
         if stage == "predict":
-            self.decathlon_heart_test = DecathlonDataset(
+            self.decathlon_test = DecathlonDataset(
                 self.images_dir,
                 self.masks_dir,
                 self.num_classes,
@@ -646,10 +641,10 @@ class DecathlonHeartDataModule(LightningDataModule):
                 "test",
                 self.split_file,
             )
-
+    
     def train_dataloader(self):
         loader = torch.utils.data.DataLoader(
-            dataset=self.decathlon_heart_train,
+            dataset=self.decathlon_train,
             shuffle=True,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
@@ -661,7 +656,7 @@ class DecathlonHeartDataModule(LightningDataModule):
 
     def val_dataloader(self):
         loader = torch.utils.data.DataLoader(
-            dataset=self.decathlon_heart_val,
+            dataset=self.decathlon_val,
             shuffle=False,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
@@ -673,7 +668,7 @@ class DecathlonHeartDataModule(LightningDataModule):
 
     def test_dataloader(self):
         loader = torch.utils.data.DataLoader(
-            dataset=self.decathlon_heart_test,
+            dataset=self.decathlon_test,
             shuffle=False,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
@@ -724,3 +719,24 @@ class DecathlonHeartDataModule(LightningDataModule):
         )
 
         return image_transform, mask_transform
+
+@register_datamodule("DECATHLON_HEART")
+class DecathlonHeartDataModule(DecathlonDataModule):
+    NUM_CLASSES = 1
+    MEAN = (0.1064,)
+    STD = (0.1598,)
+
+    def __init__(self, images_dir, masks_dir, split_file, batch_size, num_workers):
+        super().__init__(images_dir, masks_dir, split_file, batch_size, num_workers)
+
+    @property
+    def num_classes(self):
+        return self.NUM_CLASSES
+
+    @property
+    def mean(self):
+        return self.MEAN
+
+    @property
+    def std(self):
+        return self.STD
