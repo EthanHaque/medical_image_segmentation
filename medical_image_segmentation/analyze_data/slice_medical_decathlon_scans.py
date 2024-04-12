@@ -5,7 +5,7 @@ import nibabel as nib
 import numpy as np
 import cv2
 from rich.progress import Progress
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 
 from medical_image_segmentation.analyze_data.utils import get_file_paths
 
@@ -86,7 +86,7 @@ def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int = 1,
     with Progress() as progress:
         main_task_id = progress.add_task("[cyan]Processing images and masks...", total=len(pairs) * 2)
 
-        with ThreadPoolExecutor(max_workers) as executor:
+        with ProcessPoolExecutor(max_workers) as executor:
             futures = [
                 executor.submit(process_pair, pair, image_output_dir, masks_output_dir, slice_dim, progress)
                 for pair in pairs
