@@ -66,14 +66,16 @@ def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int, max
     os.makedirs(image_output_dir, exist_ok=True)
     os.makedirs(masks_output_dir, exist_ok=True)
 
-    with Progress() as progress:
-        main_task_id = progress.add_task("[cyan]Processing images and masks...", total=len(pairs) * 2)
-
-        with ProcessPoolExecutor(max_workers) as executor:
-            futures = []
+    with ProcessPoolExecutor(max_workers) as executor:
+        futures = []
+        with Progress() as progress:
+            submit_task_id = progress.add_task("[cyan]Preparing images and masks...", total=len(pairs) * 2)
             for image_path, mask_path in pairs:
-                futures.append( executor.submit(save_nii_slices, image_path, image_output_dir, slice_dim, False))
+                futures.append(executor.submit(save_nii_slices, image_path, image_output_dir, slice_dim, False))
                 futures.append(executor.submit(save_nii_slices, mask_path, masks_output_dir, slice_dim, True))
+                progress.update(submit_task_id, advance=2)
+        with Progress() as progress:
+            main_task_id = progress.add_task("[cyan]Processing images and masks...", total=len(pairs) * 2)
             for _ in as_completed(futures):
                 progress.update(main_task_id, advance=1)
 
