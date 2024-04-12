@@ -316,7 +316,7 @@ def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size
     os.makedirs(save_dir, exist_ok=True)
     overlay_images = []
 
-    images = images.float() / 255 if images.max() > 1 else images.float()
+    images = images.float() / 255 if images.max() > 1 else images.float(pred_masks)
 
     for i in range(images.shape[0]):
         img = images[i]
