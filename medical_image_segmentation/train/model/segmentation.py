@@ -1,11 +1,7 @@
-from typing import Any
-
 import pytorch_lightning as pl
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
-from segmentation_models_pytorch.losses import FocalLoss
-from segmentation_models_pytorch.losses._functional import focal_loss_with_logits, softmax_focal_loss_with_logits
 
 
 def post_process_masks(logits, threshold=0.5):
