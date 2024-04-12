@@ -9,6 +9,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 
 from medical_image_segmentation.analyze_data.utils import get_file_paths
 
+
 class NIBSegmentationFile():
     def __init__(self, nib_file_path, is_mask):
         self.file_path = nib_file_path
@@ -20,6 +21,7 @@ class NIBSegmentationFile():
 
     def get_arr(self):
         return self.image.get_fdata()
+
 
 def get_scan_and_mask_pairs(scan_dir: str, mask_dir: str) -> List[Tuple[str, str]]:
     """Pairs the scan and mask paths into a list of tuples (scan, mask)."""
@@ -65,6 +67,19 @@ def save_nii_slices(segmentation_file: NIBSegmentationFile, output_dir: str, sli
         # output_path = get_slice_output_path(segmentation_file.file_path, output_dir, slice_number)
         # cv2.imwrite(output_path, slice)
 
+    return {
+        "file_path": segmentation_file.file_path,
+        "num_slices": num_slices,
+    }
+
+
+def get_total_slices(segmentation_files: List[NIBSegmentationFile], dim):
+    total_slices = 0
+    for file in segmentation_files:
+        total_slices += file.get_shape()[dim]
+
+    return total_slices
+
 
 def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int, max_workers: int):
     pairs = get_scan_and_mask_pairs(scan_dir, mask_dir)
@@ -73,9 +88,10 @@ def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int, max
         files.append(NIBSegmentationFile(image_path, False))
         files.append(NIBSegmentationFile(mask_path, True))
 
+    total_slices = get_total_slices(files, slice_dim)
+
     image_output_dir = os.path.join(root_output_dir, "images")
     masks_output_dir = os.path.join(root_output_dir, "masks")
-
     os.makedirs(image_output_dir, exist_ok=True)
     os.makedirs(masks_output_dir, exist_ok=True)
 
@@ -85,9 +101,10 @@ def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int, max
             output_dir = masks_output_dir if file.is_mask else image_output_dir
             futures.append(executor.submit(save_nii_slices, file, output_dir, slice_dim))
         with Progress() as progress:
-            main_task_id = progress.add_task("[cyan]Processing images and masks...", total=len(futures))
-            for _ in as_completed(futures):
-                progress.update(main_task_id, advance=1)
+            main_task_id = progress.add_task("[cyan]Processing images and masks...", total=total_slices)
+            for future in as_completed(futures):
+                result = future.result()
+                progress.update(main_task_id, advance=result["num_slices"])
 
 
 def parse_args() -> argparse.Namespace:
