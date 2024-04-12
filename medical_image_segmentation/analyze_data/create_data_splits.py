@@ -61,7 +61,7 @@ def main():
     ids = get_ids(args.image_dir)
     splits = create_split_by_percent(ids)
     for size, split in splits.items():
-        print(f"{size:0.2f}", json.dumps(split))
+        print(f"{size * 100:d}", json.dumps(split))
 
 
 if __name__ == "__main__":
