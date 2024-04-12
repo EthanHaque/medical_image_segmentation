@@ -171,7 +171,7 @@ class DecathlonDataset(Dataset):
     """
 
     def __init__(self, images_dir: str, masks_dir: str, num_classes: int, image_transform=None, mask_transform=None, split: str = "train",
-                 split_file: str = None, ):
+                 split_file: str = None, do_pair_transforms: bool=False ):
         """
         Parameters
         ----------
@@ -185,6 +185,7 @@ class DecathlonDataset(Dataset):
             A composition of transformations to apply to the masks (default is None).
         """
         self.num_classes = num_classes
+        self.do_pair_transforms = do_pair_transforms
         self.image_paths = get_file_paths(images_dir, lambda x: x.endswith(".png"))
         self.mask_paths = get_file_paths(masks_dir, lambda x: x.endswith(".png"))
 
@@ -267,15 +268,16 @@ class DecathlonDataset(Dataset):
         if self.mask_transform:
             mask = self.mask_transform(mask)
 
-        # do_hflip = random.random() < 0.5
-        # if do_hflip:
-        #     image = torch.flip(image, [2])
-        #     mask = torch.flip(mask, [2])
-        #
-        # do_vflip = random.random() < 0.5
-        # if do_vflip:
-        #     image = torch.flip(image, [1])
-        #     mask = torch.flip(mask, [1])
+        if self.do_pair_transforms:
+            do_hflip = random.random() < 0.5
+            if do_hflip:
+                image = torch.flip(image, [2])
+                mask = torch.flip(mask, [2])
+
+            do_vflip = random.random() < 0.5
+            if do_vflip:
+                image = torch.flip(image, [1])
+                mask = torch.flip(mask, [1])
 
         return image, mask
 
