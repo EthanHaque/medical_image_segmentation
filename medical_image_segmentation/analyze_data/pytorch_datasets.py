@@ -269,13 +269,13 @@ class DecathlonDataset(Dataset):
 
         do_hflip = random.random() < 0.5
         if do_hflip:
-            torch.flip(image, [2])
-            torch.flip(mask, [2])
+            image = torch.flip(image, [2])
+            mask = torch.flip(mask, [2])
 
         do_vflip = random.random() < 0.5
         if do_vflip:
-            torch.flip(image, [1])
-            torch.flip(mask, [1])
+            image = torch.flip(image, [1])
+            mask = torch.flip(mask, [1])
 
 
         return image, mask
