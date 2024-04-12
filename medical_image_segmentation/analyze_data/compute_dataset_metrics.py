@@ -60,8 +60,8 @@ def compute_mean_and_std_ffcv(beton_file_path, batch_size=8, num_workers=2):
 
 
 if __name__ == "__main__":
-    images_dir = "/bind_tmp/test_write_nii/images"
-    masks_dir = "/bind_tmp/test_write_nii/masks"
+    images_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task03_Liver/images"
+    masks_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task03_Liver/masks"
     transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
     dataset = DecathlonDataset(images_dir, masks_dir, transform, transform)
     mean, std = compute_mean_and_std_pytorch(dataset)

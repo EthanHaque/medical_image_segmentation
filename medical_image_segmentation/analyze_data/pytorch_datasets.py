@@ -409,14 +409,13 @@ def print_batch_stats(images: torch.Tensor, labels: torch.Tensor, label_mapping:
 
 if __name__ == "__main__":
     transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
-    task_heart_images_root = "/bind_tmp/test_write_nii/images"
-    task_heart_masks_root = "/bind_tmp/test_write_nii/masks"
-    dataset = DecathlonDataset(task_heart_images_root, task_heart_masks_root, transform, transform)
-    dataloader = DataLoader(dataset, batch_size=9, shuffle=True)
+    task_images_root = "/bind_tmp/test_write_nii/images"
+    task_masks_root = "/bind_tmp/test_write_nii/masks"
+    dataset = DecathlonDataset(task_images_root, task_masks_root, transform, transform)
+    dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
 
-    images, masks = next(iter(dataloader))
+    # images, masks = next(iter(dataloader))
 
-    images_next_to_masks = torch.cat((images, masks), dim=0)
-
-    save_image_grid(images_next_to_masks, save_dir="/bind_tmp")
-    print_batch_stats(images, None, None)
+    # images_next_to_masks = torch.cat((images, masks), dim=0)
+    # save_image_grid(images_next_to_masks, save_dir="/bind_tmp")
+    # print_batch_stats(images, None, None)

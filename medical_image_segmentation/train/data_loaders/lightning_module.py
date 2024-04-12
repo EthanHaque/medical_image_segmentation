@@ -740,3 +740,26 @@ class DecathlonHeartDataModule(DecathlonDataModule):
     @property
     def std(self):
         return self.STD
+
+
+@register_datamodule("DECATHLON_LIVER")
+class DecathlonLiverDataModule(DecathlonDataModule):
+    NUM_CLASSES = 1
+
+    def __init__(self, images_dir, masks_dir, split_file, batch_size, num_workers):
+        super().__init__(images_dir, masks_dir, split_file, batch_size, num_workers)
+
+
+    @property
+    def num_classes(self):
+        return self.NUM_CLASSES
+
+
+    @property
+    def mean(self):
+        return self.MEAN
+
+
+    @property
+    def std(self):
+        return self.STD
