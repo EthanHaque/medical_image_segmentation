@@ -18,21 +18,23 @@ def compute_mean_and_std(loader):
     for batch in tqdm(loader):
         images = batch[0].to(torch.float64)
         sum_ += torch.sum(images, dim=[0, 2, 3])  # Sum over batch, height, and width
-        sum_squared += torch.sum(images ** 2, dim=[0, 2, 3])
+        sum_squared += torch.sum(images**2, dim=[0, 2, 3])
         num_pixels += images.size(0) * images.size(2) * images.size(3)  # Batch size * Height * Width
 
     mean = sum_ / num_pixels
     mean_of_squares = sum_squared / num_pixels
-    mean_squared = mean ** 2
+    mean_squared = mean**2
     std = torch.sqrt(mean_of_squares - mean_squared)
 
     return mean, std
+
 
 def compute_mean_and_std_pytorch(dataset: Dataset, batch_size=8, num_workers=2):
     """Computes mean and standard deviation for a PyTorch dataset."""
 
     loader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers)
     return compute_mean_and_std(loader)
+
 
 def compute_mean_and_std_ffcv(beton_file_path, batch_size=8, num_workers=2):
     """Computes mean and standard deviation for a dataset stored in a .beton file."""
@@ -44,15 +46,17 @@ def compute_mean_and_std_ffcv(beton_file_path, batch_size=8, num_workers=2):
         os_cache=True,
         drop_last=False,
         pipelines={
-            "image": [CenterCropRGBImageDecoder((224, 224), 1.0), ffcv.transforms.ToTensor(), ffcv.transforms.ToTorchImage()],
-            "label": [IntDecoder()]
+            "image": [
+                CenterCropRGBImageDecoder((224, 224), 1.0),
+                ffcv.transforms.ToTensor(),
+                ffcv.transforms.ToTorchImage(),
+            ],
+            "label": [IntDecoder()],
         },
         distributed=False,
     )
 
     return compute_mean_and_std(loader)
-
-
 
 
 if __name__ == "__main__":

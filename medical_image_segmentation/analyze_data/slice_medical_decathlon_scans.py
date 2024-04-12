@@ -10,7 +10,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from medical_image_segmentation.analyze_data.utils import get_file_paths
 
 
-class NIBSegmentationFile():
+class NIBSegmentationFile:
     def __init__(self, nib_file_path, is_mask):
         self.file_path = nib_file_path
         self.is_mask = is_mask
@@ -112,22 +112,27 @@ def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int, max
             futures.append(executor.submit(save_nii_slices, file, output_dir, slice_dim))
 
         with Progress(
-                TextColumn("[progress.description]{task.description}"),
-                BarColumn(),
-                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-                TextColumn("[cyan]Images: {task.fields[images_processed]}"),
-                TextColumn("[green]Masks: {task.fields[masks_processed]}"),
-                TextColumn("[yellow]Slices: {task.fields[slices_written]}/{task.total}"),
-                TimeRemainingColumn(),
-                TimeElapsedColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+            TextColumn("[cyan]Images: {task.fields[images_processed]}"),
+            TextColumn("[green]Masks: {task.fields[masks_processed]}"),
+            TextColumn("[yellow]Slices: {task.fields[slices_written]}/{task.total}"),
+            TimeRemainingColumn(),
+            TimeElapsedColumn(),
         ) as progress:
-            main_task_id = progress.add_task("[cyan]Processing images and masks...", total=total_slices,
-                                             images_processed=0, masks_processed=0, slices_written=0)
+            main_task_id = progress.add_task(
+                "[cyan]Processing images and masks...",
+                total=total_slices,
+                images_processed=0,
+                masks_processed=0,
+                slices_written=0,
+            )
             for future in as_completed(futures):
                 result = future.result()
-                images_processed = progress.tasks[main_task_id].fields['images_processed']
-                masks_processed = progress.tasks[main_task_id].fields['masks_processed']
-                slices_written = progress.tasks[main_task_id].fields['slices_written'] + result["num_slices"]
+                images_processed = progress.tasks[main_task_id].fields["images_processed"]
+                masks_processed = progress.tasks[main_task_id].fields["masks_processed"]
+                slices_written = progress.tasks[main_task_id].fields["slices_written"] + result["num_slices"]
                 if result["is_mask"]:
                     masks_processed += 1
                 else:
@@ -137,8 +142,9 @@ def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int, max
                     advance=result["num_slices"],
                     images_processed=images_processed,
                     masks_processed=masks_processed,
-                    slices_written=slices_written
+                    slices_written=slices_written,
                 )
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()

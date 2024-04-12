@@ -16,15 +16,16 @@ def create_split(image_ids, train_size=0.7, val_size=0.2, test_size=0.1):
 
     splits = {
         "train": image_ids[:number_train],
-        "val": image_ids[number_train:number_train + number_val],
-        "test": image_ids[number_train + number_val:]
+        "val": image_ids[number_train : number_train + number_val],
+        "test": image_ids[number_train + number_val :],
     }
 
     return splits
 
 
-def create_split_by_percent(image_ids, train_size=0.7, val_size=0.2, test_size=0.1,
-                            train_percents=(0.1, 0.25, 0.50, 1.0)):
+def create_split_by_percent(
+    image_ids, train_size=0.7, val_size=0.2, test_size=0.1, train_percents=(0.1, 0.25, 0.50, 1.0)
+):
     splits = {}
     base_split = create_split(image_ids, train_size, val_size, test_size)
     for percent in train_percents:

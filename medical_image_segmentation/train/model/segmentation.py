@@ -14,12 +14,12 @@ class DiceLoss(nn.Module):
         super(DiceLoss, self).__init__()
 
     def forward(self, inputs, targets):
-        smooth = 1.
+        smooth = 1.0
         inputs = torch.sigmoid(inputs)
         inputs_flat = inputs.view(-1)
         targets_flat = targets.view(-1)
         intersection = (inputs_flat * targets_flat).sum()
-        dice_coeff = (2. * intersection + smooth) / (inputs_flat.sum() + targets_flat.sum() + smooth)
+        dice_coeff = (2.0 * intersection + smooth) / (inputs_flat.sum() + targets_flat.sum() + smooth)
         dice_loss = 1 - dice_coeff
         return dice_loss
 
@@ -42,7 +42,7 @@ class Segmentation(pl.LightningModule):
             in_channels=1,
             classes=n_classes,
         )
-        
+
     def forward(self, x) -> torch.Tensor:
         return self.model(x)
 
@@ -73,9 +73,7 @@ class Segmentation(pl.LightningModule):
         logits = self.forward(images)
         loss = self.loss(logits, masks)
 
-        metric_log = {
-            "train/loss": loss
-        }
+        metric_log = {"train/loss": loss}
 
         self.log_dict(
             metric_log,
@@ -94,9 +92,7 @@ class Segmentation(pl.LightningModule):
         logits = self.forward(images)
         loss = self.loss(logits, masks)
 
-        metric_log = {
-            "val/loss": loss
-        }
+        metric_log = {"val/loss": loss}
 
         self.log_dict(
             metric_log,

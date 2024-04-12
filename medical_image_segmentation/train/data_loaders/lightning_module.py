@@ -193,6 +193,7 @@ class RGBFFCVDataModule(LightningDataModule):
 @register_datamodule("RADIOLOGY_1M_FFCV")
 class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
     NUM_CLASSES = 10
+
     def __init__(self, batch_size, num_workers, device, use_distributed, **kwargs):
         super().__init__(
             "/scratch/gpfs/RUSTOW/med_datasets/ffcv_datasets/radiology_1M_224_train.beton",
@@ -269,7 +270,6 @@ class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
             pipelines=pipelines,
         )
         return loader
-
 
 
 @register_datamodule("CIFAR100_FFCV")
@@ -579,11 +579,10 @@ class CIFAR100DataModule(CIFARDataModule):
 
 @register_datamodule("DECATHLON_HEART")
 class DecathlonHeartDataModule(LightningDataModule):
-    # TODO: Should be 1 or 2?
-    NUM_CLASSES = 2
+    NUM_CLASSES = 1
     MEAN = (0.1064,)
     STD = (0.1598,)
-    
+
     def __init__(self, images_dir, masks_dir, split_file, batch_size, num_workers):
         super().__init__()
         self.images_dir = images_dir
@@ -591,7 +590,7 @@ class DecathlonHeartDataModule(LightningDataModule):
         self.split_file = split_file
         self.batch_size = batch_size
         self.num_workers = num_workers
-        
+
     @property
     def num_classes(self):
         return self.NUM_CLASSES
@@ -608,12 +607,45 @@ class DecathlonHeartDataModule(LightningDataModule):
         train_image_transform, train_mask_transform = self.train_transforms()
         test_image_transform, test_mask_transform = self.default_transforms()
         if stage == "fit":
-            self.decathlon_heart_train = DecathlonDataset(self.images_dir, self.masks_dir, self.num_classes, train_image_transform, train_mask_transform, "train", self.split_file, do_pair_transforms=True)
-            self.decathlon_heart_val = DecathlonDataset(self.images_dir, self.masks_dir,  self.num_classes, test_image_transform, test_mask_transform, "val", self.split_file)
+            self.decathlon_heart_train = DecathlonDataset(
+                self.images_dir,
+                self.masks_dir,
+                self.num_classes,
+                train_image_transform,
+                train_mask_transform,
+                "train",
+                self.split_file,
+                do_pair_transforms=True,
+            )
+            self.decathlon_heart_val = DecathlonDataset(
+                self.images_dir,
+                self.masks_dir,
+                self.num_classes,
+                test_image_transform,
+                test_mask_transform,
+                "val",
+                self.split_file,
+            )
         if stage == "test":
-            self.decathlon_heart_test = DecathlonDataset(self.images_dir, self.masks_dir,  self.num_classes, test_image_transform, test_mask_transform, "test", self.split_file)
+            self.decathlon_heart_test = DecathlonDataset(
+                self.images_dir,
+                self.masks_dir,
+                self.num_classes,
+                test_image_transform,
+                test_mask_transform,
+                "test",
+                self.split_file,
+            )
         if stage == "predict":
-            self.decathlon_heart_test = DecathlonDataset(self.images_dir, self.masks_dir,  self.num_classes, test_image_transform, test_mask_transform, "test", self.split_file)
+            self.decathlon_heart_test = DecathlonDataset(
+                self.images_dir,
+                self.masks_dir,
+                self.num_classes,
+                test_image_transform,
+                test_mask_transform,
+                "test",
+                self.split_file,
+            )
 
     def train_dataloader(self):
         loader = torch.utils.data.DataLoader(
@@ -653,7 +685,6 @@ class DecathlonHeartDataModule(LightningDataModule):
 
     def predict_dataloader(self):
         return self.test_dataloader()
-
 
     def train_transforms(self):
         image_transform = transform_lib.Compose(
