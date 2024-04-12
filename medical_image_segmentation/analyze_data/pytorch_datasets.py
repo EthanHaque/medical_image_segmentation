@@ -277,7 +277,6 @@ class DecathlonDataset(Dataset):
         #     image = torch.flip(image, [1])
         #     mask = torch.flip(mask, [1])
 
-
         return image, mask
 
 

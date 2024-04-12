@@ -6,7 +6,6 @@ import torch.nn as nn
 
 def post_process_masks(logits, threshold=0.5):
     probs = torch.sigmoid(logits)
-    print(probs.max())
     masks = (probs > threshold).float()
     return masks
 
