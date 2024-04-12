@@ -1,7 +1,8 @@
 import torch
 import torchvision
+from pytorch_lightning.utilities.types import TRAIN_DATALOADERS
 from torchvision import datasets
-from torchvision.transforms import v2 as transform_lib
+from torchvision.transforms import v2 as transform_lib, InterpolationMode
 from pytorch_lightning import LightningDataModule
 import ffcv
 from ffcv.fields.decoders import (
@@ -14,6 +15,8 @@ import numpy as np
 
 
 import os
+
+from medical_image_segmentation.analyze_data.pytorch_datasets import DecathlonDataset
 
 DATAMODULE_REGISTRY = {}
 
@@ -572,3 +575,121 @@ class CIFAR100DataModule(CIFARDataModule):
     @property
     def std(self):
         return self.STD
+
+
+@register_datamodule("DECATHLON_HEART")
+class DecathlonHeartDataModule(LightningDataModule):
+    # TODO: Should be 1 or 2?
+    NUM_CLASSES = 2
+    MEAN = (0.1064,)
+    STD = (0.1598,)
+    
+    def __init__(self, images_dir, masks_dir, split_file, batch_size, num_workers):
+        super().__init__()
+        self.images_dir = images_dir
+        self.masks_dir = masks_dir
+        self.split_file = split_file
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+        
+    @property
+    def num_classes(self):
+        return self.NUM_CLASSES
+
+    @property
+    def mean(self):
+        return self.MEAN
+
+    @property
+    def std(self):
+        return self.STD
+
+    def setup(self, stage):
+        train_image_transform, train_mask_transform = self.train_transforms()
+        test_image_transform, test_mask_transform = self.default_transforms()
+        if stage == "fit":
+            self.decathlon_heart_train = DecathlonDataset(self.images_dir, self.masks_dir, self.num_classes, train_image_transform, train_mask_transform, "train", self.split_file, do_pair_transforms=True)
+            self.decathlon_heart_val = DecathlonDataset(self.images_dir, self.masks_dir,  self.num_classes, test_image_transform, test_mask_transform, "val", self.split_file)
+        if stage == "test":
+            self.decathlon_heart_test = DecathlonDataset(self.images_dir, self.masks_dir,  self.num_classes, test_image_transform, test_mask_transform, "test", self.split_file)
+        if stage == "predict":
+            self.decathlon_heart_test = DecathlonDataset(self.images_dir, self.masks_dir,  self.num_classes, test_image_transform, test_mask_transform, "test", self.split_file)
+
+    def train_dataloader(self):
+        loader = torch.utils.data.DataLoader(
+            dataset=self.decathlon_heart_train,
+            shuffle=True,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            pin_memory=True,
+            drop_last=True,
+        )
+
+        return loader
+
+    def val_dataloader(self):
+        loader = torch.utils.data.DataLoader(
+            dataset=self.decathlon_heart_val,
+            shuffle=False,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            pin_memory=True,
+            drop_last=False,
+        )
+
+        return loader
+
+    def test_dataloader(self):
+        loader = torch.utils.data.DataLoader(
+            dataset=self.decathlon_heart_test,
+            shuffle=False,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            pin_memory=True,
+            drop_last=False,
+        )
+
+        return loader
+
+    def predict_dataloader(self):
+        return self.test_dataloader()
+
+
+    def train_transforms(self):
+        image_transform = transform_lib.Compose(
+            [
+                transform_lib.ToImage(),
+                transform_lib.Resize((224, 224)),
+                transform_lib.ColorJitter(brightness=0.4, contrast=0.4),
+                transform_lib.ToDtype(torch.float32, scale=True),
+                transform_lib.Normalize(mean=self.mean, std=self.std),
+            ]
+        )
+        mask_transform = transform_lib.Compose(
+            [
+                transform_lib.ToImage(),
+                transform_lib.Resize((224, 224), interpolation=InterpolationMode.NEAREST),
+                transform_lib.ToDtype(torch.float32, scale=True),
+            ]
+        )
+
+        return image_transform, mask_transform
+
+    def default_transforms(self):
+        image_transform = transform_lib.Compose(
+            [
+                transform_lib.ToImage(),
+                transform_lib.Resize((224, 224)),
+                transform_lib.ToDtype(torch.float32, scale=True),
+                transform_lib.Normalize(mean=self.mean, std=self.std),
+            ]
+        )
+        mask_transform = transform_lib.Compose(
+            [
+                transform_lib.ToImage(),
+                transform_lib.Resize((224, 224), interpolation=InterpolationMode.NEAREST),
+                transform_lib.ToDtype(torch.float32, scale=True),
+            ]
+        )
+
+        return image_transform, mask_transform

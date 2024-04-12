@@ -1,3 +1,5 @@
+import random
+
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
@@ -11,6 +13,7 @@ from torch.utils.data import DataLoader
 import os
 from medical_image_segmentation.analyze_data.utils import get_file_paths
 import numpy as np
+import json
 
 
 class ChestXRayDataset(Dataset):
@@ -146,8 +149,141 @@ class Radiology1MDataset(Dataset):
         return (image,)
 
 
+class DecathlonDataset(Dataset):
+    """
+    A PyTorch dataset for image segmentation using the Medical Decathlon dataset.
+
+    Attributes
+    ----------
+    image_paths: List[str]
+        List of paths to each image.
+    mask_paths: List[str]
+        List of paths to each image mask.
+    transform : torchvision.transforms.Compose
+        A composition of transformations to apply to the images.
+
+    Methods
+    -------
+    __len__() -> int
+        Returns the number of samples in the dataset.
+    __getitem__(index: int) -> Tuple[torch.Tensor]
+        Returns the image inside a tuple.
+    """
+
+    def __init__(self, images_dir: str, masks_dir: str, num_classes: int, image_transform=None, mask_transform=None, split: str = "train",
+                 split_file: str = None, do_pair_transforms: bool=False ):
+        """
+        Parameters
+        ----------
+        images_dir: str
+            Root directory where all scans are located.
+        masks_dir: str
+            Root directory where all scan masks are located.
+        image_transform : torchvision.transforms.Compose, optional
+            A composition of transformations to apply to the images (default is None).
+        mask_transform : torchvision.transforms.Compose, optional
+            A composition of transformations to apply to the masks (default is None).
+        """
+        self.num_classes = num_classes
+        self.do_pair_transforms = do_pair_transforms
+        self.image_paths = get_file_paths(images_dir, lambda x: x.endswith(".png"))
+        self.mask_paths = get_file_paths(masks_dir, lambda x: x.endswith(".png"))
+
+        with open(split_file, "r") as f:
+            splits = json.load(f)
+        ids_subset = set([int(x) for x in splits[split]])
+
+        filtered_image_paths = []
+        for image_path in self.image_paths:
+            image_fname = os.path.basename(image_path)
+            image_id = int(image_fname.split("_")[1])
+            if image_id in ids_subset:
+                filtered_image_paths.append(image_path)
+
+        filtered_mask_paths = []
+        for mask_path in self.mask_paths:
+            mask_fname = os.path.basename(mask_path)
+            mask_id = int(mask_fname.split("_")[1])
+            if mask_id in ids_subset:
+                filtered_mask_paths.append(mask_path)
+
+        self.image_paths = filtered_image_paths
+        self.mask_paths = filtered_mask_paths
+
+        if len(self.image_paths) != len(self.mask_paths):
+            raise ValueError(
+                f"Number of images and masks do not match. {len(self.image_paths)} images and {len(self.mask_paths)} masks")
+
+        self.image_and_mask_bidict = self._create_image_and_mask_bidict()
+        if len(self.image_and_mask_bidict) != len(self.image_paths) + len(self.mask_paths):
+            raise ValueError(
+                (f"Some images and masks do not match. I.e. a bijection between images and masks does not exist."
+                 f"{len(self.image_paths) + len(self.mask_paths)} images and masks, but {len(self.image_and_mask_bidict)} matches."))
+
+        self.image_transform = image_transform
+        self.mask_transform = mask_transform
+
+    def _create_image_and_mask_bidict(self):
+        """Creates a dictionary that maps image paths to the mask path, and masks paths to image paths."""
+        image_uids_to_path = {path.split("/")[-1]: path for path in self.image_paths}
+        pairs = []
+        for mask_path in self.mask_paths:
+            uid = mask_path.split("/")[-1]
+            image_path = image_uids_to_path[uid]
+            pairs.append((image_path, mask_path))
+
+        bidict = {}
+        for image_path, mask_path in pairs:
+            bidict[image_path] = mask_path
+            bidict[mask_path] = image_path
+
+        return bidict
+
+    def __len__(self) -> int:
+        """Returns the number of samples in the dataset."""
+        return len(self.image_paths)
+
+    def __getitem__(self, index: int) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Returns the image and its label (as an integer) at the specified index.
+
+        Parameters
+        ----------
+        index : int
+            The index of the sample to retrieve.
+
+        Returns
+        -------
+        Tuple[np.ndarray, np.ndarray]
+            The image and its corresponding mask
+        """
+        image_path = self.image_paths[index]
+        mask_path = self.image_and_mask_bidict[image_path]
+        image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+        image = Image.fromarray(image)
+        mask = cv2.imread(mask_path, cv2.IMREAD_UNCHANGED)
+        mask = Image.fromarray(mask)
+        if self.image_transform:
+            image = self.image_transform(image)
+        if self.mask_transform:
+            mask = self.mask_transform(mask)
+
+        if self.do_pair_transforms:
+            do_hflip = random.random() < 0.5
+            if do_hflip:
+                image = torch.flip(image, [2])
+                mask = torch.flip(mask, [2])
+
+            do_vflip = random.random() < 0.5
+            if do_vflip:
+                image = torch.flip(image, [1])
+                mask = torch.flip(mask, [1])
+
+        return image, mask
+
+
 def save_image_grid(
-    images: torch.Tensor, labels: torch.Tensor, label_mapping: Dict[int, str], save_dir: str, grid_size: int = 3
+        images: torch.Tensor, save_dir: str, grid_size: int = 3, output_name: str = "image_grid"
 ):
     """
     Saves a grid of images with their labels to a specified directory.
@@ -156,23 +292,74 @@ def save_image_grid(
     ----------
     images : torch.Tensor
         A tensor containing the images to save in a grid.
-    labels : torch.Tensor
-        A tensor containing the labels corresponding to the images.
-    label_mapping : Dict[int, str]
-        A dictionary mapping integer labels back to their string representations.
     save_dir : str
         The directory where the image grid will be saved.
     grid_size : int, optional
         The number of images per row in the grid (default is 3).
+    output_name : str, optional
+        The name of the file to write.
     """
     os.makedirs(save_dir, exist_ok=True)
+    if images.dtype != torch.float32:
+        images = images.to(torch.float32)
     grid = vutils.make_grid(images, nrow=grid_size, padding=2, normalize=True)
     grid_np = grid.numpy().transpose((1, 2, 0))
     plt.figure(figsize=(grid_size * 2, grid_size * 2))
     plt.imshow(grid_np)
     plt.axis("off")
-    plt.savefig(os.path.join(save_dir, "image_grid.png"))
+    output_path = os.path.join(save_dir, f"{output_name}.png")
+    plt.savefig(output_path)
+    print(f"saved to {output_path}")
     plt.close()
+
+
+def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size=3, output_name="combined_grid"):
+    """
+    Saves a grid of original images with predicted and ground truth masks overlaid.
+
+    Parameters:
+        images (torch.Tensor): A tensor containing the original images.
+        pred_masks (torch.Tensor): A tensor containing the predicted masks.
+        true_masks (torch.Tensor): A tensor containing the ground truth masks.
+        save_dir (str): The directory where the image grid will be saved.
+        grid_size (int, optional): The number of images per row in the grid (default is 3).
+        output_name (str, optional): The name of the file to write.
+    """
+    os.makedirs(save_dir, exist_ok=True)
+    overlay_images = []
+
+    images = images.float() / 255 if images.max() > 1 else images.float(pred_masks)
+
+    for i in range(images.shape[0]):
+        img = images[i]
+        if img.size(0) == 1:
+            img = img.repeat(3, 1, 1)
+
+        pred_mask = pred_masks[i].repeat(3, 1, 1)
+        true_mask = true_masks[i].repeat(3, 1, 1)
+
+        pred_color_mask = torch.zeros_like(img)
+        pred_color_mask[0] = pred_mask[0]
+
+        true_color_mask = torch.zeros_like(img)
+        true_color_mask[2] = true_mask[0]
+
+        overlay_img = img + 0.3 * pred_color_mask + 0.3 * true_color_mask
+        overlay_img = torch.clamp(overlay_img, 0, 1)
+
+        overlay_images.append(overlay_img)
+
+    overlay_grid = vutils.make_grid(overlay_images, nrow=grid_size, normalize=True, scale_each=True)
+
+    np_grid = overlay_grid.numpy().transpose((1, 2, 0))
+    plt.figure(figsize=(grid_size * 2, grid_size * 2))
+    plt.imshow(np_grid, interpolation='nearest')
+    plt.axis('off')
+
+    output_path = os.path.join(save_dir, f"{output_name}.png")
+    plt.savefig(output_path, bbox_inches='tight')
+    plt.close()
+    print(f"Saved to {output_path}")
 
 
 def print_batch_stats(images: torch.Tensor, labels: torch.Tensor, label_mapping: Dict[int, str]):
@@ -209,16 +396,16 @@ def print_batch_stats(images: torch.Tensor, labels: torch.Tensor, label_mapping:
     print(f"Data type: {dtype}")
 
 
-# Example usage
 if __name__ == "__main__":
     transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
-    # csv_path = "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/nih_chest_x_ray_subset_info/original_image_path_to_label.csv"
-    # dataset = ChestXRayDataset(csv_file=csv_path, transform=transform)
-    radiology_root_dir = "/scratch/gpfs/eh0560/data/med_datasets/radiology_1M"
-    dataset = Radiology1MDataset(radiology_root_dir, transform)
+    task_heart_images_root = "/bind_tmp/test_write_nii/images"
+    task_heart_masks_root = "/bind_tmp/test_write_nii/masks"
+    dataset = DecathlonDataset(task_heart_images_root, task_heart_masks_root, transform, transform)
     dataloader = DataLoader(dataset, batch_size=9, shuffle=True)
 
-    images = next(iter(dataloader))[0]
-    # label_mapping = {v: k for k, v in dataset.label_encoding.items()}
-    save_image_grid(images, None, None, save_dir="/tmp")
+    images, masks = next(iter(dataloader))
+
+    images_next_to_masks = torch.cat((images, masks), dim=0)
+
+    save_image_grid(images_next_to_masks, save_dir="/bind_tmp")
     print_batch_stats(images, None, None)
