@@ -57,13 +57,6 @@ def save_nii_slices(image_file_path: str, output_dir: str, slice_dim: int, is_ma
         cv2.imwrite(output_path, slice)
 
 
-def process_pair(pair: Tuple[str, str], image_output_dir: str, masks_output_dir: str, slice_dim: int):
-    """Processes a pair of image and mask paths."""
-    image_path, mask_path = pair
-    save_nii_slices(image_path, image_output_dir, slice_dim, is_mask=False)
-    save_nii_slices(mask_path, masks_output_dir, slice_dim, is_mask=True)
-
-
 def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int, max_workers: int):
     pairs = get_scan_and_mask_pairs(scan_dir, mask_dir)
 
@@ -77,12 +70,12 @@ def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int, max
         main_task_id = progress.add_task("[cyan]Processing images and masks...", total=len(pairs) * 2)
 
         with ProcessPoolExecutor(max_workers) as executor:
-            future_to_pair = {
-                executor.submit(process_pair, pair, image_output_dir, masks_output_dir, slice_dim): pair
-                for pair in pairs
-            }
-            for _ in as_completed(future_to_pair):
-                progress.update(main_task_id, advance=2)  # Update progress for each completed pair
+            futures = []
+            for image_path, mask_path in pairs:
+                futures.append( executor.submit(save_nii_slices, image_path, image_output_dir, slice_dim, False))
+                futures.append(executor.submit(save_nii_slices, mask_path, masks_output_dir, slice_dim, True))
+            for _ in as_completed(futures):
+                progress.update(main_task_id, advance=1)
 
 
 def parse_args() -> argparse.Namespace:
