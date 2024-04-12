@@ -65,7 +65,7 @@ def save_nii_slices(segmentation_file: NIBSegmentationFile, output_dir: str, sli
 
     for slice_number in range(num_slices):
         # Slightly convoluted way of slicing the array
-        slice_indices = [slice(None)] * image_arr.ndim
+        slice_indices = [None] * image_arr.ndim
         slice_indices[slice_dim] = slice_number
         slice = image_arr[tuple(slice_indices)]
     #     output_path = get_slice_output_path(segmentation_file.file_path, output_dir, slice_number)
