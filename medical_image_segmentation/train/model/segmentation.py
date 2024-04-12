@@ -8,6 +8,12 @@ from segmentation_models_pytorch.losses import FocalLoss
 from segmentation_models_pytorch.losses._functional import focal_loss_with_logits, softmax_focal_loss_with_logits
 
 
+def post_process_masks(logits, threshold=0.5):
+    probs = torch.sigmoid(logits)
+    masks = (probs > threshold).float()
+    return masks
+
+
 class Segmentation(pl.LightningModule):
     """Segmentation learner."""
 
@@ -79,5 +85,5 @@ class Segmentation(pl.LightningModule):
     def predict_step(self, batch, batch_idx):
         images, masks = batch
         logits = self(images)
-        predicted_masks = (logits > 0.5).float()
+        predicted_masks = post_process_masks(logits)
         return images, predicted_masks, masks
