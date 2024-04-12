@@ -1,4 +1,3 @@
-import time
 from typing import Tuple, List
 import os
 import argparse
@@ -55,10 +54,8 @@ def get_slice_output_path(segmentation_file: NIBSegmentationFile, output_dir: st
 
 def save_nii_slices(segmentation_file: NIBSegmentationFile, output_dir: str, slice_dim: int):
     """Saves slices of nifti file to an output directory."""
-    num_slices = segmentation_file.get_shape()[slice_dim]
-    time.sleep(2)
-    # image_arr = segmentation_file.get_arr()
-    # num_slices = image_arr.shape[slice_dim]
+    image_arr = segmentation_file.get_arr()
+    num_slices = image_arr.shape[slice_dim]
 
     # for slice_number in range(num_slices):
     #     slice = image_arr.take(indices=slice_number, axis=slice_dim)
