@@ -605,13 +605,15 @@ class DecathlonHeartDataModule(LightningDataModule):
         return self.STD
 
     def setup(self, stage):
-        image_transform, mask_transform = self.default_transforms()
         if stage == "fit":
+            image_transform, mask_transform = self.train_transforms()
             self.decathlon_heart_train = DecathlonDataset(self.images_dir, self.masks_dir, self.num_classes, image_transform, mask_transform, "train", self.split_file)
             self.decathlon_heart_val = DecathlonDataset(self.images_dir, self.masks_dir,  self.num_classes,image_transform, mask_transform, "val", self.split_file)
         if stage == "test":
+            image_transform, mask_transform = self.default_transforms()
             self.decathlon_heart_test = DecathlonDataset(self.images_dir, self.masks_dir,  self.num_classes,image_transform, mask_transform, "test", self.split_file)
         if stage == "predict":
+            image_transform, mask_transform = self.default_transforms()
             self.decathlon_heart_test = DecathlonDataset(self.images_dir, self.masks_dir,  self.num_classes,image_transform, mask_transform, "test", self.split_file)
 
     def train_dataloader(self):
@@ -653,12 +655,32 @@ class DecathlonHeartDataModule(LightningDataModule):
     def predict_dataloader(self):
         return self.test_dataloader()
 
-    def default_transforms(self):
+
+    def train_transforms(self):
         image_transform = transform_lib.Compose(
             [
                 transform_lib.ToImage(),
                 transform_lib.Resize((224, 224)),
                 transform_lib.ColorJitter(brightness=0.4, contrast=0.4),
+                transform_lib.ToDtype(torch.float32, scale=True),
+                transform_lib.Normalize(mean=self.mean, std=self.std),
+            ]
+        )
+        mask_transform = transform_lib.Compose(
+            [
+                transform_lib.ToImage(),
+                transform_lib.Resize((224, 224), interpolation=InterpolationMode.NEAREST),
+                transform_lib.ToDtype(torch.float32, scale=True),
+            ]
+        )
+
+        return image_transform, mask_transform
+
+    def default_transforms(self):
+        image_transform = transform_lib.Compose(
+            [
+                transform_lib.ToImage(),
+                transform_lib.Resize((224, 224)),
                 transform_lib.ToDtype(torch.float32, scale=True),
                 transform_lib.Normalize(mean=self.mean, std=self.std),
             ]
