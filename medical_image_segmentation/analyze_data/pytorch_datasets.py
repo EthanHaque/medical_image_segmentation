@@ -267,15 +267,15 @@ class DecathlonDataset(Dataset):
         if self.mask_transform:
             mask = self.mask_transform(mask)
 
-        do_hflip = random.random() < 0.5
-        if do_hflip:
-            image = torch.flip(image, [2])
-            mask = torch.flip(mask, [2])
-
-        do_vflip = random.random() < 0.5
-        if do_vflip:
-            image = torch.flip(image, [1])
-            mask = torch.flip(mask, [1])
+        # do_hflip = random.random() < 0.5
+        # if do_hflip:
+        #     image = torch.flip(image, [2])
+        #     mask = torch.flip(mask, [2])
+        #
+        # do_vflip = random.random() < 0.5
+        # if do_vflip:
+        #     image = torch.flip(image, [1])
+        #     mask = torch.flip(mask, [1])
 
 
         return image, mask
