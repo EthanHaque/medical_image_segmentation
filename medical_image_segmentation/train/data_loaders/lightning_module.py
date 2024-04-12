@@ -723,8 +723,8 @@ class DecathlonDataModule(LightningDataModule):
 @register_datamodule("DECATHLON_HEART")
 class DecathlonHeartDataModule(DecathlonDataModule):
     NUM_CLASSES = 1
-    MEAN = (0.1064,)
-    STD = (0.1598,)
+    MEAN = (0.1181,)
+    STD = (0.1720,)
 
     def __init__(self, images_dir, masks_dir, split_file, batch_size, num_workers):
         super().__init__(images_dir, masks_dir, split_file, batch_size, num_workers)
@@ -745,6 +745,8 @@ class DecathlonHeartDataModule(DecathlonDataModule):
 @register_datamodule("DECATHLON_LIVER")
 class DecathlonLiverDataModule(DecathlonDataModule):
     NUM_CLASSES = 1
+    MEAN = (0.2089,)
+    STD = (0.2109,)
 
     def __init__(self, images_dir, masks_dir, split_file, batch_size, num_workers):
         super().__init__(images_dir, masks_dir, split_file, batch_size, num_workers)
