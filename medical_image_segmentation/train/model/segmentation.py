@@ -1,7 +1,13 @@
+from typing import Tuple, List
+
 import pytorch_lightning as pl
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
+
+from medical_image_segmentation.train.optimizer.lars import LARS
+from medical_image_segmentation.train.scheduler.cosine_annealing import LinearWarmupCosineAnnealingLR
+
 
 class DiceLoss(nn.Module):
     def __init__(self):
@@ -40,11 +46,22 @@ class Segmentation(pl.LightningModule):
     def forward(self, x) -> torch.Tensor:
         return self.model(x)
 
-    def configure_optimizers(self) -> torch.optim.Optimizer:
+    def configure_optimizers(self) -> Tuple[List[torch.optim.Optimizer], List[torch.optim.lr_scheduler.LRScheduler]]:
         params = [param for param in self.model.parameters() if param.requires_grad]
-        optimizer = torch.optim.AdamW(params, lr=self.hparams.lr)
-
-        return optimizer
+        optimizer = LARS(
+            params,
+            lr=self.hparams.base_lr,
+            momentum=self.hparams.momentum_opt,
+            weight_decay=self.hparams.weight_decay,
+        )
+        scheduler = LinearWarmupCosineAnnealingLR(
+            optimizer,
+            warmup_epochs=self.hparams.warmup_epochs,
+            max_epochs=self.hparams.max_epochs,
+            warmup_start_lr=self.hparams.min_lr,
+            eta_min=self.hparams.min_lr,
+        )
+        return [optimizer], [scheduler]
 
     def loss(self, logits, masks):
         loss_fn = DiceLoss()
