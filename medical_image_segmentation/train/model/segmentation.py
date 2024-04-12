@@ -81,5 +81,5 @@ class Segmentation(pl.LightningModule):
     def predict_step(self, batch, batch_idx):
         images, masks = batch
         logits = self(images)
-        predicted_masks = post_process_masks(logits, threshold=0.4)
+        predicted_masks = post_process_masks(logits)
         return images, predicted_masks, masks
