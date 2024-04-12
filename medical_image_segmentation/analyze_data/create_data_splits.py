@@ -25,7 +25,7 @@ def create_split(image_ids, train_size=0.7, val_size=0.2, test_size=0.1):
 
 def create_split_by_percent(image_ids, train_size=0.7, val_size=0.2, test_size=0.1,
                             train_percents=(0.1, 0.25, 0.50, 1.0)):
-    splits = []
+    splits = {}
     base_split = create_split(image_ids, train_size, val_size, test_size)
     for percent in train_percents:
         subset = base_split.copy()
@@ -33,8 +33,7 @@ def create_split_by_percent(image_ids, train_size=0.7, val_size=0.2, test_size=0
         new_samples = int(len_train * percent)
         random.shuffle(subset["train"])
         subset["train"] = subset["train"][:new_samples]
-        splits.append(subset)
-        print(json.dumps(subset))
+        splits[percent] = subset
 
     return splits
 
@@ -59,7 +58,9 @@ def parse_args() -> argparse.Namespace:
 def main():
     args = parse_args()
     ids = get_ids(args.image_dir)
-    create_split_by_percent(ids)
+    splits = create_split_by_percent(ids)
+    for size, split in splits.items():
+        print(size, json.dumps(split))
 
 
 if __name__ == "__main__":
