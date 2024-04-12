@@ -17,7 +17,7 @@ class Segmentation(pl.LightningModule):
         self.model = smp.Unet(
             encoder_name=self.hparams.arch,
             encoder_weights=None,
-            in_channels=1,
+            in_channels=2,
             classes=n_classes,
         )
         
