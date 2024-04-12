@@ -4,7 +4,7 @@ import argparse
 import nibabel as nib
 import numpy as np
 import cv2
-from rich.progress import Progress, TextColumn, BarColumn, TimeRemainingColumn
+from rich.progress import Progress, TextColumn, BarColumn, TimeRemainingColumn, TimeElapsedColumn
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 from medical_image_segmentation.analyze_data.utils import get_file_paths
@@ -118,6 +118,7 @@ def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int, max
                 TextColumn("[green]Masks: {task.fields[masks_processed]}"),
                 TextColumn("[yellow]Slices: {task.fields[slices_written]}/{task.total}"),
                 TimeRemainingColumn(),
+                TimeElapsedColumn(),
         ) as progress:
             main_task_id = progress.add_task("[cyan]Processing images and masks...", total=total_slices,
                                              images_processed=0, masks_processed=0, slices_written=0)
