@@ -5,7 +5,7 @@ import argparse
 import nibabel as nib
 import numpy as np
 import cv2
-from rich.progress import Progress
+from rich.progress import Progress, TextColumn, BarColumn, TimeRemainingColumn
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 from medical_image_segmentation.analyze_data.utils import get_file_paths
@@ -105,32 +105,32 @@ def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int, max
             output_dir = masks_output_dir if file.is_mask else image_output_dir
             futures.append(executor.submit(save_nii_slices, file, output_dir, slice_dim))
 
-        with Progress() as progress:
-            main_task_id = progress.add_task(
-                "[cyan]Processing images and masks...",
-                total=total_slices,
-                images_processed=0,
-                masks_processed=0,
-                files_remaining=len(futures)
-            )
+        with Progress(
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                TextColumn("[cyan]Images: {task.fields[images_processed]}"),
+                TextColumn("[green]Masks: {task.fields[masks_processed]}"),
+                TextColumn("[yellow]Slices: {task.fields[slices_written]}/{task.total}"),
+                TimeRemainingColumn(),
+        ) as progress:
+            main_task_id = progress.add_task("[cyan]Processing images and masks...", total=total_slices,
+                                             images_processed=0, masks_processed=0, slices_written=0)
             for future in as_completed(futures):
                 result = future.result()
                 images_processed = progress.tasks[main_task_id].fields['images_processed']
                 masks_processed = progress.tasks[main_task_id].fields['masks_processed']
-                files_remaining = progress.tasks[main_task_id].fields['files_remaining'] - 1
-
+                slices_written = progress.tasks[main_task_id].fields['slices_written'] + result["num_slices"]
                 if result["is_mask"]:
                     masks_processed += 1
                 else:
                     images_processed += 1
-
                 progress.update(
                     main_task_id,
                     advance=result["num_slices"],
                     images_processed=images_processed,
                     masks_processed=masks_processed,
-                    files_remaining=files_remaining,
-                    description=f"[cyan]Images: {images_processed}, Masks: {masks_processed}, Remaining: {files_remaining}"
+                    slices_written=slices_written
                 )
 
 def parse_args() -> argparse.Namespace:
