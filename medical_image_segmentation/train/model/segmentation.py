@@ -33,7 +33,8 @@ class Segmentation(pl.LightningModule):
         return optimizer
 
     def loss(self, logits, masks):
-        loss_fn = nn.BCEWithLogitsLoss()
+        pos_weight = torch.tensor([10])
+        loss_fn = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
         loss = loss_fn(logits, masks)
         return loss
 
