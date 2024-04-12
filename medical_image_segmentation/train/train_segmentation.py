@@ -13,7 +13,7 @@ from medical_image_segmentation.train.model.segmentation import Segmentation
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument("--torch_matmul_precision", default="high", type=str, help="torch matmul precision")
-    parser.add_argument("--arch", default="resnet18", type=str, help="backbone architecture")
+    parser.add_argument("--arch", default="resnet34", type=str, help="backbone architecture")
     parser.add_argument("--lr", default=4e-3, type=float, help="base learning rate")
     parser.add_argument("--max_epochs", default=50, type=int, help="Number of training epochs")
     parser.add_argument(
