@@ -43,8 +43,7 @@ def get_ids(image_dir):
     files = os.listdir(image_dir)
     ids = []
     for file in files:
-        fname = os.path.basename(file)
-        image_id = fname.split("_")[-1]
+        image_id = file.split("_")[-1].split("0")[0]
         image_id = int(image_id)
         ids.append(image_id)
     return ids
