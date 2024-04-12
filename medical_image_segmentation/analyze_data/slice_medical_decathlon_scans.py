@@ -54,7 +54,7 @@ def save_nii_slices(image_file_path: str, output_dir: str, slice_dim: int, is_ma
             slice = (slice != 0).astype(np.uint8) * 255
         slice = slice.astype(np.uint8)
         output_path = get_slice_output_path(image_file_path, output_dir, slice_number)
-        cv2.imwrite(output_path, slice)
+        # cv2.imwrite(output_path, slice)
 
 
 def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int, max_workers: int):
