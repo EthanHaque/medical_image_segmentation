@@ -63,10 +63,10 @@ def save_nii_slices(segmentation_file: NIBSegmentationFile, output_dir: str, sli
         image_arr = (image_arr - image_arr.min()) / (image_arr.max() - image_arr.min()) * 255
         image_arr = image_arr.astype(np.uint8)
 
-    for slice_number in range(num_slices):
-        slice = image_arr.take(indices=slice_number, axis=slice_dim)
-        # output_path = get_slice_output_path(segmentation_file.file_path, output_dir, slice_number)
-        # cv2.imwrite(output_path, slice)
+    # for slice_number in range(num_slices):
+    #     slice = image_arr.take(indices=slice_number, axis=slice_dim)
+    #     output_path = get_slice_output_path(segmentation_file.file_path, output_dir, slice_number)
+    #     cv2.imwrite(output_path, slice)
 
     return {
         "file_path": segmentation_file.file_path,
