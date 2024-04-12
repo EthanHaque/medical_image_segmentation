@@ -3,6 +3,20 @@ import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 
+class DiceLoss(nn.Module):
+    def __init__(self):
+        super(DiceLoss, self).__init__()
+
+    def forward(self, inputs, targets):
+        smooth = 1.
+        inputs = torch.sigmoid(inputs)
+        inputs_flat = inputs.view(-1)
+        targets_flat = targets.view(-1)
+        intersection = (inputs_flat * targets_flat).sum()
+        dice_coeff = (2. * intersection + smooth) / (inputs_flat.sum() + targets_flat.sum() + smooth)
+        dice_loss = 1 - dice_coeff
+        return dice_loss
+
 
 def post_process_masks(logits, threshold=0.5):
     probs = torch.sigmoid(logits)
@@ -33,8 +47,7 @@ class Segmentation(pl.LightningModule):
         return optimizer
 
     def loss(self, logits, masks):
-        pos_weight = torch.tensor([5], device=self.local_rank)
-        loss_fn = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+        loss_fn = DiceLoss()
         loss = loss_fn(logits, masks)
         return loss
 
