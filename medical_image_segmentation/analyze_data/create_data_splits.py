@@ -58,6 +58,7 @@ def parse_args() -> argparse.Namespace:
 
 def main():
     args = parse_args()
+    os.makedirs(args.output_dir, exist_ok=True)
     ids = get_ids(args.image_dir)
     splits = create_split_by_percent(ids)
     for size, split in splits.items():
