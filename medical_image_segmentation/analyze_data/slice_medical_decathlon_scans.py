@@ -105,23 +105,33 @@ def main(scan_dir: str, mask_dir: str, root_output_dir: str, slice_dim: int, max
             output_dir = masks_output_dir if file.is_mask else image_output_dir
             futures.append(executor.submit(save_nii_slices, file, output_dir, slice_dim))
 
-        with Progress() as progress:
-            main_task_id = progress.add_task("[cyan]Processing images and masks...",
-                                             total=total_slices,
-                                             images_processed=0,
-                                             masks_processed=0,
-                                             files_remaining=len(futures))
-            for future in as_completed(futures):
-                result = future.result()
-                progress.update(main_task_id,
-                                advance=result["num_slices"],
-                                files_remaining=progress.tasks[main_task_id].fields['files_remaining'] - 1 )
-                if result["is_mask"]:
-                    progress.update(main_task_id, masks_processed=progress.tasks[main_task_id].fields['masks_processed'] + 1)
-                else:
-                    progress.update(main_task_id, images_processed=progress.tasks[main_task_id].fields['images_processed'] + 1)
+    with Progress() as progress:
+        main_task_id = progress.add_task(
+            "[cyan]Processing images and masks...",
+            total=total_slices,
+            images_processed=0,
+            masks_processed=0,
+            files_remaining=len(futures)
+        )
+        for future in as_completed(futures):
+            result = future.result()
+            images_processed = progress.tasks[main_task_id].fields['images_processed']
+            masks_processed = progress.tasks[main_task_id].fields['masks_processed']
+            files_remaining = progress.tasks[main_task_id].fields['files_remaining'] - 1
 
+            if result["is_mask"]:
+                masks_processed += 1
+            else:
+                images_processed += 1
 
+            progress.update(
+                main_task_id,
+                advance=result["num_slices"],
+                images_processed=images_processed,
+                masks_processed=masks_processed,
+                files_remaining=files_remaining,
+                description=f"[cyan]Images: {images_processed}, Masks: {masks_processed}, Remaining: {files_remaining}"
+            )
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
