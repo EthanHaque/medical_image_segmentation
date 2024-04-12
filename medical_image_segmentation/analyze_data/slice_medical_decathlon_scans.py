@@ -60,9 +60,11 @@ def save_nii_slices(segmentation_file: NIBSegmentationFile, output_dir: str, sli
     for slice_number in range(num_slices):
         slice = image_arr.take(indices=slice_number, axis=slice_dim)
         if segmentation_file.is_mask:
-            slice = (slice != 0).astype(np.uint8) * 255
+            # slice = (slice != 0).astype(np.uint8) * 255
+            pass
         else:
-            slice = ((slice - slice.min()) / (slice.max() - slice.min()) * 255)
+            # slice = ((slice - slice.min()) / (slice.max() - slice.min()) * 255)
+            pass
         slice = slice.astype(np.uint8)
         # output_path = get_slice_output_path(segmentation_file.file_path, output_dir, slice_number)
         # cv2.imwrite(output_path, slice)
