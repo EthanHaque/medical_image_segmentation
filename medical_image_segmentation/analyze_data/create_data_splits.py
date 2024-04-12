@@ -62,8 +62,16 @@ def main():
     os.makedirs(args.output_dir, exist_ok=True)
     ids = get_ids(args.image_dir)
     splits = create_split_by_percent(ids)
+    full = splits[1.0]
+    combined_data = {
+        "train": full["train"] + full["val"] + full["test"]
+    }
+    splits[-1] = combined_data
     for size, split in splits.items():
-        output_file_name = f"split_{int(size * 100)}_percent_train.json"
+        if size == -1:
+            output_file_name = f"split_all_in_train.json"
+        else:
+            output_file_name = f"split_{int(size * 100)}_percent_train.json"
         output_path = os.path.join(args.output_dir, output_file_name)
         with open(output_path, "w") as f:
             json.dump(split, f)
