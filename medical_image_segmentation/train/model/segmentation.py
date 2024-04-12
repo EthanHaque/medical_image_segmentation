@@ -31,7 +31,7 @@ class Segmentation(pl.LightningModule):
         return optimizer
 
     def loss(self, logits, masks):
-        loss_fn = nn.BCEWithLogitsLoss
+        loss_fn = nn.BCEWithLogitsLoss()
         loss = loss_fn(logits, masks)
         return loss
 
