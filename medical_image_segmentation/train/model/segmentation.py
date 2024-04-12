@@ -59,6 +59,7 @@ class Segmentation(pl.LightningModule):
         images, masks = batch
 
         logits = self.forward(images)
+        print(logits.max().item())
         loss = self.loss(logits, masks)
 
         metric_log = {
