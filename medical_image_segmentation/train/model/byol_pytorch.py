@@ -89,7 +89,6 @@ class Encoder(nn.Module):
         if self.grayscale and x.shape[1] == 3:
             # Slice out just the first channel for grayscale images
             x = x[:, 0:1, :, :]
-        print(x.shape)
         feats = self.encoder(x)
         z = self.projection(feats)
         return z, feats
@@ -302,26 +301,26 @@ class BYOL(pl.LightningModule):
         for po, pm in zip(online_params, momentum_params):
             pm.data.mul_(m).add_(po.data, alpha=1.0 - m)
 
-    def validation_step(self, batch, batch_idx):
-        images = batch[0]
-        labels = batch[1]
-
-        # predict using online encoder
-        preds = self(images)
-
-        # calculate accuracy @k
-        acc1, acc5 = self.accuracy(preds, labels)
-
-        # gather results and log
-        logs = {"val/acc@1": acc1, "val/acc@5": acc5}
-        self.log_dict(
-            logs,
-            on_step=False,
-            on_epoch=True,
-            sync_dist=True,
-            prog_bar=True,
-            logger=True,
-        )
+    # def validation_step(self, batch, batch_idx):
+    #     images = batch[0]
+    #     labels = batch[1]
+    #
+    #     # predict using online encoder
+    #     preds = self(images)
+    #
+    #     # calculate accuracy @k
+    #     acc1, acc5 = self.accuracy(preds, labels)
+    #
+    #     # gather results and log
+    #     logs = {"val/acc@1": acc1, "val/acc@5": acc5}
+    #     self.log_dict(
+    #         logs,
+    #         on_step=False,
+    #         on_epoch=True,
+    #         sync_dist=True,
+    #         prog_bar=True,
+    #         logger=True,
+    #     )
 
     @torch.no_grad()
     def accuracy(self, preds, targets, k=(1, 5)):
