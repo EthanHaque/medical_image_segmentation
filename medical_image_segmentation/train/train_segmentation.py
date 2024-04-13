@@ -87,7 +87,7 @@ def main(args):
     mean_iou = running_iou / len(preds)
     mean_dice = running_dice / len(preds)
 
-    print(f"iou score: {mean_iou}, dice score: {mean_dice}")
+    print(f"iou score: {mean_iou:.3f}, dice score: {mean_dice:.3f}")
 
     if args.save_example_predictions:
         first_prediction = preds[0]
