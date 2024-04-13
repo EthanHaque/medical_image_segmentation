@@ -29,6 +29,19 @@ def post_process_masks(logits, threshold=0.5):
     masks = (probs > threshold).float()
     return masks
 
+def dice_coefficient(predicted, target, smooth=1.0):
+    predicted_flat = predicted.view(-1)
+    target_flat = target.view(-1)
+    intersection = (predicted_flat * target_flat).sum()
+    return (2.0 * intersection + smooth) / (predicted_flat.sum() + target_flat.sum() + smooth)
+
+def jaccard_index(predicted, target, smooth=1.0):
+    predicted_flat = predicted.view(-1)
+    target_flat = target.view(-1)
+    intersection = (predicted_flat * target_flat).sum()
+    union = predicted_flat.sum() + target_flat.sum() - intersection
+    return (intersection + smooth) / (union + smooth)
+
 
 class Segmentation(pl.LightningModule):
     """Segmentation learner."""
@@ -88,25 +101,25 @@ class Segmentation(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         images, masks = batch
-
         logits = self.forward(images)
         loss = self.loss(logits, masks)
 
-        metric_log = {"val/loss": loss}
+        predicted_masks = post_process_masks(logits)
+        dice = dice_coefficient(predicted_masks, masks)
+        iou = jaccard_index(predicted_masks, masks)
 
-        self.log_dict(
-            metric_log,
-            on_step=False,
-            on_epoch=True,
-            sync_dist=True,
-            prog_bar=True,
-            logger=True,
-        )
+        self.log('val/loss', loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log('val/dice', dice, on_step=False, on_epoch=True, prog_bar=True)
+        self.log('val/iou', iou, on_step=False, on_epoch=True, prog_bar=True)
 
-        return loss
+        return {"val_loss": loss, "val_dice": dice, "val_iou": iou}s
 
     def predict_step(self, batch, batch_idx):
         images, masks = batch
         logits = self(images)
         predicted_masks = post_process_masks(logits)
-        return images, predicted_masks, masks
+
+        dice = dice_coefficient(predicted_masks, masks)
+        iou = jaccard_index(predicted_masks, masks)
+
+        return {"images": images, "predicted_masks": predicted_masks, "true_masks": masks, "dice": dice, "iou": iou}
