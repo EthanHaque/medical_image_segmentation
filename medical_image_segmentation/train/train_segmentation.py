@@ -33,6 +33,7 @@ def parse_args():
         help="number of workers",
     )
     parser.add_argument("--batch_size", default=512, type=int, help="batch size")
+    parser.add_argument("--save_example_predictions", action="store_true", help="Write some images from the prediction step.")
 
     return parser.parse_args()
 
@@ -77,20 +78,30 @@ def main(args):
     trainer.fit(model, decathlon_dataset)
 
     preds = trainer.predict(model, decathlon_dataset)
-    images = preds["images"]
-    pred_masks = preds["predicted_masks"]
-    true_masks = preds["true_masks"]
-    dice_score = preds["dice"]
-    iou_score = preds["iou"]
-    print(f"dice score: {dice_score} iou score: {iou_score}")
-    save_combined_image_grid(
-        images,
-        pred_masks,
-        true_masks,
-        "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/images",
-        grid_size=16,
-    )
-    save_image_grid(pred_masks, "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/images", grid_size=16)
+
+    running_iou = 0
+    running_dice = 0
+    for pred in preds:
+        running_iou = pred["iou"]
+        running_dice += pred["dice"]
+    mean_iou = running_iou / len(preds)
+    mean_dice = running_dice / len(preds)
+
+    print(f"iou score: {mean_iou}, dice score: {mean_dice}")
+
+    if args.save_example_predictions:
+        first_prediction = preds[0]
+        images = first_prediction["images"]
+        pred_masks = first_prediction["predicted_masks"]
+        true_masks = first_prediction["true_masks"]
+        save_combined_image_grid(
+            images,
+            pred_masks,
+            true_masks,
+            "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/images",
+            grid_size=16,
+        )
+        save_image_grid(pred_masks, "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/images", grid_size=16)
 
 
 if __name__ == "__main__":
