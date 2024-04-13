@@ -15,7 +15,7 @@ def parse_args():
     parser.add_argument("--torch_matmul_precision", default="high", type=str, help="torch matmul precision")
     parser.add_argument("--arch", default="resnet18", type=str, help="backbone architecture")
     parser.add_argument("--base_lr", default=1.0, type=float, help="base learning rate")
-    parser.add_argument("--min_lr", default=1e-3, type=float, help="min learning rate")
+    parser.add_argument("--min_lr", default=1e-2, type=float, help="min learning rate")
     parser.add_argument("--momentum_opt", default=0.9, type=float, help="momentum for optimizer")
     parser.add_argument("--weight_decay", default=1.0e-6, type=float, help="weight decay")
     parser.add_argument("--warmup_epochs", default=10, type=int, help="number of warmup epochs")
