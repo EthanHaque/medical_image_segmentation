@@ -74,7 +74,6 @@ def main(args):
     ]
 
     model = BYOL(**args.__dict__)
-    print(model)
     trainer = pl.Trainer(
         devices=args.num_gpus,
         accelerator="gpu",
@@ -87,7 +86,7 @@ def main(args):
         callbacks=callbacks,
         strategy="ddp_find_unused_parameters_true",
     )
-    # trainer.fit(model)
+    trainer.fit(model)
 
 
 if __name__ == "__main__":
