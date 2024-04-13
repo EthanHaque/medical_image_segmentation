@@ -223,7 +223,7 @@ class BYOL(pl.LightningModule):
         loss = self.cosine_similarity_loss(preds, targets)
 
         # train linear layer
-        preds_linear = self.linear(feats.detach())
+        # preds_linear = self.linear(feats.detach())
         # loss_linear = F.cross_entropy(preds_linear, labels.repeat(2))
 
         # gather results and log stats
