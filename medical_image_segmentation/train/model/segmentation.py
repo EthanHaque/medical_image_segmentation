@@ -67,14 +67,14 @@ class Segmentation(pl.LightningModule):
             momentum=self.hparams.momentum_opt,
             weight_decay=self.hparams.weight_decay,
         )
-        # scheduler = LinearWarmupCosineAnnealingLR(
-        #     optimizer,
-        #     warmup_epochs=self.hparams.warmup_epochs,
-        #     max_epochs=self.hparams.max_epochs,
-        #     warmup_start_lr=self.hparams.min_lr,
-        #     eta_min=self.hparams.min_lr,
-        # )
-        return optimizer
+        scheduler = LinearWarmupCosineAnnealingLR(
+            optimizer,
+            warmup_epochs=self.hparams.warmup_epochs,
+            max_epochs=self.hparams.max_epochs,
+            warmup_start_lr=self.hparams.min_lr,
+            eta_min=self.hparams.min_lr,
+        )
+        return [optimizer], [scheduler]
 
     def loss(self, logits, masks):
         loss_fn = DiceLoss()
