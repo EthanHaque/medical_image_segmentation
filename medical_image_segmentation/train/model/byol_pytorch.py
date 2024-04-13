@@ -162,7 +162,8 @@ class BYOL(pl.LightningModule):
 
     def configure_optimizers(self) -> Tuple[List[torch.optim.Optimizer], List[torch.optim.lr_scheduler.LRScheduler]]:
         """Get optimizers and learning rate schedulers for training."""
-        params = self.collect_params([self.online_encoder, self.predictor, self.linear])
+        # params = self.collect_params([self.online_encoder, self.predictor, self.linear])
+        params = self.collect_params([self.online_encoder, self.predictor])
         optimizer = LARS(
             params,
             lr=self.hparams.base_lr,
@@ -180,7 +181,8 @@ class BYOL(pl.LightningModule):
 
     def forward(self, x) -> torch.Tensor:
         """Forward pass of data through the model."""
-        return self.linear(self.online_encoder.encoder(x))
+        # return self.linear(self.online_encoder.encoder(x))
+        return self.online_encoder.encoder(x)
 
     def cosine_similarity_loss(self, preds, targets) -> torch.Tensor:
         """Cosine similarity loss between two sets of vectors
