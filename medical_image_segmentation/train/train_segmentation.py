@@ -77,7 +77,12 @@ def main(args):
     trainer.fit(model, decathlon_dataset)
 
     preds = trainer.predict(model, decathlon_dataset)
-    images, pred_masks, true_masks = preds[0]
+    images = preds["images"]
+    pred_masks = preds["predicted_masks"]
+    true_masks = preds["true_masks"]
+    dice_score = preds["dice"]
+    iou_score = preds["iou"]
+    print(f"dice score: {dice_score} iou score: {iou_score}")
     save_combined_image_grid(
         images,
         pred_masks,
