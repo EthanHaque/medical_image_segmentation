@@ -126,3 +126,9 @@ class Segmentation(pl.LightningModule):
         self.log_dict({ "test/dice": dice, "test/iou": iou}, on_epoch=True, prog_bar=True)
 
         return {"images": images, "predicted_masks": predicted_masks, "true_masks": masks, "dice": dice, "iou": iou, "loss": loss}
+
+    def predict_step(self, batch, batch_idx):
+        images, masks = batch
+        logits = self(images)
+        predicted_masks = post_process_masks(logits)
+        return images, predicted_masks, masks
