@@ -82,9 +82,7 @@ def main(args):
     if args.save_example_predictions:
         preds = trainer.predict(model, decathlon_dataset)
         first_prediction = preds[0]
-        images = first_prediction["images"]
-        pred_masks = first_prediction["predicted_masks"]
-        true_masks = first_prediction["true_masks"]
+        images, pred_masks, true_masks = first_prediction
         save_combined_image_grid(
             images,
             pred_masks,
