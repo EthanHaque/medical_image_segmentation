@@ -77,7 +77,7 @@ def main(args):
     model = Segmentation(n_classes, **args.__dict__)
     trainer.fit(model, decathlon_dataset)
 
-    preds = trainer.predict(model, decathlon_dataset)
+    preds = trainer.test(model, decathlon_dataset)
 
     # if args.save_example_predictions:
     #     first_prediction = preds[0]

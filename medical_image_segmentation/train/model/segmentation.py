@@ -114,14 +114,15 @@ class Segmentation(pl.LightningModule):
 
         return {"val_loss": loss, "val_dice": dice, "val_iou": iou}
 
-    def predict_step(self, batch, batch_idx):
+    def test_step(self, batch, batch_idx):
         images, masks = batch
         logits = self(images)
-        predicted_masks = post_process_masks(logits)
+        loss = self.loss(logits, masks)
 
+        predicted_masks = post_process_masks(logits)
         dice = dice_coefficient(predicted_masks, masks)
         iou = jaccard_index(predicted_masks, masks)
 
-        self.log_dict({ "pred/dice": dice, "pred/iou": iou}, on_epoch=True, prog_bar=True)
+        self.log_dict({ "test/dice": dice, "test/iou": iou}, on_epoch=True, prog_bar=True)
 
-        return {"images": images, "predicted_masks": predicted_masks, "true_masks": masks, "dice": dice, "iou": iou}
+        return {"images": images, "predicted_masks": predicted_masks, "true_masks": masks, "dice": dice, "iou": iou, "loss": loss}
