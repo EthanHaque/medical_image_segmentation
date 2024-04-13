@@ -112,7 +112,7 @@ class Segmentation(pl.LightningModule):
         self.log('val/dice', dice, on_step=False, on_epoch=True, prog_bar=True)
         self.log('val/iou', iou, on_step=False, on_epoch=True, prog_bar=True)
 
-        return {"val_loss": loss, "val_dice": dice, "val_iou": iou}s
+        return {"val_loss": loss, "val_dice": dice, "val_iou": iou}
 
     def predict_step(self, batch, batch_idx):
         images, masks = batch
