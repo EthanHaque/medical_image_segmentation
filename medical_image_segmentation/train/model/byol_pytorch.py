@@ -47,7 +47,7 @@ class MLP(nn.Module):
 class Encoder(nn.Module):
     """Encodes images into latent space."""
 
-    def __init__(self, arch, hidden_dim, proj_dim, low_res):
+    def __init__(self, arch, hidden_dim, proj_dim, low_res, grayscale):
         super().__init__()
 
         # backbone
@@ -55,10 +55,17 @@ class Encoder(nn.Module):
         self.feat_dim = self.encoder.fc.weight.shape[1]
         self.encoder.fc = nn.Identity()
 
-        # modify the encoder for lower resolution
-        if low_res:
-            self.encoder.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
-            self.encoder.maxpool = nn.Identity()
+        if low_res or grayscale:
+            in_channels = 1 if grayscale else 3
+            kernel_size = 3 if low_res else 7
+            stride = 1 if low_res else 2
+            padding = 1 if low_res else 3
+
+            self.encoder.conv1 = nn.Conv2d(in_channels, 64, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
+
+            if low_res:
+                self.encoder.maxpool = nn.Identity()
+
             self._reinit_all_layers()
 
         # build heads
@@ -97,6 +104,7 @@ class BYOL(pl.LightningModule):
             hidden_dim=self.hparams.hidden_dim,
             proj_dim=self.hparams.proj_dim,
             low_res="CIFAR" in self.hparams.dataset,
+            grayscale="RADIOLOGY" in self.hparams.dataset,
         )
 
         # momentum encoder
@@ -105,6 +113,7 @@ class BYOL(pl.LightningModule):
             hidden_dim=self.hparams.hidden_dim,
             proj_dim=self.hparams.proj_dim,
             low_res="CIFAR" in self.hparams.dataset,
+            grayscale="RADIOLOGY" in self.hparams.dataset,
         )
         self.initialize_momentum_encoder()
 
