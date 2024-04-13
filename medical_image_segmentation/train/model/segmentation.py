@@ -122,4 +122,6 @@ class Segmentation(pl.LightningModule):
         dice = dice_coefficient(predicted_masks, masks)
         iou = jaccard_index(predicted_masks, masks)
 
+        self.log_dict({ "pred/dice": dice, "pred/iou": iou}, on_epoch=True, prog_bar=True)
+
         return {"images": images, "predicted_masks": predicted_masks, "true_masks": masks, "dice": dice, "iou": iou}

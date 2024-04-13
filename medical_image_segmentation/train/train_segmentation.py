@@ -77,26 +77,9 @@ def main(args):
     model = Segmentation(n_classes, **args.__dict__)
     trainer.fit(model, decathlon_dataset)
 
-    preds = trainer.predict(model, decathlon_dataset)
-
-    running_iou = 0
-    running_dice = 0
-    num_samples = 0
-    for pred in preds:
-        for p in pred:
-            running_iou += p["iou"]
-            running_dice += p["dice"]
-            num_samples += 1
-
-    mean_iou = running_iou / num_samples
-    mean_dice = running_dice / num_samples
-
-    trainer.logger.experiment.add_scalar("Mean IoU", mean_iou)
-    trainer.logger.experiment.add_scalar("Mean Dice", mean_dice)
-
-    print(f"iou score: {mean_iou:.3f}, dice score: {mean_dice:.3f}")
 
     if args.save_example_predictions:
+        preds = trainer.predict(model, decathlon_dataset)
         first_prediction = preds[0]
         images = first_prediction["images"]
         pred_masks = first_prediction["predicted_masks"]
