@@ -54,6 +54,7 @@ class Encoder(nn.Module):
         self.encoder = models.__dict__[arch]()
         self.feat_dim = self.encoder.fc.weight.shape[1]
         self.encoder.fc = nn.Identity()
+        self.grayscale = grayscale
 
         if low_res or grayscale:
             in_channels = 1 if grayscale else 3
@@ -85,6 +86,9 @@ class Encoder(nn.Module):
         """Forward pass.
 
         Generates features and projection into latent space."""
+        if self.grayscale and x.shape[1] == 3:
+            # Slice out just the first channel for grayscale images
+            x = x[:, 0:1, :, :]
         feats = self.encoder(x)
         z = self.projection(feats)
         return z, feats
@@ -125,8 +129,8 @@ class BYOL(pl.LightningModule):
         )
 
         # linear layer for eval
-        num_classes = get_datamodule(self.hparams.dataset).NUM_CLASSES
-        self.linear = torch.nn.Linear(self.online_encoder.feat_dim, num_classes)
+        # num_classes = get_datamodule(self.hparams.dataset).NUM_CLASSES
+        # self.linear = torch.nn.Linear(self.online_encoder.feat_dim, num_classes)
 
     @torch.no_grad()
     def initialize_momentum_encoder(self):
@@ -199,7 +203,7 @@ class BYOL(pl.LightningModule):
 
     def training_step(self, batch, batch_idx) -> torch.Tensor:
         view_1 = batch[0]
-        labels = batch[1]
+        # labels = batch[1]
         view_2 = batch[2]
         views = [view_1, view_2]
 
