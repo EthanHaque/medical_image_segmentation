@@ -84,7 +84,7 @@ def main(args):
         log_every_n_steps=1,
         check_val_every_n_epoch=1,
         callbacks=callbacks,
-        strategy="ddp_find_unused_parameters_true",
+        # strategy="ddp_find_unused_parameters_true",
     )
     trainer.fit(model)
 
