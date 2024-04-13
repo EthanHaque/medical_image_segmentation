@@ -170,8 +170,17 @@ class DecathlonDataset(Dataset):
         Returns the image inside a tuple.
     """
 
-    def __init__(self, images_dir: str, masks_dir: str, num_classes: int, image_transform=None, mask_transform=None, split: str = "train",
-                 split_file: str = None, do_pair_transforms: bool=False ):
+    def __init__(
+        self,
+        images_dir: str,
+        masks_dir: str,
+        num_classes: int,
+        image_transform=None,
+        mask_transform=None,
+        split: str = "train",
+        split_file: str = None,
+        do_pair_transforms: bool = False,
+    ):
         """
         Parameters
         ----------
@@ -212,13 +221,17 @@ class DecathlonDataset(Dataset):
 
         if len(self.image_paths) != len(self.mask_paths):
             raise ValueError(
-                f"Number of images and masks do not match. {len(self.image_paths)} images and {len(self.mask_paths)} masks")
+                f"Number of images and masks do not match. {len(self.image_paths)} images and {len(self.mask_paths)} masks"
+            )
 
         self.image_and_mask_bidict = self._create_image_and_mask_bidict()
         if len(self.image_and_mask_bidict) != len(self.image_paths) + len(self.mask_paths):
             raise ValueError(
-                (f"Some images and masks do not match. I.e. a bijection between images and masks does not exist."
-                 f"{len(self.image_paths) + len(self.mask_paths)} images and masks, but {len(self.image_and_mask_bidict)} matches."))
+                (
+                    f"Some images and masks do not match. I.e. a bijection between images and masks does not exist."
+                    f"{len(self.image_paths) + len(self.mask_paths)} images and masks, but {len(self.image_and_mask_bidict)} matches."
+                )
+            )
 
         self.image_transform = image_transform
         self.mask_transform = mask_transform
@@ -282,9 +295,7 @@ class DecathlonDataset(Dataset):
         return image, mask
 
 
-def save_image_grid(
-        images: torch.Tensor, save_dir: str, grid_size: int = 3, output_name: str = "image_grid"
-):
+def save_image_grid(images: torch.Tensor, save_dir: str, grid_size: int = 3, output_name: str = "image_grid"):
     """
     Saves a grid of images with their labels to a specified directory.
 
@@ -353,11 +364,11 @@ def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size
 
     np_grid = overlay_grid.numpy().transpose((1, 2, 0))
     plt.figure(figsize=(grid_size * 2, grid_size * 2))
-    plt.imshow(np_grid, interpolation='nearest')
-    plt.axis('off')
+    plt.imshow(np_grid, interpolation="nearest")
+    plt.axis("off")
 
     output_path = os.path.join(save_dir, f"{output_name}.png")
-    plt.savefig(output_path, bbox_inches='tight')
+    plt.savefig(output_path, bbox_inches="tight")
     plt.close()
     print(f"Saved to {output_path}")
 
@@ -398,14 +409,13 @@ def print_batch_stats(images: torch.Tensor, labels: torch.Tensor, label_mapping:
 
 if __name__ == "__main__":
     transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
-    task_heart_images_root = "/bind_tmp/test_write_nii/images"
-    task_heart_masks_root = "/bind_tmp/test_write_nii/masks"
-    dataset = DecathlonDataset(task_heart_images_root, task_heart_masks_root, transform, transform)
-    dataloader = DataLoader(dataset, batch_size=9, shuffle=True)
+    task_images_root = "/bind_tmp/test_write_nii/images"
+    task_masks_root = "/bind_tmp/test_write_nii/masks"
+    dataset = DecathlonDataset(task_images_root, task_masks_root, transform, transform)
+    dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
 
-    images, masks = next(iter(dataloader))
+    # images, masks = next(iter(dataloader))
 
-    images_next_to_masks = torch.cat((images, masks), dim=0)
-
-    save_image_grid(images_next_to_masks, save_dir="/bind_tmp")
-    print_batch_stats(images, None, None)
+    # images_next_to_masks = torch.cat((images, masks), dim=0)
+    # save_image_grid(images_next_to_masks, save_dir="/bind_tmp")
+    # print_batch_stats(images, None, None)

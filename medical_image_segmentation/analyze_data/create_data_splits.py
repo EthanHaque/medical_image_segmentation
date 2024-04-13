@@ -16,15 +16,16 @@ def create_split(image_ids, train_size=0.7, val_size=0.2, test_size=0.1):
 
     splits = {
         "train": image_ids[:number_train],
-        "val": image_ids[number_train:number_train + number_val],
-        "test": image_ids[number_train + number_val:]
+        "val": image_ids[number_train : number_train + number_val],
+        "test": image_ids[number_train + number_val :],
     }
 
     return splits
 
 
-def create_split_by_percent(image_ids, train_size=0.7, val_size=0.2, test_size=0.1,
-                            train_percents=(0.1, 0.25, 0.50, 1.0)):
+def create_split_by_percent(
+    image_ids, train_size=0.7, val_size=0.2, test_size=0.1, train_percents=(0.1, 0.25, 0.50, 1.0)
+):
     splits = {}
     base_split = create_split(image_ids, train_size, val_size, test_size)
     for percent in train_percents:
@@ -61,8 +62,14 @@ def main():
     os.makedirs(args.output_dir, exist_ok=True)
     ids = get_ids(args.image_dir)
     splits = create_split_by_percent(ids)
+    full = splits[1.0]
+    combined_data = {"train": full["train"] + full["val"] + full["test"]}
+    splits[-1] = combined_data
     for size, split in splits.items():
-        output_file_name = f"split_{int(size * 100)}_percent_train.json"
+        if size == -1:
+            output_file_name = f"split_all_in_train.json"
+        else:
+            output_file_name = f"split_{int(size * 100)}_percent_train.json"
         output_path = os.path.join(args.output_dir, output_file_name)
         with open(output_path, "w") as f:
             json.dump(split, f)

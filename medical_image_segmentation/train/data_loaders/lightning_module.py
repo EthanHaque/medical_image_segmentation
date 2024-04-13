@@ -193,6 +193,7 @@ class RGBFFCVDataModule(LightningDataModule):
 @register_datamodule("RADIOLOGY_1M_FFCV")
 class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
     NUM_CLASSES = 10
+
     def __init__(self, batch_size, num_workers, device, use_distributed, **kwargs):
         super().__init__(
             "/scratch/gpfs/RUSTOW/med_datasets/ffcv_datasets/radiology_1M_224_train.beton",
@@ -269,7 +270,6 @@ class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
             pipelines=pipelines,
         )
         return loader
-
 
 
 @register_datamodule("CIFAR100_FFCV")
@@ -577,13 +577,7 @@ class CIFAR100DataModule(CIFARDataModule):
         return self.STD
 
 
-@register_datamodule("DECATHLON_HEART")
-class DecathlonHeartDataModule(LightningDataModule):
-    # TODO: Should be 1 or 2?
-    NUM_CLASSES = 2
-    MEAN = (0.1064,)
-    STD = (0.1598,)
-    
+class DecathlonDataModule(LightningDataModule):
     def __init__(self, images_dir, masks_dir, split_file, batch_size, num_workers):
         super().__init__()
         self.images_dir = images_dir
@@ -591,45 +585,78 @@ class DecathlonHeartDataModule(LightningDataModule):
         self.split_file = split_file
         self.batch_size = batch_size
         self.num_workers = num_workers
-        
+
     @property
     def num_classes(self):
-        return self.NUM_CLASSES
+        raise NotImplementedError("Subclasses must define num_classes")
 
     @property
     def mean(self):
-        return self.MEAN
+        raise NotImplementedError("Subclasses must define mean")
 
     @property
     def std(self):
-        return self.STD
+        raise NotImplementedError("Subclasses must define std")
 
     def setup(self, stage):
         train_image_transform, train_mask_transform = self.train_transforms()
         test_image_transform, test_mask_transform = self.default_transforms()
         if stage == "fit":
-            self.decathlon_heart_train = DecathlonDataset(self.images_dir, self.masks_dir, self.num_classes, train_image_transform, train_mask_transform, "train", self.split_file, do_pair_transforms=True)
-            self.decathlon_heart_val = DecathlonDataset(self.images_dir, self.masks_dir,  self.num_classes, test_image_transform, test_mask_transform, "val", self.split_file)
+            self.decathlon_train = DecathlonDataset(
+                self.images_dir,
+                self.masks_dir,
+                self.num_classes,
+                train_image_transform,
+                train_mask_transform,
+                "train",
+                self.split_file,
+                do_pair_transforms=True,
+            )
+            self.decathlon_val = DecathlonDataset(
+                self.images_dir,
+                self.masks_dir,
+                self.num_classes,
+                test_image_transform,
+                test_mask_transform,
+                "val",
+                self.split_file,
+            )
         if stage == "test":
-            self.decathlon_heart_test = DecathlonDataset(self.images_dir, self.masks_dir,  self.num_classes, test_image_transform, test_mask_transform, "test", self.split_file)
+            self.decathlon_test = DecathlonDataset(
+                self.images_dir,
+                self.masks_dir,
+                self.num_classes,
+                test_image_transform,
+                test_mask_transform,
+                "test",
+                self.split_file,
+            )
         if stage == "predict":
-            self.decathlon_heart_test = DecathlonDataset(self.images_dir, self.masks_dir,  self.num_classes, test_image_transform, test_mask_transform, "test", self.split_file)
+            self.decathlon_test = DecathlonDataset(
+                self.images_dir,
+                self.masks_dir,
+                self.num_classes,
+                test_image_transform,
+                test_mask_transform,
+                "test",
+                self.split_file,
+            )
 
     def train_dataloader(self):
         loader = torch.utils.data.DataLoader(
-            dataset=self.decathlon_heart_train,
+            dataset=self.decathlon_train,
             shuffle=True,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             pin_memory=True,
-            drop_last=True,
+            drop_last=False,
         )
 
         return loader
 
     def val_dataloader(self):
         loader = torch.utils.data.DataLoader(
-            dataset=self.decathlon_heart_val,
+            dataset=self.decathlon_val,
             shuffle=False,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
@@ -641,7 +668,7 @@ class DecathlonHeartDataModule(LightningDataModule):
 
     def test_dataloader(self):
         loader = torch.utils.data.DataLoader(
-            dataset=self.decathlon_heart_test,
+            dataset=self.decathlon_test,
             shuffle=False,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
@@ -654,13 +681,12 @@ class DecathlonHeartDataModule(LightningDataModule):
     def predict_dataloader(self):
         return self.test_dataloader()
 
-
     def train_transforms(self):
         image_transform = transform_lib.Compose(
             [
                 transform_lib.ToImage(),
                 transform_lib.Resize((224, 224)),
-                transform_lib.ColorJitter(brightness=0.4, contrast=0.4),
+                transform_lib.ColorJitter(brightness=0.2, contrast=0.2),
                 transform_lib.ToDtype(torch.float32, scale=True),
                 transform_lib.Normalize(mean=self.mean, std=self.std),
             ]
@@ -693,3 +719,91 @@ class DecathlonHeartDataModule(LightningDataModule):
         )
 
         return image_transform, mask_transform
+
+
+@register_datamodule("DECATHLON_HEART")
+class DecathlonHeartDataModule(DecathlonDataModule):
+    NUM_CLASSES = 1
+    MEAN = (0.1181,)
+    STD = (0.1720,)
+
+    def __init__(self, images_dir, masks_dir, split_file, batch_size, num_workers):
+        super().__init__(images_dir, masks_dir, split_file, batch_size, num_workers)
+
+    @property
+    def num_classes(self):
+        return self.NUM_CLASSES
+
+    @property
+    def mean(self):
+        return self.MEAN
+
+    @property
+    def std(self):
+        return self.STD
+
+
+@register_datamodule("DECATHLON_LIVER")
+class DecathlonLiverDataModule(DecathlonDataModule):
+    NUM_CLASSES = 1
+    MEAN = (0.2089,)
+    STD = (0.2109,)
+
+    def __init__(self, images_dir, masks_dir, split_file, batch_size, num_workers):
+        super().__init__(images_dir, masks_dir, split_file, batch_size, num_workers)
+
+    @property
+    def num_classes(self):
+        return self.NUM_CLASSES
+
+    @property
+    def mean(self):
+        return self.MEAN
+
+    @property
+    def std(self):
+        return self.STD
+
+
+@register_datamodule("DECATHLON_HIPPOCAMPUS")
+class DecathlonHippocampusDataModule(DecathlonDataModule):
+    NUM_CLASSES = 1
+    MEAN = (0.4982,)
+    STD = (0.2373,)
+
+    def __init__(self, images_dir, masks_dir, split_file, batch_size, num_workers):
+        super().__init__(images_dir, masks_dir, split_file, batch_size, num_workers)
+
+    @property
+    def num_classes(self):
+        return self.NUM_CLASSES
+
+    @property
+    def mean(self):
+        return self.MEAN
+
+    @property
+    def std(self):
+        return self.STD
+
+
+@register_datamodule("DECATHLON_LUNG")
+class DecathlonLungDataModule(DecathlonDataModule):
+    NUM_CLASSES = 1
+    MEAN = (0.1475,)
+    STD = (0.1685,)
+
+    def __init__(self, images_dir, masks_dir, split_file, batch_size, num_workers):
+        super().__init__(images_dir, masks_dir, split_file, batch_size, num_workers)
+
+    @property
+    def num_classes(self):
+        return self.NUM_CLASSES
+
+    @property
+    def mean(self):
+        return self.MEAN
+
+    @property
+    def std(self):
+        return self.STD

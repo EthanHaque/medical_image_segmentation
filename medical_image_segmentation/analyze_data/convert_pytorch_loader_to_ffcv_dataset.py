@@ -66,11 +66,13 @@ def get_nih_x_ray_datasets(num_workers=1):
 
     return None, testset
 
+
 def get_radiology_1M_datasets(num_workers=1):
     radiology_root_dir = "/scratch/gpfs/eh0560/data/med_datasets/radiology_1M"
     trainset = Radiology1MDataset(radiology_root_dir)
 
     return trainset, None
+
 
 def get_imagenet_datasets(num_workers=1):
     trainset = torchvision.datasets.ImageNet(

@@ -14,7 +14,11 @@ def parse_args():
     parser = ArgumentParser()
     parser.add_argument("--torch_matmul_precision", default="high", type=str, help="torch matmul precision")
     parser.add_argument("--arch", default="resnet18", type=str, help="backbone architecture")
-    parser.add_argument("--lr", default=4e-3, type=float, help="base learning rate")
+    parser.add_argument("--base_lr", default=1.0, type=float, help="base learning rate")
+    parser.add_argument("--min_lr", default=1e-3, type=float, help="min learning rate")
+    parser.add_argument("--momentum_opt", default=0.9, type=float, help="momentum for optimizer")
+    parser.add_argument("--weight_decay", default=1.0e-6, type=float, help="weight decay")
+    parser.add_argument("--warmup_epochs", default=10, type=int, help="number of warmup epochs")
     parser.add_argument("--max_epochs", default=50, type=int, help="Number of training epochs")
     parser.add_argument(
         "--num_gpus",
@@ -28,9 +32,11 @@ def parse_args():
         type=int,
         help="number of workers",
     )
-    parser.add_argument("--batch_size", default=256, type=int, help="batch size")
+    parser.add_argument("--batch_size", default=512, type=int, help="batch size")
+    parser.add_argument("--save_example_predictions", action="store_true", help="Write some images from the prediction step.")
 
     return parser.parse_args()
+
 
 def main(args):
     """Entry point for training with PyTorch Lightning."""
@@ -55,18 +61,37 @@ def main(args):
     )
 
     n_classes = 1
-    images_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task02_Heart/images"
-    masks_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task02_Heart/masks"
-    split_file = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task02_Heart/split_100_percent_train.json"
-    decathlon_dataset = DecathlonHeartDataModule(images_dir, masks_dir, split_file, args.batch_size, args.num_workers, )
+    images_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task03_Liver/images"
+    masks_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task03_Liver/masks"
+    split_file = (
+        "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task03_Liver/split_100_percent_train.json"
+    )
+    decathlon_dataset = DecathlonHeartDataModule(
+        images_dir,
+        masks_dir,
+        split_file,
+        args.batch_size,
+        args.num_workers,
+    )
 
     model = Segmentation(n_classes, **args.__dict__)
     trainer.fit(model, decathlon_dataset)
 
-    preds = trainer.predict(model, decathlon_dataset)
-    images, pred_masks, true_masks = preds[0]
-    save_combined_image_grid(images, pred_masks, true_masks, "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/images", grid_size=16)
-    save_image_grid(pred_masks, "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/images", grid_size=16)
+    trainer.test(model, decathlon_dataset)
+
+    if args.save_example_predictions:
+        preds = trainer.predict(model, decathlon_dataset)
+        first_prediction = preds[0]
+        images, pred_masks, true_masks = first_prediction
+        save_combined_image_grid(
+            images,
+            pred_masks,
+            true_masks,
+            "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/images",
+            grid_size=16,
+        )
+        save_image_grid(pred_masks, "/scratch/gpfs/eh0560/repos/medical-image-segmentation/data/images", grid_size=16)
+
 
 if __name__ == "__main__":
     args = parse_args()
