@@ -81,11 +81,18 @@ def main(args):
 
     running_iou = 0
     running_dice = 0
+    num_samples = 0
     for pred in preds:
-        running_iou = pred["iou"]
-        running_dice += pred["dice"]
-    mean_iou = running_iou / len(preds)
-    mean_dice = running_dice / len(preds)
+        for p in pred:
+            running_iou += p["iou"]
+            running_dice += p["dice"]
+            num_samples += 1
+
+    mean_iou = running_iou / num_samples
+    mean_dice = running_dice / num_samples
+
+    trainer.logger.experiment.add_scalar("Mean IoU", mean_iou)
+    trainer.logger.experiment.add_scalar("Mean Dice", mean_dice)
 
     print(f"iou score: {mean_iou:.3f}, dice score: {mean_dice:.3f}")
 
