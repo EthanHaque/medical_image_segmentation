@@ -74,7 +74,6 @@ def main(args):
     ]
 
     model = BYOL(**args.__dict__)
-    print(model)
     trainer = pl.Trainer(
         devices=args.num_gpus,
         accelerator="gpu",

@@ -89,6 +89,7 @@ class Encoder(nn.Module):
         if self.grayscale and x.shape[1] == 3:
             # Slice out just the first channel for grayscale images
             x = x[:, 0:1, :, :]
+        print(x.shape)
         feats = self.encoder(x)
         z = self.projection(feats)
         return z, feats
