@@ -77,9 +77,10 @@ def main(args):
     model = Segmentation(n_classes, **args.__dict__)
     trainer.fit(model, decathlon_dataset)
 
-    preds = trainer.test(model, decathlon_dataset)
+    trainer.test(model, decathlon_dataset)
 
     if args.save_example_predictions:
+        preds = trainer.predict(model, decathlon_dataset)
         first_prediction = preds[0]
         images = first_prediction["images"]
         pred_masks = first_prediction["predicted_masks"]
