@@ -273,13 +273,16 @@ class BYOL(pl.LightningModule):
         device = self.trainer.local_rank
         distributed = len(self.trainer.device_ids) > 1
         dataset = get_datamodule(self.hparams.dataset)
-        print(f"device {device}, distributed {distributed}, dataset {dataset}")
         module = dataset(
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             device=device,
             use_distributed=distributed,
         )
+        loader = module.train_dataloader()
+        for _ in loader:
+            # Prefetch all data to load into memory.
+            pass
         return module.train_dataloader()
 
     # def val_dataloader(self):
