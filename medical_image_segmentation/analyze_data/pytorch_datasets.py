@@ -346,21 +346,21 @@ def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size
     for i in range(images.shape[0]):
         img = images[i].repeat(3, 1, 1)  # Convert grayscale to RGB
 
-        pred_mask = pred_masks[i, 0]
-        true_mask = true_masks[i, 0]
+        pred_mask = pred_masks[i, 0].unsqueeze(0).repeat(3, 1, 1)  # Expand mask to match image dimensions
+        true_mask = true_masks[i, 0].unsqueeze(0).repeat(3, 1, 1)
 
-        # Create mask overlays
+        # Initialize overlays with zeros
         overlay_pred = torch.zeros_like(img)
         overlay_true = torch.zeros_like(img)
 
-        # Only apply color to the foreground regions of the masks
+        # Apply color to mask foreground
         overlay_pred[pred_mask == 1] = torch.tensor([1.0, 0, 0])  # Red for predicted
         overlay_true[true_mask == 1] = torch.tensor([0, 0, 1.0])  # Blue for ground truth
 
         # Blend overlays with the original image
         alpha = 0.3  # Transparency factor
         overlay_img = img * (1 - alpha) + (overlay_pred + overlay_true) * alpha
-        overlay_img = torch.clamp(overlay_img, 0, 1)
+        overlay_img = torch.clamp(overlay_img, 0, 1)  # Clamp values to [0, 1]
 
         overlay_images.append(overlay_img)
 
