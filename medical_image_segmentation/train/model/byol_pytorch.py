@@ -282,9 +282,9 @@ class BYOL(pl.LightningModule):
             use_distributed=distributed,
         )
         loader = module.train_dataloader()
-        for _ in tqdm(loader):
-            # Prefetch all data to load into memory.
-            pass
+        # for _ in tqdm(loader):
+        #     # Prefetch all data to load into memory.
+        #     pass
         return module.train_dataloader()
 
     # def val_dataloader(self):
