@@ -336,6 +336,15 @@ def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size
         grid_size (int, optional): The number of images per row in the grid (default is 3).
         output_name (str, optional): The name of the file to write.
     """
+    print(f"images.shape {images.shape}")
+    print(f"images.max() {images.max()}")
+    print(f"images.min() {images.min()}")
+    print(f"pred_masks.shape {pred_masks.shape}")
+    print(f"pred_masks.max() {pred_masks.max()}")
+    print(f"pred_masks.min() {pred_masks.min()}")
+    print(f"true_masks.shape {true_masks.shape}")
+    print(f"true_masks.max() {true_masks.max()}")
+    print(f"true_masks.min() {true_masks.min()}")
     os.makedirs(save_dir, exist_ok=True)
     overlay_images = []
 
@@ -404,9 +413,9 @@ def print_batch_stats(images: torch.Tensor, labels: torch.Tensor, label_mapping:
     print(f"Standard deviation of pixel values (RGB): {std.tolist()}")
 
     max_value = images.max().item()
-    min_value = images.min().item()
+    _value = images.min().item()
     print(f"Max pixel value: {max_value}")
-    print(f"Min pixel value: {min_value}")
+    print(f"Min pixel value: {_value}")
 
     dtype = images.dtype
     print(f"Data type: {dtype}")
