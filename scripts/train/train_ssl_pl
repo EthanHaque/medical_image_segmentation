@@ -1,5 +1,5 @@
 #!/bin/bash
-apptainer exec --nv docker/ffcv-ssl_latest.sif \
+apptainer exec --nv docker/med_seg_latest.sif \
 bash -c "source activate; \
 conda activate ffcv-ssl; \
 python medical_image_segmentation/train/train_ssl.py \
