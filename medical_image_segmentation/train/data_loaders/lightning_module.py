@@ -78,7 +78,7 @@ class BYOLRGBFFCVDataTransforms:
         transforms = [
             RandomResizedCropRGBImageDecoder(self.crop_size, scale=(0.08, 1.0), ratio=(0.75, 1.33333)),
             ffcv.transforms.RandomHorizontalFlip(flip_prob=0.5),
-            # ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0, 0),
+            ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0, 0),
             # ffcv.transforms.RandomGrayscale(0.2),
             # ffcv.transforms.GaussianBlur(gaussian_blur_prob, kernel_size=23),
             ffcv.transforms.RandomSolarization(solarize_prob, 128),
