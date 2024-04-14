@@ -34,7 +34,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--arch", default="resnet18", type=str, help="backbone architecture")
     parser.add_argument("--base_lr", default=1.0, type=float, help="base learning rate")
     parser.add_argument("--min_lr", default=1e-3, type=float, help="min learning rate")
-    parser.add_argument("--linear_loss_weight", default=0.03, type=float, help="weight for the linear loss")
     parser.add_argument("--momentum_opt", default=0.9, type=float, help="momentum for optimizer")
     parser.add_argument("--weight_decay", default=1.0e-6, type=float, help="weight decay")
     parser.add_argument("--warmup_epochs", default=10, type=int, help="number of warmup epochs")
@@ -46,11 +45,8 @@ def parse_args() -> argparse.Namespace:
         "--comment",
         default=datetime.now().strftime("%b%d_%H-%M-%S"),
         type=str,
-        help="wandb comment",
+        help="comment about run",
     )
-    parser.add_argument("--project", default="essential-byol", type=str, help="wandb project")
-    parser.add_argument("--entity", default=None, type=str, help="wandb entity")
-    parser.add_argument("--offline", default=False, action="store_true", help="disable wandb")
     parser.add_argument(
         "--num_gpus",
         default=int(os.environ.get("SLURM_GPUS_ON_NODE", "4")),
@@ -84,7 +80,6 @@ def main(args):
         log_every_n_steps=1,
         check_val_every_n_epoch=1,
         callbacks=callbacks,
-        # strategy="ddp_find_unused_parameters_true",
     )
     trainer.fit(model)
 
