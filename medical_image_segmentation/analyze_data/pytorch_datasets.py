@@ -324,15 +324,9 @@ def save_image_grid(images: torch.Tensor, save_dir: str, grid_size: int = 3, out
     plt.close()
 
 
-import os
-import torch
-import numpy as np
-import matplotlib.pyplot as plt
-import torchvision.utils as vutils
-
 def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size=3, output_name="combined_grid"):
     """
-    Saves a grid of original images with predicted and ground truth masks overlaid.
+    Saves a grid of original images with predicted and ground truth masks overlaid transparently on foreground regions.
 
     Parameters:
         images (torch.Tensor): A tensor containing the original images.
@@ -345,27 +339,29 @@ def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size
     os.makedirs(save_dir, exist_ok=True)
     overlay_images = []
 
-    # Normalize the images if not already done
-    images = images.float() / 255 if images.max() > 1 else images
+    images = images.float() / 255 if images.max() > 1 else images  # Ensure images are normalized
 
     for i in range(images.shape[0]):
         img = images[i]
         if img.size(0) == 1:
             img = img.repeat(3, 1, 1)  # Convert grayscale to RGB by repeating channels
 
-        pred_mask = pred_masks[i].repeat(3, 1, 1)
-        true_mask = true_masks[i].repeat(3, 1, 1)
+        pred_mask = pred_masks[i]
+        true_mask = true_masks[i]
 
-        # Create colored masks with reduced intensity for better visibility of the original image
-        pred_color_mask = torch.zeros_like(img)
-        pred_color_mask[0] = pred_mask[0]  # Red channel for predicted mask
+        # Create colored overlay for masks, only where mask indicates foreground
+        overlay_pred = torch.zeros_like(img)
+        overlay_true = torch.zeros_like(img)
+        overlay_pred[pred_mask.byte().repeat(3, 1, 1)] = torch.tensor([1.0, 0, 0])  # Red for predicted
+        overlay_true[true_mask.byte().repeat(3, 1, 1)] = torch.tensor([0, 0, 1.0])  # Blue for ground truth
 
-        true_color_mask = torch.zeros_like(img)
-        true_color_mask[2] = true_mask[0]  # Blue channel for true mask
-
-        # Blend original image with masks; you can adjust the transparency here
-        overlay_img = img + 0.15 * pred_color_mask + 0.15 * true_color_mask
-        overlay_img = torch.clamp(overlay_img, 0, 1)  # Ensure the pixel values are between 0 and 1
+        # Combine the original image with overlays
+        overlay_img = img.clone()
+        alpha_pred = 0.3  # Adjust the transparency for predicted mask
+        alpha_true = 0.3  # Adjust the transparency for true mask
+        overlay_img += alpha_pred * overlay_pred
+        overlay_img += alpha_true * overlay_true
+        overlay_img = torch.clamp(overlay_img, 0, 1)  # Ensure values are within [0, 1]
 
         overlay_images.append(overlay_img)
 
@@ -383,6 +379,8 @@ def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size
     plt.savefig(output_path, bbox_inches="tight")
     plt.close()
     print(f"Saved to {output_path}")
+
+
 
 
 def print_batch_stats(images: torch.Tensor, labels: torch.Tensor, label_mapping: Dict[int, str]):
