@@ -65,25 +65,22 @@ class BYOLRGBDataTransforms:
 
 
 class BYOLRGBFFCVDataTransforms:
-    def __init__(self, device, crop_size, mean, std, solarize_prob=(0.0, 0.2)):
+    def __init__(self, device, crop_size, mean, std, solarize_prob=(0.0, 0.2), gaussian_blur_prob=(1.0, 0.1)):
         if isinstance(crop_size, int):
             crop_size = (crop_size, crop_size)
         self.crop_size = crop_size
         self.mean = mean
         self.std = std
         self.device = device
-        self.transforms = [self._build_transforms(sp) for sp in solarize_prob]
+        self.transforms = [self._build_transforms(sp, bp) for sp, bp in zip(solarize_prob, gaussian_blur_prob)]
 
-    def _build_transforms(self, solarize_prob):
+    def _build_transforms(self, solarize_prob, gaussian_blur_prob):
         transforms = [
             RandomResizedCropRGBImageDecoder(self.crop_size, scale=(0.08, 1.0), ratio=(0.75, 1.33333)),
             ffcv.transforms.RandomHorizontalFlip(flip_prob=0.5),
-            # ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0.2, 0.1),
-            # ffcv.transforms.RandomBrightness(0.4, 0.8),
-            # ffcv.transforms.RandomContrast(0.4, 0.8),
-            # ffcv.transforms.RandomSaturation(0.2, 0.8),
-            ffcv.transforms.RandomGrayscale(0.2),
-            # ffcv.transforms.GaussianBlur(1.0, kernel_size=23),
+            ffcv.transforms.RandomColorJitter(0.8, 0.4, 0.4, 0, 0),
+            # ffcv.transforms.RandomGrayscale(0.2),
+            ffcv.transforms.GaussianBlur(gaussian_blur_prob, kernel_size=23),
             ffcv.transforms.RandomSolarization(solarize_prob, 128),
             ffcv.transforms.NormalizeImage(np.array(self.mean) * 255, np.array(self.std) * 255, np.float32),
             ffcv.transforms.ToTensor(),

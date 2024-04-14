@@ -21,7 +21,7 @@ def parse_args() -> argparse.Namespace:
         "--download",
         default=False,
         action="store_true",
-        help="wether to download the dataset",
+        help="whether to download the dataset",
     )
     parser.add_argument("--data_dir", default="datasets", type=str, help="data directory")
     parser.add_argument("--batch_size", default=256, type=int, help="batch size")
