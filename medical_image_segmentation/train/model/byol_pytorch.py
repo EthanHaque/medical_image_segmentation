@@ -11,6 +11,8 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 import pytorch_lightning as pl
+from tqdm import tqdm
+
 from medical_image_segmentation.train.data_loaders.lightning_module import (
     get_datamodule,
 )
@@ -280,7 +282,7 @@ class BYOL(pl.LightningModule):
             use_distributed=distributed,
         )
         loader = module.train_dataloader()
-        for _ in loader:
+        for _ in tqdm(loader):
             # Prefetch all data to load into memory.
             pass
         return module.train_dataloader()
