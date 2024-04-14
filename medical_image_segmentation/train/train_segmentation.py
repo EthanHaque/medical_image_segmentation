@@ -6,7 +6,8 @@ from pytorch_lightning.callbacks import RichProgressBar, RichModelSummary
 import torchvision.transforms as transforms
 
 from medical_image_segmentation.analyze_data.pytorch_datasets import save_image_grid, save_combined_image_grid
-from medical_image_segmentation.train.data_loaders.lightning_module import DecathlonHeartDataModule
+from medical_image_segmentation.train.data_loaders.lightning_module import DecathlonHeartDataModule, \
+    DecathlonLiverDataModule
 from medical_image_segmentation.train.model.segmentation import Segmentation
 
 
@@ -66,7 +67,7 @@ def main(args):
     split_file = (
         "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task03_Liver/split_100_percent_train.json"
     )
-    decathlon_dataset = DecathlonHeartDataModule(
+    decathlon_dataset = DecathlonLiverDataModule(
         images_dir,
         masks_dir,
         split_file,
