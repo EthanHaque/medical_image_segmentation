@@ -11,7 +11,6 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 import pytorch_lightning as pl
-from tqdm import tqdm
 
 from medical_image_segmentation.train.data_loaders.lightning_module import (
     get_datamodule,
@@ -130,10 +129,6 @@ class BYOL(pl.LightningModule):
             output_dim=self.hparams.proj_dim,
         )
 
-        # linear layer for eval
-        # num_classes = get_datamodule(self.hparams.dataset).NUM_CLASSES
-        # self.linear = torch.nn.Linear(self.online_encoder.feat_dim, num_classes)
-
     @torch.no_grad()
     def initialize_momentum_encoder(self):
         """Initialize the momentum encoder."""
@@ -164,7 +159,6 @@ class BYOL(pl.LightningModule):
 
     def configure_optimizers(self) -> Tuple[List[torch.optim.Optimizer], List[torch.optim.lr_scheduler.LRScheduler]]:
         """Get optimizers and learning rate schedulers for training."""
-        # params = self.collect_params([self.online_encoder, self.predictor, self.linear])
         params = self.collect_params([self.online_encoder, self.predictor])
         optimizer = LARS(
             params,
@@ -183,7 +177,6 @@ class BYOL(pl.LightningModule):
 
     def forward(self, x) -> torch.Tensor:
         """Forward pass of data through the model."""
-        # return self.linear(self.online_encoder.encoder(x))
         return self.online_encoder.encoder(x)
 
     def cosine_similarity_loss(self, preds, targets) -> torch.Tensor:
@@ -224,14 +217,9 @@ class BYOL(pl.LightningModule):
         # compute BYOL loss
         loss = self.cosine_similarity_loss(preds, targets)
 
-        # train linear layer
-        # preds_linear = self.linear(feats.detach())
-        # loss_linear = F.cross_entropy(preds_linear, labels.repeat(2))
-
         # gather results and log stats
         loss_log = {
             "loss": loss,
-            # "loss_linear": loss_linear,
         }
         hparam_log = {
             "lr": self.trainer.optimizers[0].param_groups[0]["lr"],
@@ -255,7 +243,6 @@ class BYOL(pl.LightningModule):
             logger=True,
         )
 
-        # return loss + loss_linear * self.hparams.linear_loss_weight
         return loss
 
     def on_train_batch_end(self, outputs, batch, batch_idx):
@@ -281,10 +268,6 @@ class BYOL(pl.LightningModule):
             device=device,
             use_distributed=distributed,
         )
-        loader = module.train_dataloader()
-        # for _ in tqdm(loader):
-        #     # Prefetch all data to load into memory.
-        #     pass
         return module.train_dataloader()
 
     # def val_dataloader(self):
