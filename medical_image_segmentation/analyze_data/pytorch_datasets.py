@@ -354,8 +354,8 @@ def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size
         overlay_true = torch.zeros_like(img)
 
         # Apply color only to the mask foreground
-        overlay_pred[pred_mask.repeat(3, 1, 1)] = torch.tensor([1.0, 0, 0])  # Red for predicted
-        overlay_true[true_mask.repeat(3, 1, 1)] = torch.tensor([0, 0, 1.0])  # Blue for ground truth
+        overlay_pred[pred_mask.repeat(3, 1, 1)] = torch.tensor([1.0, 0, 0]).expand_as(overlay_pred)[pred_mask.repeat(3, 1, 1)]
+        overlay_true[true_mask.repeat(3, 1, 1)] = torch.tensor([0, 0, 1.0]).expand_as(overlay_true)[true_mask.repeat(3, 1, 1)]
 
         # Combine the original image with overlays
         alpha_pred = 0.3  # Transparency for predicted mask
@@ -381,8 +381,6 @@ def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size
     plt.savefig(output_path, bbox_inches="tight")
     plt.close()
     print(f"Saved to {output_path}")
-
-
 def print_batch_stats(images: torch.Tensor, labels: torch.Tensor, label_mapping: Dict[int, str]):
     """
     Prints statistics about a batch of images and labels.
