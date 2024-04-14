@@ -171,15 +171,15 @@ class DecathlonDataset(Dataset):
     """
 
     def __init__(
-        self,
-        images_dir: str,
-        masks_dir: str,
-        num_classes: int,
-        image_transform=None,
-        mask_transform=None,
-        split: str = "train",
-        split_file: str = None,
-        do_pair_transforms: bool = False,
+            self,
+            images_dir: str,
+            masks_dir: str,
+            num_classes: int,
+            image_transform=None,
+            mask_transform=None,
+            split: str = "train",
+            split_file: str = None,
+            do_pair_transforms: bool = False,
     ):
         """
         Parameters
@@ -324,7 +324,6 @@ def save_image_grid(images: torch.Tensor, save_dir: str, grid_size: int = 3, out
     plt.close()
 
 
-
 def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size=3, output_name="combined_grid"):
     """
     Saves a grid of original images with predicted and ground truth masks overlaid transparently on foreground regions.
@@ -340,40 +339,33 @@ def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size
     os.makedirs(save_dir, exist_ok=True)
     overlay_images = []
 
-    # Normalize images for display
     images = (images - images.min()) / (images.max() - images.min())
 
     for i in range(images.shape[0]):
-        img = images[i].repeat(3, 1, 1)  # Convert grayscale to RGB
+        img = images[i].repeat(3, 1, 1)
 
         pred_mask = pred_masks[i, 0]
         true_mask = true_masks[i, 0]
 
-        # Create RGB color masks
         colored_pred_mask = torch.zeros_like(img)
         colored_true_mask = torch.zeros_like(img)
 
-        # Apply colors to the appropriate mask areas
-        colored_pred_mask[0] = pred_mask  # Red channel
-        colored_true_mask[2] = true_mask  # Blue channel
+        colored_pred_mask[0] = pred_mask
+        colored_true_mask[2] = true_mask
 
-        # Blend overlays with the original image
-        alpha = 0.3  # Transparency factor
+        alpha = 0.3
         overlay_img = img * (1 - alpha) + (colored_pred_mask * alpha + colored_true_mask * alpha)
-        overlay_img = torch.clamp(overlay_img, 0, 1)  # Clamp values to [0, 1]
+        overlay_img = torch.clamp(overlay_img, 0, 1)
 
         overlay_images.append(overlay_img)
 
-    # Make a grid of images
     overlay_grid = vutils.make_grid(overlay_images, nrow=grid_size)
 
-    # Convert to numpy and plot
     np_grid = overlay_grid.numpy().transpose((1, 2, 0))
     plt.figure(figsize=(grid_size * 10, grid_size * 10))
     plt.imshow(np_grid, interpolation="nearest")
     plt.axis("off")
 
-    # Save the image
     output_path = os.path.join(save_dir, f"{output_name}.png")
     plt.savefig(output_path, bbox_inches="tight")
     plt.close()
