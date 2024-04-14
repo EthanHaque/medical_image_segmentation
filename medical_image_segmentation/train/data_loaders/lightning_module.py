@@ -138,7 +138,7 @@ class RGBFFCVDataModule(LightningDataModule):
         }
         custom_field_mapper = {"image_1": "image"}
 
-        order = ffcv.loader.OrderOption.RANDOM if self.use_distributed else ffcv.loader.OrderOption.QUASI_RANDOM
+        order = ffcv.loader.OrderOption.RANDOM
         loader = ffcv.loader.Loader(
             self.train_path,
             batch_size=self.batch_size,
@@ -217,7 +217,7 @@ class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
         }
         custom_field_mapper = {"image_1": "image"}
 
-        order = ffcv.loader.OrderOption.RANDOM if self.use_distributed else ffcv.loader.OrderOption.QUASI_RANDOM
+        order = ffcv.loader.OrderOption.RANDOM
         loader = ffcv.loader.Loader(
             self.train_path,
             batch_size=self.batch_size,
