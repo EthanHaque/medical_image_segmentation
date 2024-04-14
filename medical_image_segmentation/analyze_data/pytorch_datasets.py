@@ -324,6 +324,12 @@ def save_image_grid(images: torch.Tensor, save_dir: str, grid_size: int = 3, out
     plt.close()
 
 
+import os
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torchvision.utils as vutils
+
 def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size=3, output_name="combined_grid"):
     """
     Saves a grid of original images with predicted and ground truth masks overlaid.
@@ -339,34 +345,40 @@ def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size
     os.makedirs(save_dir, exist_ok=True)
     overlay_images = []
 
-    images = images.float() / 255 if images.max() > 1 else images.float(pred_masks)
+    # Normalize the images if not already done
+    images = images.float() / 255 if images.max() > 1 else images
 
     for i in range(images.shape[0]):
         img = images[i]
         if img.size(0) == 1:
-            img = img.repeat(3, 1, 1)
+            img = img.repeat(3, 1, 1)  # Convert grayscale to RGB by repeating channels
 
         pred_mask = pred_masks[i].repeat(3, 1, 1)
         true_mask = true_masks[i].repeat(3, 1, 1)
 
+        # Create colored masks with reduced intensity for better visibility of the original image
         pred_color_mask = torch.zeros_like(img)
-        pred_color_mask[0] = pred_mask[0]
+        pred_color_mask[0] = pred_mask[0]  # Red channel for predicted mask
 
         true_color_mask = torch.zeros_like(img)
-        true_color_mask[2] = true_mask[0]
+        true_color_mask[2] = true_mask[0]  # Blue channel for true mask
 
-        overlay_img = img + 0.3 * pred_color_mask + 0.3 * true_color_mask
-        overlay_img = torch.clamp(overlay_img, 0, 1)
+        # Blend original image with masks; you can adjust the transparency here
+        overlay_img = img + 0.15 * pred_color_mask + 0.15 * true_color_mask
+        overlay_img = torch.clamp(overlay_img, 0, 1)  # Ensure the pixel values are between 0 and 1
 
         overlay_images.append(overlay_img)
 
-    overlay_grid = vutils.make_grid(overlay_images, nrow=grid_size, normalize=True, scale_each=True)
+    # Make a grid of images
+    overlay_grid = vutils.make_grid(overlay_images, nrow=grid_size, normalize=False, scale_each=False)
 
+    # Convert to numpy and plot
     np_grid = overlay_grid.numpy().transpose((1, 2, 0))
     plt.figure(figsize=(grid_size * 2, grid_size * 2))
     plt.imshow(np_grid, interpolation="nearest")
     plt.axis("off")
 
+    # Save the image
     output_path = os.path.join(save_dir, f"{output_name}.png")
     plt.savefig(output_path, bbox_inches="tight")
     plt.close()
