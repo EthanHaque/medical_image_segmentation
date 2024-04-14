@@ -148,6 +148,7 @@ class RGBFFCVDataModule(LightningDataModule):
             drop_last=True,
             pipelines=pipelines,
             custom_field_mapper=custom_field_mapper,
+            distributed=self.use_distributed,
         )
         return loader
 
@@ -173,6 +174,7 @@ class RGBFFCVDataModule(LightningDataModule):
             os_cache=True,
             drop_last=False,
             pipelines=pipelines,
+            distributed=self.use_distributed,
         )
         return loader
 
@@ -227,6 +229,7 @@ class RADIOLOGY1MFFCVDataModule(RGBFFCVDataModule):
             drop_last=True,
             pipelines=pipelines,
             custom_field_mapper=custom_field_mapper,
+            distributed=self.use_distributed,
         )
         return loader
 
