@@ -346,23 +346,19 @@ def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size
         if img.size(0) == 1:
             img = img.repeat(3, 1, 1)  # Convert grayscale to RGB by repeating channels
 
-        pred_mask = pred_masks[i].bool()
-        true_mask = true_masks[i].bool()
+        pred_mask = pred_masks[i].bool().unsqueeze(0).repeat(3, 1, 1)  # Prepare 3-channel mask
+        true_mask = true_masks[i].bool().unsqueeze(0).repeat(3, 1, 1)
 
-        # Initialize overlays
-        overlay_pred = torch.zeros_like(img)
-        overlay_true = torch.zeros_like(img)
+        # Apply color directly into the mask
+        colored_pred_mask = pred_mask * torch.tensor([1.0, 0, 0]).view(3, 1, 1)  # Red for predicted
+        colored_true_mask = true_mask * torch.tensor([0, 0, 1.0]).view(3, 1, 1)  # Blue for ground truth
 
-        # Apply color only to the mask foreground
-        overlay_pred[pred_mask.repeat(3, 1, 1)] = torch.tensor([1.0, 0, 0]).expand_as(overlay_pred)[pred_mask.repeat(3, 1, 1)]
-        overlay_true[true_mask.repeat(3, 1, 1)] = torch.tensor([0, 0, 1.0]).expand_as(overlay_true)[true_mask.repeat(3, 1, 1)]
-
-        # Combine the original image with overlays
+        # Combine the original image with overlays using specified alpha
         alpha_pred = 0.3  # Transparency for predicted mask
         alpha_true = 0.3  # Transparency for true mask
         overlay_img = img.clone()
-        overlay_img += alpha_pred * overlay_pred
-        overlay_img += alpha_true * overlay_true
+        overlay_img += alpha_pred * colored_pred_mask
+        overlay_img += alpha_true * colored_true_mask
         overlay_img = torch.clamp(overlay_img, 0, 1)  # Clamp values to [0, 1]
 
         overlay_images.append(overlay_img)
@@ -381,6 +377,7 @@ def save_combined_image_grid(images, pred_masks, true_masks, save_dir, grid_size
     plt.savefig(output_path, bbox_inches="tight")
     plt.close()
     print(f"Saved to {output_path}")
+    
 def print_batch_stats(images: torch.Tensor, labels: torch.Tensor, label_mapping: Dict[int, str]):
     """
     Prints statistics about a batch of images and labels.
