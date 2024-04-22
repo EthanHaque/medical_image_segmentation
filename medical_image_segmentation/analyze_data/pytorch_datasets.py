@@ -315,7 +315,7 @@ def save_image_grid(images: torch.Tensor, save_dir: str, grid_size: int = 3, out
         images = images.to(torch.float32)
     grid = vutils.make_grid(images, nrow=grid_size, padding=2, normalize=True)
     grid_np = grid.numpy().transpose((1, 2, 0))
-    plt.figure(figsize=(grid_size * 2, grid_size * 2))
+    plt.figure(figsize=(grid_size * 8, grid_size * 8))
     plt.imshow(grid_np)
     plt.axis("off")
     output_path = os.path.join(save_dir, f"{output_name}.png")
