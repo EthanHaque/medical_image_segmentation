@@ -62,10 +62,10 @@ def main(args):
     )
 
     n_classes = 1
-    images_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task03_Liver/images"
-    masks_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task03_Liver/masks"
+    images_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task02_Heart/images"
+    masks_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task02_heart/masks"
     split_file = (
-        "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task03_Liver/split_100_percent_train.json"
+        "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task02_Heart/split_100_percent_train.json"
     )
     decathlon_dataset = DecathlonLiverDataModule(
         images_dir,
