@@ -65,7 +65,7 @@ def main(args):
     images_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task04_hippocampus/images"
     masks_dir = "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task04_hippocampus/masks"
     split_file = (
-        "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task04_hippocampus/split_10_percent_train.json"
+        "/scratch/gpfs/RUSTOW/med_datasets/medicaldecathlon/sliced_data/Task04_hippocampus/split_25_percent_train.json"
     )
     decathlon_dataset = DecathlonLiverDataModule(
         images_dir,
